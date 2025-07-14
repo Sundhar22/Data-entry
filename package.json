@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "prisma": {
+    "seed": "pnpx tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^6.11.1",
     "@prisma/extension-accelerate": "^2.0.2",
