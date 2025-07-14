@@ -1,0 +1,191 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Commissioner {
+  id              String   @id @default(cuid())
+  name            String
+  location        String
+  phone           String
+  email           String   @unique
+  commission_rate Float    @default(5.0) // percentage
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  farmers          Farmer[]
+  buyers           Buyer[]
+  auction_sessions AuctionSession[]
+
+  @@map("commissioners")
+}
+
+model Farmer {
+  id              String   @id @default(cuid())
+  name            String
+  phone           String
+  village         String
+  commissioner_id String
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  commissioner  Commissioner  @relation(fields: [commissioner_id], references: [id], onDelete: Cascade)
+  auction_items AuctionItem[]
+  bills         Bill[]
+
+  @@map("farmers")
+}
+
+model Buyer {
+  id              String   @id @default(cuid())
+  name            String
+  phone           String
+  commissioner_id String
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  commissioner  Commissioner  @relation(fields: [commissioner_id], references: [id], onDelete: Cascade)
+  auction_items AuctionItem[]
+
+  @@map("buyers")
+}
+
+model Category {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  category_id String
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  category      Category      @relation(fields: [category_id], references: [id])
+  auction_items AuctionItem[]
+
+  @@map("products")
+}
+
+model AuctionSession {
+  id              String        @id @default(cuid())
+  date            DateTime      @default(now())
+  commissioner_id String
+  status          SessionStatus @default(ACTIVE)
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+
+  // Relations
+  commissioner  Commissioner  @relation(fields: [commissioner_id], references: [id], onDelete: Cascade)
+  auction_items AuctionItem[]
+  bills         Bill[]
+
+  @@map("auction_sessions")
+}
+
+model AuctionItem {
+  id          String   @id @default(cuid())
+  session_id  String
+  farmer_id   String
+  product_id  String
+  unit        Unit
+  quantity    Float
+  final_price Float
+  buyer_id    String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  session    AuctionSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  farmer     Farmer         @relation(fields: [farmer_id], references: [id], onDelete: Cascade)
+  product    Product        @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  buyer      Buyer          @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
+  bill_items BillItem[]
+
+  @@map("auction_items")
+}
+
+model Bill {
+  id                String        @id @default(cuid())
+  session_id        String
+  farmer_id         String
+  total_amount      Float
+  commission_amount Float
+  net_amount        Float
+  bill_number       String        @unique
+  payment_status    PaymentStatus @default(UNPAID)
+  printed_at        DateTime?
+  paid_at           DateTime?
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+
+  // Relations
+  session    AuctionSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  farmer     Farmer         @relation(fields: [farmer_id], references: [id], onDelete: Cascade)
+  bill_items BillItem[]
+
+  @@map("bills")
+}
+
+model BillItem {
+  id              String   @id @default(cuid())
+  bill_id         String
+  auction_item_id String
+  quantity        Float
+  price           Float
+  amount          Float
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  bill         Bill        @relation(fields: [bill_id], references: [id], onDelete: Cascade)
+  auction_item AuctionItem @relation(fields: [auction_item_id], references: [id], onDelete: Cascade)
+
+  @@map("bill_items")
+}
+
+// Enums
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+enum Unit {
+  KG
+  BUNDLE
+  PIECE
+  LITRE
+  DOZEN
+  OTHER
+}
