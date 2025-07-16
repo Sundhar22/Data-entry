@@ -1,3 +1,5 @@
+import { NextRequest } from 'next/server';
+
 export type LoginRequest = {
   email: string;
   password: string;
@@ -17,3 +19,7 @@ export type JWTPayload = {
   email: string;
   name: string;
 };
+
+export interface AuthenticatedRequest extends NextRequest {
+  user: JWTPayload;
+}

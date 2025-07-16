@@ -1,21 +1,31 @@
 import prisma from "@/lib/prisma";
-import { Commissioner } from "@/types/commissioner";
 import { UpdateCommissionerApiSchema } from "@/schemas/commissioner";
 import { validateRequest } from "@/lib/validation";
 import { NextResponse } from "next/server";
+import { withAuth } from "@/lib/auth";
+import { AuthenticatedRequest } from "@/types/auth";
 
-export async function GET(): Promise<NextResponse> {
-  
+async function getCommissioner(req: AuthenticatedRequest): Promise<NextResponse> {
   try {
-    const temp_id = 'cmd5jn3800000cpye9csrtue6';
-    console.log('Looking for commissioner with ID:', temp_id);
+    const userId = req.user.id;
+    
+    console.log('Looking for commissioner with ID:', userId);
     
     const commissioner = await prisma.commissioner.findUnique({
       where: {
-        id: temp_id
+        id: userId
       },
-      select: { id: true, name: true, email: true, phone: true, commission_rate: true, location: true, created_at: true, updated_at: true }
-    })
+      select: { 
+        id: true, 
+        name: true, 
+        email: true, 
+        phone: true, 
+        commission_rate: true, 
+        location: true, 
+        created_at: true, 
+        updated_at: true 
+      }
+    });
     
     console.log('Commissioner found:', commissioner);
     
@@ -31,10 +41,10 @@ export async function GET(): Promise<NextResponse> {
   }
 }
 
-export async function PUT(req: Request): Promise<NextResponse> {
+async function updateCommissioner(req: AuthenticatedRequest): Promise<NextResponse> {
   try {
-    const temp_id = 'cmd5jn3800000cpye9csrtue6';
-
+    const userId = req.user.id;
+    
     // Validate the request body using Zod
     const validator = validateRequest(UpdateCommissionerApiSchema);
     const validation = await validator(req);
@@ -46,7 +56,7 @@ export async function PUT(req: Request): Promise<NextResponse> {
     const validatedData = validation.data;
 
     const existingCommissioner = await prisma.commissioner.findUnique({
-      where: { id: temp_id }
+      where: { id: userId }
     });
 
     if (!existingCommissioner) {
@@ -55,7 +65,7 @@ export async function PUT(req: Request): Promise<NextResponse> {
     }
     
     const updatedCommissioner = await prisma.commissioner.update({
-      where: { id: temp_id },
+      where: { id: userId },
       data: {
         name: validatedData.name || existingCommissioner.name,
         email: validatedData.email || existingCommissioner.email,
@@ -71,3 +81,7 @@ export async function PUT(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+// Export the protected routes
+export const GET = withAuth(getCommissioner);
+export const PUT = withAuth(updateCommissioner);

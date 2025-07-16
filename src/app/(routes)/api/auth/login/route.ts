@@ -1,23 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { comparePassword } from '@/lib/bcrypt';
-import { findCommissionerByEmail } from '@/lib/services';
 import { signAccessToken, signRefreshToken } from '@/lib/jwt';
+import prisma from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { email, password } = body;
+  try {
+    const body = await req.json();
+    const { email, password } = body;
 
-  const commissioner = findCommissionerByEmail(email);
-  if (!commissioner || !(await comparePassword(password, commissioner.password))) {
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    }
+
+    // Find commissioner by email
+    const commissioner = await prisma.commissioner.findUnique({
+      where: { email },
+      select: { id: true, name: true, email: true, password: true }
+    });
+
+    if (!commissioner || !(await comparePassword(password, commissioner.password))) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    }
+
+    const payload = {
+      id: commissioner.id,
+      email: commissioner.email,
+      name: commissioner.name
+    };
+
+    const accessToken = signAccessToken(payload);
+    const refreshToken = signRefreshToken(payload);
+
+    const res = NextResponse.json({
+      success: true,
+      user: { id: commissioner.id, email: commissioner.email, name: commissioner.name }
+    });
+
+    res.cookies.set('access_token', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 15 * 60 // 15 minutes
+    });
+
+    res.cookies.set('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/api/auth/refresh',
+      maxAge: 7 * 24 * 60 * 60 // 7 days
+    });
+
+    return res;
+  } catch (error) {
+    console.error('Login error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  const accessToken = signAccessToken({ id: commissioner.id, email: commissioner.email });
-  const refreshToken = signRefreshToken({ id: commissioner.id, email: commissioner.email });
-
-  const res = NextResponse.json({ success: true });
-  res.cookies.set('access_token', accessToken, { httpOnly: true, secure: true });
-  res.cookies.set('refresh_token', refreshToken, { httpOnly: true, secure: true, path: '/api/auth/refresh' });
-
-  return res;
 }

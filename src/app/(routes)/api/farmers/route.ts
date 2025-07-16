@@ -1,152 +1,165 @@
+import { requireAuth, withAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { validateRequest, validateQueryParams, PaginationSchema } from "@/lib/validation";
-import { CreateFarmerSchema } from "@/schemas/farmer";
+import { AuthenticatedRequest } from "@/types/auth";
+import { UpdateFarmer, UpdateFarmerSchema, CreateFarmer, CreateFarmerSchema } from "@/schemas/farmer";
+import { validateRequest } from "@/lib/validation";
 
-// GET /api/farmers - List all farmers with pagination
-export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    
-    // Validate pagination parameters
-    const paginationValidation = validateQueryParams(PaginationSchema, searchParams);
-    
-    if (!paginationValidation.success) {
-      return NextResponse.json(
-        { 
-          error: "Invalid pagination parameters",
-          errors: paginationValidation.errors 
-        },
-        { status: 400 }
-      );
-    }
-
-    const { page, limit, sortBy, sortOrder } = paginationValidation.data!;
-    const skip = (page - 1) * limit;
-
-    // Build order by clause
-    const orderBy: any = {};
-    if (sortBy) {
-      orderBy[sortBy] = sortOrder;
-    } else {
-      orderBy.created_at = 'desc'; // Default sort
-    }
-
-    // Get farmers with pagination
-    const [farmers, totalCount] = await Promise.all([
-      prisma.farmer.findMany({
-        skip,
-        take: limit,
-        orderBy,
-        select: {
-          id: true,
-          name: true,
-          village: true,
-          phone: true,
-          commissioner_id: true,
-          is_active: true,
-          created_at: true,
-          updated_at: true,
-          commissioner: {
-            select: {
-              id: true,
-              name: true,
-              location: true,
-            }
-          }
-        },
-      }),
-      prisma.farmer.count(),
-    ]);
-
-    const totalPages = Math.ceil(totalCount / limit);
-
-    return NextResponse.json({
-      success: true,
-      data: farmers,
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
-      },
-    });
-
-  } catch (error) {
-    console.error('Error fetching farmers:', error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
-
-// POST /api/farmers - Create new farmer
-export async function POST(req: NextRequest) {
-  try {
-    const validator = validateRequest(CreateFarmerSchema);
-    const validation = await validator(req);
-
-    if (!validation.success) {
-      return validation.response;
-    }
-
-    const farmerData = validation.data;
-
-    // Check if farmer with same phone already exists
-    const existingFarmer = await prisma.farmer.findFirst({
-      where: { phone: farmerData.phone }
-    });
-
-    if (existingFarmer) {
-      return NextResponse.json(
-        { error: "Farmer with this phone number already exists" },
-        { status: 409 }
-      );
-    }
-
-    // Verify commissioner exists
-    const commissioner = await prisma.commissioner.findUnique({
-      where: { id: farmerData.commissioner_id }
-    });
-
-    if (!commissioner) {
-      return NextResponse.json(
-        { error: "Commissioner not found" },
-        { status: 404 }
-      );
-    }
-
-    // Create new farmer
-    const newFarmer = await prisma.farmer.create({
-      data: farmerData,
-      include: {
-        commissioner: {
-          select: {
-            id: true,
-            name: true,
-            location: true,
-          }
+export async function GET(req: NextRequest): Promise<NextResponse> {
+    try {
+        // Verify authentication
+        const authResult = await requireAuth(req);
+        if (!authResult.success) {
+            return authResult.error!;
         }
-      },
-    });
 
-    return NextResponse.json(
-      { 
-        success: true,
-        data: newFarmer,
-        message: "Farmer created successfully" 
-      },
-      { status: 201 }
-    );
+        const userId = authResult.user!.id;
+        const { searchParams } = new URL(req.url);
 
-  } catch (error) {
-    console.error('Error creating farmer:', error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
+        const page = parseInt(searchParams.get('page') || '1');
+        const limit = parseInt(searchParams.get('limit') || '10');
+        const skip = (page - 1) * limit;
+
+        // Get farmers for this commissioner with pagination
+        const [farmers, totalCount] = await Promise.all([
+            prisma.farmer.findMany({
+                where: { commissioner_id: userId },
+                select: {
+                    id: true,
+                    name: true,
+                    phone: true,
+                    village: true,
+                    is_active: true,
+                    created_at: true,
+                    updated_at: true
+                },
+                skip,
+                take: limit,
+                orderBy: { created_at: 'desc' }
+            }),
+            prisma.farmer.count({
+                where: { commissioner_id: userId }
+            })
+        ]);
+
+        const totalPages = Math.ceil(totalCount / limit);
+
+        return NextResponse.json({
+            farmers,
+            pagination: {
+                page,
+                limit,
+                totalCount,
+                totalPages,
+                hasNext: page < totalPages,
+                hasPrev: page > 1
+            }
+        });
+    } catch (error) {
+        console.error('Error in /api/farmers:', error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
 }
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+    try {
+        // Verify authentication
+        const authResult = await requireAuth(req);
+        if (!authResult.success) {
+            return authResult.error!;
+        }
+
+        const userId = authResult.user!.id;
+
+        // Validate request body
+        const validator = validateRequest(CreateFarmerSchema);
+        const validation = await validator(req);
+
+        if (!validation.success) {
+            return validation.response;
+        }
+        const validatedData: CreateFarmer = validation.data;
+
+        // Create farmer for this commissioner
+        const farmer = await prisma.farmer.create({
+            data: {
+                ...validatedData,
+                commissioner_id: userId
+            }
+        });
+
+        return NextResponse.json(farmer, { status: 201 });
+    } catch (error) {
+        console.error('Error in POST /api/farmers:', error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}
+
+async function updateFarmerSchema(req: AuthenticatedRequest): Promise<NextResponse> {
+
+    try {
+        const userId = req.user.id;
+
+
+        const validator = validateRequest(UpdateFarmerSchema);
+        const validation = await validator(req);
+
+        if (!validation.success) {
+            return validation.response;
+        }
+        const validatedData: UpdateFarmer = validation.data;
+
+        const existingFarmer = await prisma.farmer.findUnique({
+            where: { id: validatedData.id, commissioner_id: userId }
+        });
+
+        if (!existingFarmer) {
+            console.log('Farmer not found');
+            return NextResponse.json({ error: "Farmer not found" }, { status: 404 });
+        }
+
+        const updatedFarmer = await prisma.farmer.update({
+            where: { id: validatedData.id },
+            data: {
+                name: validatedData.name || existingFarmer.name,
+                phone: validatedData.phone || existingFarmer.phone,
+                village: validatedData.village || existingFarmer.village,
+                is_active: validatedData.is_active !== undefined ? validatedData.is_active : existingFarmer.is_active
+            }
+        });
+
+        return NextResponse.json(updatedFarmer, { status: 200 });
+    } catch (error) {
+        console.error('Error in PUT /api/farmers:', error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}
+
+async function deleteFarmer(req: AuthenticatedRequest): Promise<NextResponse> {
+    try {
+        const userId = req.user.id;
+        const { id } = await req.json();
+
+        const existingFarmer = await prisma.farmer.findUnique({
+            where: { id, commissioner_id: userId }
+        });
+
+        if (!existingFarmer) {
+            console.log('Farmer not found');
+            return NextResponse.json({ error: "Farmer not found" }, { status: 404 });
+        }
+
+        await prisma.farmer.delete({
+            where: { id }
+        });
+
+        return NextResponse.json({ message: "Farmer deleted successfully" }, { status: 200 });
+    } catch (error) {
+        console.error('Error in DELETE /api/farmers:', error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}
+
+
+export const PUT = withAuth(updateFarmerSchema);
+export const DELETE = withAuth(deleteFarmer);

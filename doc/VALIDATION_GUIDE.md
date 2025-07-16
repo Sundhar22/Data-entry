@@ -12,31 +12,36 @@ This project now includes a comprehensive validation system using Zod for type-s
 
 ## Quick Start
 
-### 1. Using the Form Component
+### 1. Using the Form Component - Farmer Example
 
 ```tsx
-import CommissionerForm from '@/components/CommissionerForm';
+import FarmerForm from '@/components/FarmerForm';
 
-export default function MyPage() {
-  const handleSubmit = async (data: z.infer<typeof CreateCommissionerSchema>) => {
-    const response = await fetch('/api/commissioner', {
+export default function FarmersPage() {
+  const handleSubmit = async (data: z.infer<typeof CreateFarmerSchema>) => {
+    const response = await fetch('/api/farmers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // Include authentication cookies
       body: JSON.stringify(data),
     });
+    
+    if (!response.ok) {
+      throw new Error('Failed to create farmer');
+    }
   };
 
-  return <CommissionerForm onSubmit={handleSubmit} />;
+  return <FarmerForm onSubmit={handleSubmit} />;
 }
 ```
 
-### 2. Using the Custom Hook
+### 2. Using the Custom Hook - Farmer Example
 
 ```tsx
 import { useFormValidation } from '@/hooks/useFormValidation';
-import { CreateCommissionerSchema } from '@/schemas/commissioner';
+import { CreateFarmerSchema } from '@/schemas/farmer';
 
-export default function MyForm() {
+export default function FarmerForm() {
   const {
     values,
     errors,
@@ -44,58 +49,124 @@ export default function MyForm() {
     setValue,
     getFieldError,
   } = useFormValidation({
-    schema: CreateCommissionerSchema,
+    schema: CreateFarmerSchema,
     onSubmit: async (data) => {
-      // Submit your data
+      const response = await fetch('/api/farmers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Include auth cookies
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create farmer');
+      }
     },
   });
 
   return (
     <form onSubmit={handleSubmit}>
       <input
+        placeholder="Farmer Name"
         value={values.name || ''}
         onChange={(e) => setValue('name', e.target.value)}
       />
-      {getFieldError('name') && <span>{getFieldError('name')}</span>}
+      {getFieldError('name') && <span className="error">{getFieldError('name')}</span>}
+      
+      <input
+        placeholder="Phone Number"
+        value={values.phone || ''}
+        onChange={(e) => setValue('phone', e.target.value)}
+      />
+      {getFieldError('phone') && <span className="error">{getFieldError('phone')}</span>}
+      
+      <input
+        placeholder="Village"
+        value={values.village || ''}
+        onChange={(e) => setValue('village', e.target.value)}
+      />
+      {getFieldError('village') && <span className="error">{getFieldError('village')}</span>}
+      
+      <button type="submit">Create Farmer</button>
     </form>
   );
 }
 ```
 
-### 3. API Validation
+### 3. API Validation - Farmers Example
 
 ```typescript
 import { validateRequest } from '@/lib/validation';
-import { CreateCommissionerSchema } from '@/schemas/commissioner';
+import { CreateFarmerSchema } from '@/schemas/farmer';
 
 export async function POST(request: Request) {
-  const validation = await validateRequest(request, CreateCommissionerSchema);
+  const validator = validateRequest(CreateFarmerSchema);
+  const validation = await validator(request);
   
   if (!validation.success) {
-    return NextResponse.json(
-      { errors: validation.errors },
-      { status: 400 }
-    );
+    return validation.response; // Returns NextResponse with validation errors
   }
 
   // Use validation.data - it's fully typed!
-  const commissioner = await prisma.commissioner.create({
-    data: validation.data,
+  const farmer = await prisma.farmer.create({
+    data: {
+      ...validation.data,
+      commissioner_id: userId // Added by authentication
+    }
   });
 
-  return NextResponse.json(commissioner);
+  return NextResponse.json(farmer, { status: 201 });
 }
 ```
 
 ## Available Schemas
 
+### Commissioner Schemas
 - **CommissionerSchema**: Full commissioner with all fields
 - **CreateCommissionerSchema**: For creating new commissioners
 - **UpdateCommissionerApiSchema**: For updating existing commissioners  
+
+### Farmer Schemas
 - **FarmerSchema**: Full farmer data validation
 - **CreateFarmerSchema**: For creating new farmers
+- **UpdateFarmerSchema**: For updating existing farmers
+
+### Other Schemas
 - **ProductSchema**: Product validation
 - **CategorySchema**: Category validation
+
+### Farmer Schema Details
+
+```typescript
+// Full farmer schema
+export const FarmerSchema = z.object({
+  id: z.string().cuid(),
+  name: z.string().min(1, "Name is required"),
+  phone: z.string().min(1, "Phone number is required"),
+  village: z.string().min(1, "Village is required"),
+  commissioner_id: z.string().cuid(),
+  is_active: z.boolean().default(true),
+  created_at: z.date(),
+  updated_at: z.date(),
+});
+
+// Create farmer schema (excludes auto-generated fields)
+export const CreateFarmerSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  phone: z.string().min(1, "Phone number is required"),
+  village: z.string().min(1, "Village is required"),
+  is_active: z.boolean().default(true).optional(),
+});
+
+// Update farmer schema
+export const UpdateFarmerSchema = z.object({
+  id: z.string().cuid(),
+  name: z.string().min(1, "Name is required").optional(),
+  phone: z.string().min(1, "Phone number is required").optional(),
+  village: z.string().min(1, "Village is required").optional(),
+  is_active: z.boolean().optional(),
+});
+```
 
 ## Files Structure
 
@@ -111,14 +182,25 @@ src/
 ├── hooks/
 │   └── useFormValidation.ts  # Custom validation hook
 └── components/
-    └── CommissionerForm.tsx  # Example form component
+    ├── CommissionerForm.tsx  # Example form component
+    └── FarmerForm.tsx        # Farmer form component
 ```
 
 ## Testing the System
 
-1. Visit `/example` to see the commissioner form in action
-2. Try submitting invalid data to see validation errors
-3. Test the API endpoints at `/api/commissioner/me`
+1. **Login**: Visit `/api/auth/login` to authenticate first
+2. **Visit UI**: Go to `/farmers` to see the farmer management interface
+3. **Test API**: Use farmer endpoints at `/api/farmers` 
+4. **Test Validation**: Try submitting invalid data to see validation errors
+5. **Test Forms**: Use the form components to test real-time validation
+
+## Authentication Integration
+
+All validation now works with the authentication system:
+- API endpoints require authentication cookies
+- Form submissions include authentication headers
+- Validation errors are returned with proper HTTP status codes
+- See [Authentication Guide](./AUTHENTICATION_GUIDE.md) for more details
 
 ## Validation Features
 
