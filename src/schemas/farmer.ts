@@ -1,40 +1,37 @@
 import { z } from 'zod';
 
-// Farmer validation schema
+// Base Farmer schema for validation
 export const FarmerSchema = z.object({
-  id: z.string().cuid(),
-  name: z.string().min(2, 'Name must be at least 2 characters long').max(100, 'Name must be less than 100 characters'),
-  phone: z.string().regex(/^\d{10}$/, 'Phone number must be exactly 10 digits'),
-  village: z.string().min(2, 'Village must be at least 2 characters long').max(100, 'Village must be less than 100 characters'),
-  commissioner_id: z.string().cuid(),
+  id: z.cuid(),
+  name: z.string().min(1, "Name is required"),
+  phone: z.string().min(1, "Phone number is required"),
+  village: z.string().min(1, "Village is required"),
+  commissioner_id: z.cuid(),
   is_active: z.boolean().default(true),
   created_at: z.date(),
   updated_at: z.date(),
 });
 
-// Schema for creating a new farmer
-export const CreateFarmerSchema = FarmerSchema.omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
+// Schema for creating a new farmer (excludes auto-generated fields)
+export const CreateFarmerSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  phone: z.string().min(1, "Phone number is required"),
+  village: z.string().min(1, "Village is required"),
+  commissioner_id: z.cuid(),
+  is_active: z.boolean().default(true).optional(),
 });
 
-// Schema for updating a farmer
-export const UpdateFarmerSchema = FarmerSchema.partial().extend({
-  id: z.string().cuid(),
+// Schema for updating a farmer (all fields optional except id)
+export const UpdateFarmerSchema = z.object({
+  id: z.cuid(),
+  name: z.string().min(1, "Name is required").optional(),
+  phone: z.string().min(1, "Phone number is required").optional(),
+  village: z.string().min(1, "Village is required").optional(),
+  commissioner_id: z.cuid().optional(),
+  is_active: z.boolean().optional(),
 });
 
-// Schema for API requests
-export const FarmerApiSchema = FarmerSchema.omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
-});
-
-// Schema for updating via API
-export const UpdateFarmerApiSchema = FarmerApiSchema.partial();
-
-// Type inference
-export type FarmerInput = z.infer<typeof CreateFarmerSchema>;
-export type FarmerUpdate = z.infer<typeof UpdateFarmerApiSchema>;
-export type FarmerApi = z.infer<typeof FarmerApiSchema>;
+// Type exports for TypeScript
+export type Farmer = z.infer<typeof FarmerSchema>;
+export type CreateFarmer = z.infer<typeof CreateFarmerSchema>;
+export type UpdateFarmer = z.infer<typeof UpdateFarmerSchema>;
