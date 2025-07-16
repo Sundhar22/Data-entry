@@ -27,14 +27,14 @@ export function validateSchema<T>(schema: z.ZodSchema<T>, data: unknown): Valida
         }
         errors[path].push(issue.message);
       });
-      
+
       return {
         success: false,
         error: 'Validation failed',
         errors,
       };
     }
-    
+
     return {
       success: false,
       error: 'Unknown validation error',
@@ -48,12 +48,12 @@ export function validateRequest<T>(schema: z.ZodSchema<T>) {
     try {
       const body = await req.json();
       const result = validateSchema(schema, body);
-      
+
       if (!result.success) {
         return {
           success: false,
           response: NextResponse.json(
-            { 
+            {
               error: result.error,
               errors: result.errors,
               message: 'Invalid request data'
@@ -62,12 +62,13 @@ export function validateRequest<T>(schema: z.ZodSchema<T>) {
           ),
         };
       }
-      
+
       return {
         success: true,
         data: result.data!,
       };
     } catch (error) {
+      console.error('Error parsing request body:', error);
       return {
         success: false,
         response: NextResponse.json(
@@ -82,7 +83,7 @@ export function validateRequest<T>(schema: z.ZodSchema<T>) {
 // Query parameter validation
 export function validateQueryParams<T>(schema: z.ZodSchema<T>, params: URLSearchParams): ValidationResult<T> {
   const data: Record<string, string | string[]> = {};
-  
+
   for (const [key, value] of params.entries()) {
     if (data[key]) {
       if (Array.isArray(data[key])) {
@@ -94,7 +95,7 @@ export function validateQueryParams<T>(schema: z.ZodSchema<T>, params: URLSearch
       data[key] = value;
     }
   }
-  
+
   return validateSchema(schema, data);
 }
 
@@ -115,8 +116,8 @@ export const PaginationSchema = z.object({
 });
 
 export const DateRangeSchema = z.object({
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
+  startDate: z.iso.datetime().optional(),
+  endDate: z.iso.datetime().optional(),
 });
 
 export type PaginationParams = z.infer<typeof PaginationSchema>;

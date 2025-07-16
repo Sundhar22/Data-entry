@@ -5,7 +5,6 @@ import { validateRequest } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
 export async function GET(): Promise<NextResponse> {
-  console.log('API route called: /api/commissioner/me');
   
   try {
     const temp_id = 'cmd5jn3800000cpye9csrtue6';
@@ -54,18 +53,18 @@ export async function PUT(req: Request): Promise<NextResponse> {
       console.log('Commissioner not found');
       return NextResponse.json({ error: "Commissioner not found" }, { status: 404 });
     }
-
+    
     const updatedCommissioner = await prisma.commissioner.update({
       where: { id: temp_id },
       data: {
-        name: validatedData.name,
-        email: validatedData.email,
-        phone: validatedData.phone,
-        location: validatedData.location,
-        commission_rate: validatedData.commission_rate,
+        name: validatedData.name || existingCommissioner.name,
+        email: validatedData.email || existingCommissioner.email,
+        phone: validatedData.phone || existingCommissioner.phone,
+        location: validatedData.location || existingCommissioner.location,
+        commission_rate: validatedData.commission_rate !== undefined ? validatedData.commission_rate : existingCommissioner.commission_rate,
       }
-    });
-
+    }); 
+    
     return NextResponse.json(updatedCommissioner, { status: 200 });
   } catch (error) {
     console.error('Error in /api/commissioner/me:', error);
