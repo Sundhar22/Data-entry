@@ -1,3 +1,4 @@
+import CommissionerProfile from '@/components/CommissionerProfile';
 import Footer from '@/components/layout/footer';
 import Header from '@/components/layout/header';
 import React from 'react';
@@ -20,6 +21,7 @@ export default function HomePage() {
         justifyContent: 'center'
       }}>
         <h2 style={{ color: '#333', fontWeight: 400 }}>Welcome to the Data Entry App</h2>
+        <CommissionerProfile />
       </main>
       <Footer />
     </div>

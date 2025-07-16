@@ -5,8 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../app/generated/prisma"
+  provider      = "prisma-client-js"
+  output        = "../generated/prisma"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -20,6 +21,7 @@ model Commissioner {
   location        String
   phone           String
   email           String   @unique
+  password        String
   commission_rate Float    @default(5.0) // percentage
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
@@ -123,9 +125,9 @@ model AuctionItem {
 
   // Relations
   session    AuctionSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
-  farmer     Farmer         @relation(fields: [farmer_id], references: [id], onDelete: Cascade)
-  product    Product        @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  buyer      Buyer          @relation(fields: [buyer_id], references: [id], onDelete: Cascade)
+  farmer     Farmer         @relation(fields: [farmer_id], references: [id])
+  product    Product        @relation(fields: [product_id], references: [id])
+  buyer      Buyer          @relation(fields: [buyer_id], references: [id])
   bill_items BillItem[]
 
   @@map("auction_items")
@@ -142,12 +144,13 @@ model Bill {
   payment_status    PaymentStatus @default(UNPAID)
   printed_at        DateTime?
   paid_at           DateTime?
+  other_charges     Json?
   created_at        DateTime      @default(now())
   updated_at        DateTime      @updatedAt
 
   // Relations
-  session    AuctionSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
-  farmer     Farmer         @relation(fields: [farmer_id], references: [id], onDelete: Cascade)
+  session    AuctionSession @relation(fields: [session_id], references: [id])
+  farmer     Farmer         @relation(fields: [farmer_id], references: [id])
   bill_items BillItem[]
 
   @@map("bills")
@@ -165,7 +168,7 @@ model BillItem {
 
   // Relations
   bill         Bill        @relation(fields: [bill_id], references: [id], onDelete: Cascade)
-  auction_item AuctionItem @relation(fields: [auction_item_id], references: [id], onDelete: Cascade)
+  auction_item AuctionItem @relation(fields: [auction_item_id], references: [id])
 
   @@map("bill_items")
 }
