@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { verifyToken } from './jwt';
+import { verifyAccessToken } from './jwt';
 
 export async function getAuthCommissioner() {
   const cookieStore = await cookies();
@@ -7,7 +7,7 @@ export async function getAuthCommissioner() {
   if (!token) return null;
 
   try {
-    const decoded = verifyToken(token) as { id: string; email: string };
+    const decoded = verifyAccessToken(token) as { id: string; email: string };
     return decoded;
   } catch (err) {
     return null;
