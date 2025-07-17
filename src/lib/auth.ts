@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAccessToken, verifyRefreshToken, signAccessToken } from './jwt';
 import { AuthenticatedRequest, JWTPayload } from '@/types/auth';
+import { CommonErrors } from './api-response';
+import { handleApiError } from './error-handler';
 import prisma from './prisma';
 
 export async function verifyAuth(req: NextRequest): Promise<{
@@ -15,7 +17,7 @@ export async function verifyAuth(req: NextRequest): Promise<{
     if (!accessToken && !refreshToken) {
       return {
         success: false,
-        response: NextResponse.json({ error: 'No authentication tokens found' }, { status: 401 })
+        response: CommonErrors.Unauthorized('No authentication tokens found')
       };
     }
 
@@ -23,7 +25,7 @@ export async function verifyAuth(req: NextRequest): Promise<{
     if (accessToken) {
       try {
         const decoded = verifyAccessToken(accessToken) as JWTPayload;
-        
+
         // Verify user still exists in database
         const user = await prisma.commissioner.findUnique({
           where: { id: decoded.id },
@@ -33,7 +35,7 @@ export async function verifyAuth(req: NextRequest): Promise<{
         if (!user) {
           return {
             success: false,
-            response: NextResponse.json({ error: 'User not found' }, { status: 401 })
+            response: CommonErrors.Unauthorized('User not found')
           };
         }
 
@@ -51,7 +53,7 @@ export async function verifyAuth(req: NextRequest): Promise<{
     if (refreshToken) {
       try {
         const decoded = verifyRefreshToken(refreshToken) as JWTPayload;
-        
+
         // Verify user still exists in database
         const user = await prisma.commissioner.findUnique({
           where: { id: decoded.id },
@@ -61,7 +63,7 @@ export async function verifyAuth(req: NextRequest): Promise<{
         if (!user) {
           return {
             success: false,
-            response: NextResponse.json({ error: 'User not found' }, { status: 401 })
+            response: CommonErrors.Unauthorized('User not found')
           };
         }
 
@@ -73,7 +75,7 @@ export async function verifyAuth(req: NextRequest): Promise<{
         });
 
         // Create response with new access token
-        const response = NextResponse.json({ 
+        const response = NextResponse.json({
           message: 'Token refreshed successfully',
           user: { id: user.id, email: user.email, name: user.name }
         });
@@ -94,20 +96,20 @@ export async function verifyAuth(req: NextRequest): Promise<{
         // Both tokens are invalid
         return {
           success: false,
-          response: NextResponse.json({ error: 'Invalid or expired tokens' }, { status: 401 })
+          response: CommonErrors.Unauthorized('Invalid or expired tokens')
         };
       }
     }
 
     return {
       success: false,
-      response: NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      response: CommonErrors.Unauthorized('Authentication required')
     };
   } catch (error) {
     console.error('Authentication error:', error);
     return {
       success: false,
-      response: NextResponse.json({ error: 'Authentication failed' }, { status: 500 })
+      response: handleApiError(error, 'Authentication')
     };
   }
 }
@@ -115,7 +117,7 @@ export async function verifyAuth(req: NextRequest): Promise<{
 export function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextResponse>) {
   return async (req: NextRequest): Promise<NextResponse> => {
     const authResult = await verifyAuth(req);
-    
+
     if (!authResult.success) {
       return authResult.response!;
     }
@@ -134,7 +136,7 @@ export function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextRes
 
 export async function requireAuth(req: NextRequest): Promise<{ success: boolean; user?: JWTPayload; error?: NextResponse }> {
   const authResult = await verifyAuth(req);
-  
+
   if (!authResult.success) {
     return { success: false, error: authResult.response! };
   }
