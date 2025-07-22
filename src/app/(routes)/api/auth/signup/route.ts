@@ -5,15 +5,7 @@ import { createSuccessResponse, CommonErrors } from '@/lib/api-response';
 import { withErrorHandling, ConflictError } from '@/lib/error-handler';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-
-// Define validation schema
-const signupSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.email('Please provide a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters long'),
-  location: z.string().min(1, 'Location is required'),
-  phone: z.string().min(1, 'Phone is required')
-});
+import { signupSchema } from '@/schemas/auth';
 
 async function signupHandler(req: NextRequest) {
   const body = await req.json();

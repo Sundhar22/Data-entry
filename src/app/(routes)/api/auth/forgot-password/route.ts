@@ -5,14 +5,11 @@ import { sendResetEmail } from "@/lib/mail";
 import { withErrorHandling, ValidationError } from "@/lib/error-handler";
 import { NextResponse } from "next/server";
 import { createSuccessResponse } from "@/lib/api-response";
-
-const schema = z.object({
-  email: z.email("Invalid email format"),
-});
+import { forgotPasswordSchema } from "@/schemas/auth"; // Import from schemas
 
 async function forgetPassword(req: Request): Promise<NextResponse> {
   const body = await req.json();
-  const result = schema.safeParse(body);
+  const result = forgotPasswordSchema.safeParse(body);
 
   if (!result.success) {
     throw new ValidationError("Invalid email format", result.error.flatten().fieldErrors);

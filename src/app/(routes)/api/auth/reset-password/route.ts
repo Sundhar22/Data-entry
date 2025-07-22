@@ -1,47 +1,68 @@
-// app/api/commissioner/reset-password/route.ts
 import { z } from "zod";
-import  prisma from "@/lib/prisma";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 import { withErrorHandling, ValidationError, NotFoundError } from "@/lib/error-handler";
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
+import { createSuccessResponse } from "@/lib/api-response";
+import { resetPasswordSchema } from "@/schemas/auth";
 
-const schema = z.object({
-  email: z.email(),
-  token: z.string(),
-  password: z.string().min(8, "Password must be at least 8 characters long"),
-});
-
-export const POST = withErrorHandling(async (req: Request): Promise<NextResponse> => {
+async function resetPassword(req: Request): Promise<NextResponse> {
   const body = await req.json();
-  const result = schema.safeParse(body);
+  const result = resetPasswordSchema.safeParse(body);
 
   if (!result.success) {
-    throw new ValidationError("Invalid input", result.error.message);
+    throw new ValidationError("Validation failed", result.error.flatten().fieldErrors);
   }
 
-  const { email, token, password } = result.data;
+  const { token, email, password } = result.data;
 
-  const commissioner = await prisma.commissioner.findUnique({ where: { email } });
-
-  if (
-    !commissioner ||
-    commissioner.resetToken !== token ||
-    !commissioner.resetTokenExpiry ||
-    commissioner.resetTokenExpiry < new Date()
-  ) {
-    throw new ValidationError("Invalid or expired token");
-  }
-
-  const hashed = await bcrypt.hash(password, 10);
-
-  await prisma.commissioner.update({
-    where: { email },
-    data: {
-      password: hashed,
-      resetToken: null,
-      resetTokenExpiry: null,
-    },
+  // Find the commissioner
+  const commissioner = await prisma.commissioner.findUnique({
+    where: { email }
   });
 
-  return NextResponse.json({ message: "Password reset successful" });
-}, "ResetPassword");
+  if (!commissioner) {
+    throw new NotFoundError("Invalid reset request");
+  }
+
+  // Find valid reset token
+  const passwordReset = await prisma.passwordReset.findFirst({
+    where: {
+      token,
+      commissioner_id: commissioner.id,
+      used: false,
+      expires_at: { gt: new Date() }
+    }
+  });
+
+  if (!passwordReset) {
+    throw new NotFoundError("Invalid or expired reset token");
+  }
+
+  // Hash new password
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  // Update password and mark token as used
+  await prisma.$transaction([
+    // Update commissioner password
+    prisma.commissioner.update({
+      where: { id: commissioner.id },
+      data: { password: hashedPassword }
+    }),
+    
+    // Mark token as used
+    prisma.passwordReset.update({
+      where: { id: passwordReset.id },
+      data: { 
+        used: true,
+        used_at: new Date()
+      }
+    })
+  ]);
+
+  return createSuccessResponse({
+    message: "Password reset successfully"
+  });
+}
+
+export const POST = withErrorHandling(resetPassword, "ResetPassword");
