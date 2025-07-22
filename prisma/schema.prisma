@@ -22,20 +22,33 @@ model Commissioner {
   phone           String
   email           String   @unique
   password        String
-  commission_rate Float    @default(5.0) // percentage
+  commission_rate Float    @default(5.0)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
-
-  //password resets
-  resetToken       String?
-  resetTokenExpiry DateTime?
 
   // Relations
   farmers          Farmer[]
   buyers           Buyer[]
   auction_sessions AuctionSession[]
+  password_resets  PasswordReset[]
 
   @@map("commissioners")
+}
+
+// Separate table for password resets
+model PasswordReset {
+  id               String    @id @default(cuid())
+  commissioner_id  String
+  token            String    @unique
+  expires_at       DateTime
+  used             Boolean   @default(false)
+  created_at       DateTime  @default(now())
+  used_at          DateTime?
+
+  // Relations
+  commissioner Commissioner @relation(fields: [commissioner_id], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
 }
 
 model Farmer {

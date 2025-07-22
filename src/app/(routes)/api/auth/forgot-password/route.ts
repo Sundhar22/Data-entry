@@ -4,38 +4,61 @@ import { randomBytes } from "crypto";
 import { sendResetEmail } from "@/lib/mail";
 import { withErrorHandling, ValidationError } from "@/lib/error-handler";
 import { NextResponse } from "next/server";
+import { createSuccessResponse } from "@/lib/api-response";
 
 const schema = z.object({
-  email: z.email(),
+  email: z.email("Invalid email format"),
 });
 
-export const POST = withErrorHandling(async (req: Request): Promise<NextResponse> => {
+async function forgetPassword(req: Request): Promise<NextResponse> {
   const body = await req.json();
   const result = schema.safeParse(body);
 
   if (!result.success) {
-    throw new ValidationError("Invalid email format", result.error.message);
+    throw new ValidationError("Invalid email format", result.error.flatten().fieldErrors);
   }
 
   const { email } = result.data;
 
-  const commissioner = await prisma.commissioner.findUnique({ where: { email } });
+  const commissioner = await prisma.commissioner.findUnique({
+    where: { email }
+  });
 
   if (!commissioner) {
-    // Return generic success response to prevent user enumeration
-    return NextResponse.json({ message: "If this email exists, a reset link has been sent" });
+    return createSuccessResponse({
+      message: "If this email exists, a reset link has been sent"
+    });
   }
 
   const token = randomBytes(32).toString("hex");
-  const expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
 
-  await prisma.commissioner.update({
-    where: { email },
-    data: { resetToken: token, resetTokenExpiry: expires },
+  // Invalidate any existing unused reset tokens for this user
+  await prisma.passwordReset.updateMany({
+    where: {
+      commissioner_id: commissioner.id,
+      used: false,
+      expires_at: { gt: new Date() }
+    },
+    data: { used: true }
   });
 
+  // Create new password reset record
+  await prisma.passwordReset.create({
+    data: {
+      commissioner_id: commissioner.id,
+      token,
+      expires_at: expiresAt
+    }
+  });
+
+  // Send reset email
   const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/commissioner/reset-password?token=${token}&email=${email}`;
   await sendResetEmail(email, resetLink);
 
-  return NextResponse.json({ message: "If this email exists, a reset link has been sent" });
-}, "ForgotPassword");
+  return createSuccessResponse({
+    message: "If this email exists, a reset link has been sent"
+  });
+}
+
+export const POST = withErrorHandling(forgetPassword, "ForgotPassword");
