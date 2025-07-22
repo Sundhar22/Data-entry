@@ -26,6 +26,10 @@ model Commissioner {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
+  //password resets
+  resetToken       String?
+  resetTokenExpiry DateTime?
+
   // Relations
   farmers          Farmer[]
   buyers           Buyer[]
