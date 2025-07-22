@@ -5,6 +5,7 @@ import { withErrorHandling, ValidationError, NotFoundError } from "@/lib/error-h
 import { NextResponse } from "next/server";
 import { createSuccessResponse } from "@/lib/api-response";
 import { resetPasswordSchema } from "@/schemas/auth";
+import { hashPassword } from "@/lib/bcrypt";
 
 async function resetPassword(req: Request): Promise<NextResponse> {
   const body = await req.json();
@@ -40,7 +41,7 @@ async function resetPassword(req: Request): Promise<NextResponse> {
   }
 
   // Hash new password
-  const hashedPassword = await bcrypt.hash(password, 12);
+  const hashedPassword = await hashPassword(password);
 
   // Update password and mark token as used
   await prisma.$transaction([
