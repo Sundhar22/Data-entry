@@ -1,20 +1,15 @@
-import { requireAuth } from "@/lib/auth";
+import { withAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse } from "@/lib/api-response";
 import { withErrorHandling, NotFoundError } from "@/lib/error-handler";
+import { AuthenticatedRequest } from "@/types/auth";
 import prisma from "@/lib/prisma";
 
 async function getFarmerByIdHandler(
-    req: NextRequest,
+    req: AuthenticatedRequest,
     { params }: { params: { id: string } }
 ): Promise<NextResponse> {
-    // Verify authentication
-    const authResult = await requireAuth(req);
-    if (!authResult.success) {
-        return authResult.error!;
-    }
-
-    const userId = authResult.user!.id;
+    const userId = req.user.id;
     const farmerId = params.id;
 
     const farmer = await prisma.farmer.findUnique({
@@ -44,8 +39,8 @@ export async function GET(
     req: NextRequest,
     { params }: { params: { id: string } }
 ): Promise<NextResponse> {
-    return withErrorHandling(
-        (req: NextRequest) => getFarmerByIdHandler(req, { params }),
+    return withAuth(withErrorHandling(
+        (req: AuthenticatedRequest) => getFarmerByIdHandler(req, { params }),
         'Get Farmer by ID'
-    )(req);
+    ))(req);
 }
