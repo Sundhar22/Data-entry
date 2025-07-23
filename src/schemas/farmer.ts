@@ -17,17 +17,14 @@ export const CreateFarmerSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().min(1, "Phone number is required"),
   village: z.string().min(1, "Village is required"),
-  commissioner_id: z.cuid(),
   is_active: z.boolean().default(true).optional(),
 });
 
-// Schema for updating a farmer (all fields optional except id)
+// Schema for updating a farmer (all fields optional, id comes from route params)
 export const UpdateFarmerSchema = z.object({
-  id: z.cuid(),
   name: z.string().min(1, "Name is required").optional(),
   phone: z.string().min(1, "Phone number is required").optional(),
   village: z.string().min(1, "Village is required").optional(),
-  commissioner_id: z.cuid().optional(),
   is_active: z.boolean().optional(),
 });
 
