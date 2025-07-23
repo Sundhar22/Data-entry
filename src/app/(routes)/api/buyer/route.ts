@@ -9,7 +9,11 @@ import { AuthenticatedRequest } from "@/types/auth";
 
 // GET /api/buyers
 async function listBuyersHandler(_req: AuthenticatedRequest): Promise<NextResponse> {
+    const userId = _req.user.id;
   const buyers = await prisma.buyer.findMany({
+    where: {
+        commissioner_id: userId
+    },
     orderBy: { created_at: "desc" }
   });
   return createSuccessResponse(buyers);
