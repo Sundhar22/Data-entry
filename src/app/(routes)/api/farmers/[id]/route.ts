@@ -9,10 +9,10 @@ import { UpdateFarmerSchema, UpdateFarmer } from "@/schemas/farmer";
 
 async function getFarmerByIdHandler(
     req: AuthenticatedRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
     const userId = req.user.id;
-    const farmerId = params.id;
+    const { id: farmerId } = await params;
 
     const farmer = await prisma.farmer.findUnique({
         where: {
@@ -40,10 +40,10 @@ async function getFarmerByIdHandler(
 // PUT /api/farmers/:id
 async function updateFarmerByIdHandler(
     req: AuthenticatedRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
     const userId = req.user.id;
-    const farmerId = params.id;
+    const { id: farmerId } = await params;
 
     const validator = validateRequest(UpdateFarmerSchema);
     const validation = await validator(req);
@@ -78,10 +78,10 @@ async function updateFarmerByIdHandler(
 // DELETE /api/farmers/:id
 async function deleteFarmerByIdHandler(
     req: AuthenticatedRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
     const userId = req.user.id;
-    const farmerId = params.id;
+    const { id: farmerId } = await params;
 
     const existingFarmer = await prisma.farmer.findUnique({
         where: { id: farmerId, commissioner_id: userId }
@@ -100,7 +100,7 @@ async function deleteFarmerByIdHandler(
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
     return withAuth(withErrorHandling(
         (req: AuthenticatedRequest) => getFarmerByIdHandler(req, { params }),
@@ -110,7 +110,7 @@ export async function GET(
 
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
     return withAuth(withErrorHandling(
         (req: AuthenticatedRequest) => updateFarmerByIdHandler(req, { params }),
@@ -120,7 +120,7 @@ export async function PUT(
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
     return withAuth(withErrorHandling(
         (req: AuthenticatedRequest) => deleteFarmerByIdHandler(req, { params }),

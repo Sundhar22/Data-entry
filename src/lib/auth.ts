@@ -45,7 +45,7 @@ export async function verifyAuth(req: NextRequest): Promise<{
         };
       } catch (accessTokenError) {
         // Access token is invalid, try refresh token
-        console.log('Access token invalid, trying refresh token');
+        console.log('Access token invalid, trying refresh token: ', accessTokenError);
       }
     }
 
@@ -93,6 +93,7 @@ export async function verifyAuth(req: NextRequest): Promise<{
           response
         };
       } catch (refreshTokenError) {
+        console.log('Refresh token invalid: ', refreshTokenError);
         // Both tokens are invalid
         return {
           success: false,
@@ -122,15 +123,28 @@ export function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextRes
       return authResult.response!;
     }
 
-    // If we got a response (token was refreshed), return it
-    if (authResult.response) {
-      return authResult.response;
-    }
-
     // Attach user to request
     (req as AuthenticatedRequest).user = authResult.user!;
 
-    return handler(req as AuthenticatedRequest);
+    // Execute the original handler
+    const response = await handler(req as AuthenticatedRequest);
+
+    // If token was refreshed, add the new access token cookie to the response
+    if (authResult.response) {
+      const refreshResponse = authResult.response;
+      const accessTokenCookie = refreshResponse.cookies.get('access_token');
+      
+      if (accessTokenCookie) {
+        response.cookies.set('access_token', accessTokenCookie.value, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 15 * 60 // 15 minutes
+        });
+      }
+    }
+
+    return response;
   };
 }
 

@@ -9,6 +9,7 @@ export async function middleware(request: NextRequest) {
     '/api/products',
     '/api/bills',
     '/api/auction',
+    '/api/sessions',
     // Add more protected routes as needed
   ];
 
