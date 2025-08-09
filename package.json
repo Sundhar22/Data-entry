@@ -7,7 +7,11 @@
     "dev:turbo": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "triggers:install": "pnpx tsx scripts/triggers.ts install",
+    "triggers:remove": "pnpx tsx scripts/triggers.ts remove",
+    "triggers:list": "pnpx tsx scripts/triggers.ts list",
+    "triggers:test": "pnpx tsx scripts/triggers.ts test"
   },
   "prisma": {
     "seed": "pnpx tsx prisma/seed.ts"

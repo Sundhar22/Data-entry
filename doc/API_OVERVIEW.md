@@ -213,6 +213,145 @@ All endpoints are relative to your application base URL: `http://localhost:3000`
 
 ---
 
+## 📅 Sessions Endpoints
+
+### GET /api/sessions
+**Description:** List all auction sessions for authenticated commissioner with filtering options
+
+**Query Parameters:**
+- `status` (optional): Filter by status ('ACTIVE' or 'COMPLETED')
+- `startDate` (optional): Filter sessions from this date (ISO string)
+- `endDate` (optional): Filter sessions up to this date (ISO string)
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10, max: 100)
+- `sortBy` (optional): Sort field ('date', 'created_at', 'updated_at') (default: 'date')
+- `sortOrder` (optional): Sort order ('asc' or 'desc') (default: 'desc')
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "cm123abc",
+      "date": "2025-08-03T10:00:00.000Z",
+      "commissioner_id": "cm456def",
+      "status": "ACTIVE",
+      "created_at": "2025-08-03T09:00:00.000Z",
+      "updated_at": "2025-08-03T09:00:00.000Z",
+      "_count": {
+        "auction_items": 5,
+        "bills": 2
+      }
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 1,
+    "totalPages": 1
+  }
+}
+```
+
+### POST /api/sessions
+**Description:** Create new auction session
+
+**Request Body:**
+```json
+{
+  "date": "2025-08-03T10:00:00.000Z" // Optional, defaults to current date/time
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "cm123abc",
+    "date": "2025-08-03T10:00:00.000Z",
+    "commissioner_id": "cm456def",
+    "status": "ACTIVE",
+    "created_at": "2025-08-03T10:00:00.000Z",
+    "updated_at": "2025-08-03T10:00:00.000Z",
+    "_count": {
+      "auction_items": 0,
+      "bills": 0
+    }
+  }
+}
+```
+
+### GET /api/sessions/[id]
+**Description:** Get detailed session information including auction items and bills
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "cm123abc",
+    "date": "2025-08-03T10:00:00.000Z",
+    "commissioner_id": "cm456def",
+    "status": "ACTIVE",
+    "created_at": "2025-08-03T09:00:00.000Z",
+    "updated_at": "2025-08-03T09:00:00.000Z",
+    "auction_items": [...],
+    "bills": [...],
+    "_count": {
+      "auction_items": 5,
+      "bills": 2
+    }
+  }
+}
+```
+
+### PUT /api/sessions/[id]
+**Description:** Update session status or date
+
+**Request Body:**
+```json
+{
+  "status": "COMPLETED", // Optional: 'ACTIVE' or 'COMPLETED'
+  "date": "2025-08-03T10:00:00.000Z" // Optional
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "cm123abc",
+    "date": "2025-08-03T10:00:00.000Z",
+    "commissioner_id": "cm456def",
+    "status": "COMPLETED",
+    "created_at": "2025-08-03T09:00:00.000Z",
+    "updated_at": "2025-08-03T10:30:00.000Z",
+    "_count": {
+      "auction_items": 5,
+      "bills": 2
+    }
+  }
+}
+```
+
+### DELETE /api/sessions/[id]
+**Description:** Delete session (only if no auction items or bills exist)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Session deleted successfully"
+  }
+}
+```
+
+---
+
 ## 📊 Data Models
 
 ### Commissioner
@@ -239,6 +378,18 @@ All endpoints are relative to your application base URL: `http://localhost:3000`
   village: string;
   commissioner_id: string; // Foreign key
   is_active: boolean;   // Default: true
+  created_at: Date;
+  updated_at: Date;
+}
+```
+
+### AuctionSession
+```typescript
+{
+  id: string;           // CUID
+  date: Date;           // Session date/time
+  commissioner_id: string; // Foreign key
+  status: 'ACTIVE' | 'COMPLETED'; // Session status
   created_at: Date;
   updated_at: Date;
 }
@@ -311,6 +462,7 @@ All endpoints are relative to your application base URL: `http://localhost:3000`
 
 - [Authentication Guide](./AUTHENTICATION_GUIDE.md) - Detailed authentication system documentation
 - [Farmers API](./FARMERS_API_DOCS.md) - Detailed farmer endpoints documentation
+- [Sessions API](./SESSIONS_API_DOCS.md) - Detailed session endpoints documentation
 - [Validation Guide](./VALIDATION_GUIDE.md) - Zod validation system documentation
 
 ---
