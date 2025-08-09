@@ -443,5 +443,231 @@ GET /api/sessions?status=ACTIVE&startDate=2025-07-01&endDate=2025-07-31
 GET /api/sessions?sortBy=date&sortOrder=desc&limit=20
 
 # Get completed sessions for reporting
+# Get completed sessions for reporting
 GET /api/sessions?status=COMPLETED&page=1&limit=50
+```
+
+## Auction Items Management
+
+The following endpoints manage auction items within sessions. Note that `GET /api/sessions/[id]` already returns all auction items for a session, but these endpoints provide more granular control.
+
+### 5. List Session Items
+
+**GET** `/api/sessions/{sessionId}/items`
+
+Retrieves all auction items for a specific session with filtering and pagination.
+
+#### Query Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `farmer_id` | string | - | Filter by farmer ID |
+| `product_id` | string | - | Filter by product ID |
+| `buyer_id` | string | - | Filter by buyer ID |
+| `paid` | string | - | Filter by payment status ('true' for paid items, 'false' for unpaid) |
+| `page` | number | 1 | Page number for pagination |
+| `limit` | number | 10 | Number of items per page (max 100) |
+| `sortBy` | string | 'created_at' | Sort field ('created_at', 'final_price', 'quantity') |
+| `sortOrder` | string | 'desc' | Sort order ('asc' or 'desc') |
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "item_id",
+      "session_id": "session_id",
+      "farmer_id": "farmer_id",
+      "product_id": "product_id",
+      "buyer_id": "buyer_id",
+      "unit": "KG",
+      "quantity": 50.5,
+      "final_price": 2525.00,
+      "bill_id": null,
+      "created_at": "2025-08-03T10:15:00.000Z",
+      "updated_at": "2025-08-03T10:15:00.000Z",
+      "farmer": {
+        "id": "farmer_id",
+        "name": "John Farmer",
+        "phone": "+1234567890",
+        "village": "Village Name"
+      },
+      "product": {
+        "id": "product_id",
+        "name": "Tomatoes",
+        "category": {
+          "id": "category_id",
+          "name": "Vegetables"
+        }
+      },
+      "buyer": {
+        "id": "buyer_id",
+        "name": "Buyer Name",
+        "phone": "+0987654321"
+      },
+      "bill": null
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 1,
+    "totalPages": 1,
+    "timestamp": "2025-08-03T10:30:00.000Z"
+  }
+}
+```
+
+### 6. Add Auction Item
+
+**POST** `/api/sessions/{sessionId}/items`
+
+Adds a new auction item to an active session.
+
+#### Request Body
+
+```json
+{
+  "farmer_id": "farmer_id",
+  "product_id": "product_id",
+  "buyer_id": "buyer_id",
+  "unit": "KG",
+  "quantity": 50.5,
+  "final_price": 2525.00
+}
+```
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "new_item_id",
+    "session_id": "session_id",
+    "farmer_id": "farmer_id",
+    "product_id": "product_id",
+    "buyer_id": "buyer_id",
+    "unit": "KG",
+    "quantity": 50.5,
+    "final_price": 2525.00,
+    "bill_id": null,
+    "created_at": "2025-08-03T10:15:00.000Z",
+    "updated_at": "2025-08-03T10:15:00.000Z",
+    "farmer": { /* farmer details */ },
+    "product": { /* product details */ },
+    "buyer": { /* buyer details */ }
+  }
+}
+```
+
+### 7. Get Auction Item
+
+**GET** `/api/sessions/{sessionId}/items/{itemId}`
+
+Retrieves a specific auction item by ID.
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "item_id",
+    "session_id": "session_id",
+    "farmer_id": "farmer_id",
+    "product_id": "product_id",
+    "buyer_id": "buyer_id",
+    "unit": "KG",
+    "quantity": 50.5,
+    "final_price": 2525.00,
+    "bill_id": null,
+    "created_at": "2025-08-03T10:15:00.000Z",
+    "updated_at": "2025-08-03T10:15:00.000Z",
+    "farmer": { /* farmer details */ },
+    "product": { /* product details */ },
+    "buyer": { /* buyer details */ },
+    "bill": null
+  }
+}
+```
+
+### 8. Update Auction Item
+
+**PUT** `/api/sessions/{sessionId}/items/{itemId}`
+
+Updates an existing auction item. Only unpaid items in active sessions can be updated.
+
+#### Request Body (all fields optional)
+
+```json
+{
+  "farmer_id": "new_farmer_id",
+  "product_id": "new_product_id",
+  "buyer_id": "new_buyer_id",
+  "unit": "QUINTAL",
+  "quantity": 75.0,
+  "final_price": 3750.00
+}
+```
+
+#### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    /* Updated auction item with relations */
+  }
+}
+```
+
+### 9. Delete Auction Item
+
+**DELETE** `/api/sessions/{sessionId}/items/{itemId}`
+
+Deletes an auction item. Only unpaid items in active sessions can be deleted.
+
+#### Response
+
+```
+204 No Content
+```
+
+## Business Rules for Auction Items
+
+1. **Session Status**: Items can only be added/updated/deleted in ACTIVE sessions
+2. **Payment Status**: Paid items (items with bill_id) cannot be modified or deleted
+3. **Validation**: All referenced farmers, buyers, and products must exist and be active
+4. **Authorization**: Only commissioners who own the session can manage its items
+
+## API Endpoint Summary
+
+### Session Management
+- `GET /api/sessions` - List sessions with summary data
+- `POST /api/sessions` - Create new session
+- `GET /api/sessions/[id]` - **Get session details INCLUDING all auction items**
+- `PUT /api/sessions/[id]` - Update session
+- `DELETE /api/sessions/[id]` - Delete session
+
+### Auction Items Management
+- `GET /api/sessions/[id]/items` - List items with filtering (alternative to session detail)
+- `POST /api/sessions/[id]/items` - Add new auction item
+- `GET /api/sessions/[id]/items/[itemId]` - Get specific auction item
+- `PUT /api/sessions/[id]/items/[itemId]` - Update auction item
+- `DELETE /api/sessions/[id]/items/[itemId]` - Delete auction item
+
+## Clarification: Two Ways to Get Session Items
+
+You have **two options** to get auction items for a session:
+
+1. **`GET /api/sessions/[id]`** - Returns complete session details including ALL auction items, analytics, and summary data. This is the **recommended approach** for most use cases.
+
+2. **`GET /api/sessions/[id]/items`** - Returns ONLY auction items with advanced filtering, pagination, and search. Use this when you need specific filtering or pagination of items.
+
+Both endpoints return the same auction item data structure, but the session detail endpoint includes additional analytics and context.
+
+````
 ```

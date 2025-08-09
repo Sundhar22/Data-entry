@@ -131,8 +131,8 @@ model AuctionItem {
   product_id  String
   unit        Unit
   quantity    Float
-  final_price Float
-  buyer_id    String
+  rate        Float?   // Optional for partial creation
+  buyer_id    String?  // Optional for partial creation
   bill_id     String? // Link to bill when paid
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
@@ -140,7 +140,7 @@ model AuctionItem {
   session AuctionSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
   farmer  Farmer         @relation(fields: [farmer_id], references: [id])
   product Product        @relation(fields: [product_id], references: [id])
-  buyer   Buyer          @relation(fields: [buyer_id], references: [id])
+  buyer   Buyer?         @relation(fields: [buyer_id], references: [id])
   bill    Bill?          @relation(fields: [bill_id], references: [id])
 
   // Indexes for finding unpaid items
@@ -160,7 +160,7 @@ model Bill {
 
   // Aggregated totals from auction items
   total_quantity    Float // Sum of all quantities in this bill
-  gross_amount      Float // Sum of all final_prices
+  gross_amount      Float // Sum of all rates (rate * quantity)
   commission_rate   Float @default(5.0)
   commission_amount Float // gross_amount * commission_rate / 100
   other_charges     Float @default(0)

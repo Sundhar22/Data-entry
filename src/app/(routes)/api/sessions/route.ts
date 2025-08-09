@@ -72,7 +72,7 @@ async function getSessionsHandler(req: AuthenticatedRequest): Promise<NextRespon
                         select: {
                             id: true,
                             quantity: true,
-                            final_price: true,
+                            rate: true,
                             bill_id: true
                         }
                     },
@@ -94,7 +94,7 @@ async function getSessionsHandler(req: AuthenticatedRequest): Promise<NextRespon
         // Transform sessions to include summary data
         const transformedSessions = sessions.map(session => {
             const totalItems = session.auction_items.length;
-            const totalValue = session.auction_items.reduce((sum, item) => sum + item.final_price, 0);
+            const totalValue = session.auction_items.reduce((sum, item) => sum + (item.rate || 0), 0);
             const paidItems = session.auction_items.filter(item => item.bill_id !== null).length;
             const pendingItems = totalItems - paidItems;
 
