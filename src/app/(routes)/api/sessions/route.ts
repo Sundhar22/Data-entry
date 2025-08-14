@@ -72,7 +72,7 @@ async function getSessionsHandler(req: AuthenticatedRequest): Promise<NextRespon
                         select: {
                             id: true,
                             quantity: true,
-                            final_price: true,
+                            rate: true,
                             bill_id: true
                         }
                     },
@@ -94,7 +94,7 @@ async function getSessionsHandler(req: AuthenticatedRequest): Promise<NextRespon
         // Transform sessions to include summary data
         const transformedSessions = sessions.map(session => {
             const totalItems = session.auction_items.length;
-            const totalValue = session.auction_items.reduce((sum, item) => sum + item.final_price, 0);
+            const totalValue = session.auction_items.reduce((sum, item) => sum + (item.rate || 0), 0);
             const paidItems = session.auction_items.filter(item => item.bill_id !== null).length;
             const pendingItems = totalItems - paidItems;
 
@@ -141,22 +141,32 @@ async function createSessionHandler(req: AuthenticatedRequest): Promise<NextResp
 
     try {
         // Check if there's already an active session for today for this commissioner
+        const today = new Date();
+        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
+
         const existingActiveSession = await prisma.auctionSession.findFirst({
             where: {
-                commissioner_id: userId,
-                status: 'ACTIVE',
-                date: {
-                    gte: new Date(validatedData.date.toDateString()), // Start of day
-                    lt: new Date(new Date(validatedData.date.toDateString()).getTime() + 24 * 60 * 60 * 1000) // End of day
-                }
+            commissioner_id: userId,
+            status: 'ACTIVE',
+            date: {
+                gte: startOfToday,
+                lt: endOfToday
+            }
             }
         });
 
         if (existingActiveSession) {
+            const nextAvailableTime = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000); // Tomorrow at 00:00 AM
+            
             return NextResponse.json({
-                success: false,
-                message: "An active session already exists for this date",
-                data: { existingSessionId: existingActiveSession.id }
+            success: false,
+            message: "An active session already exists for today",
+            data: { 
+                existingSessionId: existingActiveSession.id,
+                nextAvailableAt: nextAvailableTime.toISOString(),
+                nextAvailableAtFormatted: nextAvailableTime.toLocaleString()
+            }
             }, { status: 409 });
         }
 

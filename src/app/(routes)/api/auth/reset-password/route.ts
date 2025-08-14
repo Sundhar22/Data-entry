@@ -1,6 +1,4 @@
-import { z } from "zod";
 import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 import { withErrorHandling, ValidationError, NotFoundError } from "@/lib/error-handler";
 import { NextResponse } from "next/server";
 import { createSuccessResponse } from "@/lib/api-response";
