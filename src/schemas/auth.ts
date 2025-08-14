@@ -6,7 +6,7 @@ export const signupSchema = z.object({
   email: z.email('Please provide a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters long'),
   location: z.string().min(1, 'Location is required'),
-  phone: z.string().min(1, 'Phone is required')
+  phone: z.string().regex(/^\+\d{1,3}\d{7,10}$/, 'Phone must be in format +countrycode followed by 7-10 digits')
 });
 
 // Login schema

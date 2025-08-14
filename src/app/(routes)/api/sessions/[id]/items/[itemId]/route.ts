@@ -1,11 +1,12 @@
 import { withAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse } from "@/lib/api-response";
-import { withErrorHandling, NotFoundError, ConflictError } from "@/lib/error-handler";
+import { withErrorHandling, NotFoundError } from "@/lib/error-handler";
 import { AuthenticatedRequest } from "@/types/auth";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/lib/validation";
 import { UpdateAuctionItemSchema } from "@/schemas/auction-item";
+import { validateSessionForOperation, validateAuctionItemForOperation } from "@/lib/session-validation";
 
 /**
  * GET /api/sessions/[id]/items/[itemId]
@@ -105,45 +106,9 @@ async function updateAuctionItemHandler(
     const validatedData = validation.data;
 
     try {
-        // Verify session exists, belongs to commissioner, and is ACTIVE
-        const session = await prisma.auctionSession.findFirst({
-            where: {
-                id: sessionId,
-                commissioner_id: userId
-            },
-            select: {
-                id: true,
-                status: true
-            }
-        });
-
-        if (!session) {
-            throw new NotFoundError('Session not found');
-        }
-
-        if (session.status !== 'ACTIVE') {
-            throw new ConflictError('Cannot update items in non-active session');
-        }
-
-        // Check if auction item exists and isn't already paid
-        const existingItem = await prisma.auctionItem.findFirst({
-            where: {
-                id: itemId,
-                session_id: sessionId
-            },
-            select: {
-                id: true,
-                bill_id: true
-            }
-        });
-
-        if (!existingItem) {
-            throw new NotFoundError('Auction item not found');
-        }
-
-        if (existingItem.bill_id) {
-            throw new ConflictError('Cannot update auction item that has already been paid');
-        }
+        // Comprehensive session and item validation
+        await validateSessionForOperation(sessionId, userId, 'UPDATE');
+        await validateAuctionItemForOperation(itemId, sessionId, 'UPDATE');
 
         // If updating farmer, verify farmer belongs to commissioner
         if (validatedData.farmer_id) {
@@ -249,45 +214,9 @@ async function deleteAuctionItemHandler(
     const { id: sessionId, itemId } = await params;
 
     try {
-        // Verify session exists, belongs to commissioner, and is ACTIVE
-        const session = await prisma.auctionSession.findFirst({
-            where: {
-                id: sessionId,
-                commissioner_id: userId
-            },
-            select: {
-                id: true,
-                status: true
-            }
-        });
-
-        if (!session) {
-            throw new NotFoundError('Session not found');
-        }
-
-        if (session.status !== 'ACTIVE') {
-            throw new ConflictError('Cannot delete items from non-active session');
-        }
-
-        // Check if auction item exists and isn't already paid
-        const existingItem = await prisma.auctionItem.findFirst({
-            where: {
-                id: itemId,
-                session_id: sessionId
-            },
-            select: {
-                id: true,
-                bill_id: true
-            }
-        });
-
-        if (!existingItem) {
-            throw new NotFoundError('Auction item not found');
-        }
-
-        if (existingItem.bill_id) {
-            throw new ConflictError('Cannot delete auction item that has already been paid');
-        }
+        // Comprehensive session and item validation
+        await validateSessionForOperation(sessionId, userId, 'DELETE');
+        await validateAuctionItemForOperation(itemId, sessionId, 'DELETE');
 
         // Delete auction item
         await prisma.auctionItem.delete({

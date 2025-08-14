@@ -1,4 +1,5 @@
 import { PrismaClient } from "../generated/prisma";
+import { execSync } from 'child_process';
 
 
 const prisma = new PrismaClient();
@@ -176,6 +177,21 @@ async function main() {
   }
 
   console.log('🎉 Seed completed successfully!');
+  
+  // Auto-install triggers after seeding
+  console.log('\n🔧 Installing database triggers...');
+  try {
+    execSync('node scripts/simple-triggers.js install', { 
+      stdio: 'inherit',
+      cwd: process.cwd()
+    });
+    console.log('✅ Database triggers installed automatically!');
+  } catch (error) {
+    console.log('⚠️  Trigger installation failed. Run manually: npm run triggers:install');
+    if (error instanceof Error) {
+      console.error('Error:', error.message);
+    }
+  }
 }
 
 main()

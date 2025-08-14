@@ -7,111 +7,151 @@ import prisma from "@/lib/prisma";
 import { validateRequest } from "@/lib/validation";
 import { UpdateSessionSchema } from "@/schemas/session";
 
-// Analytics types
-interface SessionWithItems {
-    auction_items: Array<{
-        id: string;
-        quantity: number;
-        bill: {
-            gross_amount: number;
-            commission_amount: number;
-        } | null;
-        farmer: {
-            id: string;
-            name: string;
-            village: string;
-        };
-        product: {
-            category: {
-                name: string;
-            };
-        };
-        buyer?: {
-            id: string;
-            name: string;
-        };
-    }>;
-}
-
 /**
- * Calculate comprehensive analytics for a session
- * Separated for future use and modularity
+ * Calculate comprehensive analytics for a session using database queries
+ * Optimized to avoid fetching all auction items
  */
-function calculateSessionAnalytics(session: SessionWithItems) {
-    // Calculate detailed session analytics
-    const soldItems = session.auction_items.filter(item => item.bill !== null);
-    const unsoldItems = session.auction_items.filter(item => item.bill === null);
+async function calculateSessionAnalytics(sessionId: string) {
+    // Get overview analytics
+    const overviewStats = await prisma.$queryRaw<Array<{
+        total_items: bigint;
+        paid_items: bigint;
+        unpaid_items: bigint;
+    }>>`
+        SELECT 
+            COUNT(*) as total_items,
+            COUNT(bill_id) as paid_items,
+            COUNT(*) - COUNT(bill_id) as unpaid_items
+        FROM auction_items 
+        WHERE session_id = ${sessionId}
+    `;
 
-    const totalRevenue = soldItems.reduce((sum: number, item) => {
-        return sum + (item.bill ? item.bill.gross_amount : 0);
-    }, 0);
+    // Get financial analytics
+    const financialStats = await prisma.$queryRaw<Array<{
+        total_revenue: number;
+        total_commission: number;
+        paid_items_count: bigint;
+    }>>`
+        SELECT 
+            COALESCE(SUM(b.gross_amount), 0) as total_revenue,
+            COALESCE(SUM(b.commission_amount), 0) as total_commission,
+            COUNT(DISTINCT ai.id) as paid_items_count
+        FROM auction_items ai
+        LEFT JOIN bills b ON ai.bill_id = b.id
+        WHERE ai.session_id = ${sessionId} AND ai.bill_id IS NOT NULL
+    `;
 
-    const totalCommission = soldItems.reduce((sum: number, item) => {
-        return sum + (item.bill ? item.bill.commission_amount : 0);
-    }, 0);
+    // Get unique participants count
+    const participantsStats = await prisma.$queryRaw<Array<{
+        total_farmers: bigint;
+        total_buyers: bigint;
+    }>>`
+        SELECT 
+            COUNT(DISTINCT ai.farmer_id) as total_farmers,
+            COUNT(DISTINCT ai.buyer_id) as total_buyers
+        FROM auction_items ai
+        WHERE ai.session_id = ${sessionId}
+    `;
 
-    // Get unique farmers and buyers
-    const uniqueFarmers = Array.from(
-        new Map(session.auction_items.map(item => [item.farmer.id, item.farmer])).values()
-    );
+    // Get farmers list
+    const farmers = await prisma.$queryRaw<Array<{
+        id: string;
+        name: string;
+        phone: string;
+        village: string;
+    }>>`
+        SELECT DISTINCT f.id, f.name, f.phone, f.village
+        FROM farmers f
+        INNER JOIN auction_items ai ON f.id = ai.farmer_id
+        WHERE ai.session_id = ${sessionId}
+        ORDER BY f.name
+    `;
 
-    const uniqueBuyers = Array.from(
-        new Map(
-            soldItems
-                .filter(item => item.buyer)
-                .map(item => [item.buyer!.id, item.buyer])
-        ).values()
-    );
+    // Get buyers list
+    const buyers = await prisma.$queryRaw<Array<{
+        id: string;
+        name: string;
+        phone: string;
+    }>>`
+        SELECT DISTINCT b.id, b.name, b.phone
+        FROM buyers b
+        INNER JOIN auction_items ai ON b.id = ai.buyer_id
+        WHERE ai.session_id = ${sessionId} AND ai.buyer_id IS NOT NULL
+        ORDER BY b.name
+    `;
 
-    // Get product categories breakdown
-    const categoryBreakdown = session.auction_items.reduce((acc: Record<string, {
+    // Get category breakdown
+    const categoryBreakdown = await prisma.$queryRaw<Array<{
+        category_name: string;
+        total_items: bigint;
+        sold_items: bigint;
+        total_quantity: number;
+        total_value: number;
+    }>>`
+        SELECT 
+            c.name as category_name,
+            COUNT(ai.id) as total_items,
+            COUNT(ai.bill_id) as sold_items,
+            SUM(ai.quantity) as total_quantity,
+            COALESCE(SUM(CASE WHEN ai.bill_id IS NOT NULL THEN b.gross_amount ELSE 0 END), 0) as total_value
+        FROM auction_items ai
+        INNER JOIN products p ON ai.product_id = p.id
+        INNER JOIN categories c ON p.category_id = c.id
+        LEFT JOIN bills b ON ai.bill_id = b.id
+        WHERE ai.session_id = ${sessionId}
+        GROUP BY c.id, c.name
+        ORDER BY c.name
+    `;
+
+    // Transform raw results
+    const overview = overviewStats[0] || { total_items: BigInt(0), paid_items: BigInt(0), unpaid_items: BigInt(0) };
+    const financial = financialStats[0] || { total_revenue: 0, total_commission: 0, paid_items_count: BigInt(0) };
+    const participants = participantsStats[0] || { total_farmers: BigInt(0), total_buyers: BigInt(0) };
+
+    const totalItems = Number(overview.total_items);
+    const paidItems = Number(overview.paid_items);
+    const totalRevenue = financial.total_revenue;
+    const totalCommission = financial.total_commission;
+    const paidItemsCount = Number(financial.paid_items_count);
+
+    // Transform category breakdown to match expected format
+    const categoryBreakdownObject = categoryBreakdown.reduce((acc, item) => {
+        acc[item.category_name] = {
+            total_items: Number(item.total_items),
+            sold_items: Number(item.sold_items),
+            total_quantity: Number(item.total_quantity),
+            total_value: Number(item.total_value)
+        };
+        return acc;
+    }, {} as Record<string, {
         total_items: number;
         sold_items: number;
         total_quantity: number;
         total_value: number;
-    }>, item) => {
-        const categoryName = item.product.category.name;
-        if (!acc[categoryName]) {
-            acc[categoryName] = {
-                total_items: 0,
-                sold_items: 0,
-                total_quantity: 0,
-                total_value: 0
-            };
-        }
-        acc[categoryName].total_items += 1;
-        acc[categoryName].total_quantity += item.quantity;
-        if (item.bill) {
-            acc[categoryName].sold_items += 1;
-            acc[categoryName].total_value += item.bill.gross_amount;
-        }
-        return acc;
-    }, {});
+    }>);
 
     return {
         overview: {
-            total_items: session.auction_items.length,
-            sold_items: soldItems.length,
-            unsold_items: unsoldItems.length,
-            completion_rate: session.auction_items.length > 0 
-                ? Math.round((soldItems.length / session.auction_items.length) * 100) 
-                : 0
+            total_items: totalItems,
+            paid_farmer: paidItems,
+            unpaid_farmer: Number(overview.unpaid_items),
+            completion_rate: totalItems > 0 ? Math.round((paidItems / totalItems) * 100) : 0
         },
         financial: {
             total_revenue: totalRevenue,
             total_commission: totalCommission,
             farmer_earnings: totalRevenue - totalCommission,
-            average_item_value: soldItems.length > 0 ? totalRevenue / soldItems.length : 0
+            average_item_value: paidItemsCount > 0 ? totalRevenue / paidItemsCount : 0
         },
         participants: {
-            total_farmers: uniqueFarmers.length,
-            total_buyers: uniqueBuyers.length,
-            farmers: uniqueFarmers,
-            buyers: uniqueBuyers
+            total_farmers: Number(participants.total_farmers),
+            total_buyers: Number(participants.total_buyers),
+            farmers: farmers,
+            buyers: buyers
         },
         products: {
-            category_breakdown: categoryBreakdown,
-            total_categories: Object.keys(categoryBreakdown).length
+            category_breakdown: categoryBreakdownObject,
+            total_categories: Object.keys(categoryBreakdownObject).length
         }
     };
 }
@@ -126,48 +166,20 @@ async function getSessionByIdHandler(
     const userId = req.user.id;
     const { id: sessionId } = await params;
 
-    // Get session with all related data
+    // Get session with basic information only - no auction items for performance
     const session = await prisma.auctionSession.findFirst({
         where: {
             id: sessionId,
             commissioner_id: userId
         },
-        include: {
-            auction_items: {
-                include: {
-                    product: {
-                        include: {
-                            category: true
-                        }
-                    },
-                    farmer: {
-                        select: {
-                            id: true,
-                            name: true,
-                            phone: true,
-                            village: true
-                        }
-                    },
-                    
-                    buyer: {
-                        select: {
-                            id: true,
-                            name: true,
-                            phone: true
-                        }
-                    },
-                    bill: true
-                }
-            },
-            commissioner: {
-                select: {
-                    id: true,
-                    name: true,
-                    phone: true
-                }
-            }
-            
-
+        select: {
+            id: true,
+            date: true,
+            status: true,
+            payment_status: true,
+            created_at: true,
+            updated_at: true,
+            commissioner_id: true
         }
     });
 
@@ -176,7 +188,7 @@ async function getSessionByIdHandler(
     }
 
     // Calculate analytics using separated function
-    const sessionAnalytics = calculateSessionAnalytics(session);
+    const sessionAnalytics = await calculateSessionAnalytics(sessionId);
 
     const response = {
         session: {
@@ -228,8 +240,10 @@ async function updateSessionByIdHandler(
 
     // Business rule validations for status changes
     if (validatedData.status && validatedData.status !== existingSession.status && existingSession.status === 'COMPLETED') {
-        // Cannot set status to ACTIVE if session date is in the past
-        if (validatedData.status === 'ACTIVE' && existingSession.date < new Date()) {
+        // Cannot set status to ACTIVE if session date is in the past (before today at 00:00 AM)
+        const today = new Date();
+        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        if (validatedData.status === 'ACTIVE' && existingSession.date < startOfToday) {
             throw new ValidationError('Cannot activate session with past date');
         }
         
@@ -239,7 +253,9 @@ async function updateSessionByIdHandler(
 
     // Date validation - cannot set date to past for active sessions
     if (validatedData.date && existingSession.status === 'ACTIVE') {
-        if (validatedData.date < new Date()) {
+        const today = new Date();
+        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        if (validatedData.date < startOfToday) {
             throw new ValidationError('Cannot set past date for active session');
         }
     }

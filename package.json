@@ -8,10 +8,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "triggers:install": "pnpx tsx scripts/triggers.ts install",
-    "triggers:remove": "pnpx tsx scripts/triggers.ts remove",
-    "triggers:list": "pnpx tsx scripts/triggers.ts list",
-    "triggers:test": "pnpx tsx scripts/triggers.ts test"
+    "db:setup": "prisma migrate deploy && prisma db seed",
+    "db:reset": "prisma migrate reset --force",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "triggers:install": "node scripts/simple-triggers.js install",
+    "triggers:remove": "node scripts/simple-triggers.js remove",
+    "triggers:list": "node scripts/simple-triggers.js list",
+    "triggers:test": "node scripts/simple-triggers.js test"
   },
   "prisma": {
     "seed": "pnpx tsx prisma/seed.ts"

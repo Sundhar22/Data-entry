@@ -25,8 +25,8 @@ BEGIN
     UPDATE auction_sessions
     SET 
         payment_status = CASE 
-            WHEN unpaid_count = 0 THEN 'COMPLETED'::SessionPaymentStatus
-            ELSE 'PENDING'::SessionPaymentStatus
+            WHEN unpaid_count = 0 THEN 'COMPLETED'::"SessionPaymentStatus"
+            ELSE 'PENDING'::"SessionPaymentStatus"
         END,
         updated_at = NOW()
     WHERE id = session_id_to_update;
@@ -39,3 +39,16 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Fix existing session payment statuses after function creation
+-- This ensures all existing sessions have correct payment_status values
+UPDATE auction_sessions 
+SET payment_status = CASE 
+    WHEN (
+        SELECT COUNT(*) 
+        FROM auction_items 
+        WHERE session_id = auction_sessions.id 
+        AND bill_id IS NULL
+    ) = 0 THEN 'COMPLETED'::"SessionPaymentStatus"
+    ELSE 'PENDING'::"SessionPaymentStatus"
+END;

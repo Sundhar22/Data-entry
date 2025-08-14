@@ -1,11 +1,12 @@
 import { withAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse, createPaginatedResponse } from "@/lib/api-response";
-import { withErrorHandling, NotFoundError, ConflictError } from "@/lib/error-handler";
+import { withErrorHandling, NotFoundError } from "@/lib/error-handler";
 import { AuthenticatedRequest } from "@/types/auth";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/lib/validation";
 import { CreateAuctionItemSchema, AuctionItemFilterSchema } from "@/schemas/auction-item";
+import { validateSessionForOperation } from "@/lib/session-validation";
 
 /**
  * GET /api/sessions/[id]/items
@@ -159,26 +160,8 @@ async function createSessionItemHandler(
     const validatedData = validation.data;
 
     try {
-        // Verify session exists, belongs to commissioner, and is ACTIVE
-        const session = await prisma.auctionSession.findFirst({
-            where: {
-                id: sessionId,
-                commissioner_id: userId
-            },
-            select: {
-                id: true,
-                status: true,
-                date: true
-            }
-        });
-
-        if (!session) {
-            throw new NotFoundError('Session not found');
-        }
-
-        if (session.status !== 'ACTIVE') {
-            throw new ConflictError('Cannot add items to non-active session');
-        }
+        // Comprehensive session validation
+        await validateSessionForOperation(sessionId, userId, 'CREATE');
 
         // Verify farmer belongs to commissioner
         const farmer = await prisma.farmer.findFirst({

@@ -141,22 +141,32 @@ async function createSessionHandler(req: AuthenticatedRequest): Promise<NextResp
 
     try {
         // Check if there's already an active session for today for this commissioner
+        const today = new Date();
+        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
+
         const existingActiveSession = await prisma.auctionSession.findFirst({
             where: {
-                commissioner_id: userId,
-                status: 'ACTIVE',
-                date: {
-                    gte: new Date(validatedData.date.toDateString()), // Start of day
-                    lt: new Date(new Date(validatedData.date.toDateString()).getTime() + 24 * 60 * 60 * 1000) // End of day
-                }
+            commissioner_id: userId,
+            status: 'ACTIVE',
+            date: {
+                gte: startOfToday,
+                lt: endOfToday
+            }
             }
         });
 
         if (existingActiveSession) {
+            const nextAvailableTime = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000); // Tomorrow at 00:00 AM
+            
             return NextResponse.json({
-                success: false,
-                message: "An active session already exists for this date",
-                data: { existingSessionId: existingActiveSession.id }
+            success: false,
+            message: "An active session already exists for today",
+            data: { 
+                existingSessionId: existingActiveSession.id,
+                nextAvailableAt: nextAvailableTime.toISOString(),
+                nextAvailableAtFormatted: nextAvailableTime.toLocaleString()
+            }
             }, { status: 409 });
         }
 

@@ -1,5 +1,5 @@
 -- Drop existing triggers and functions (if they exist)
--- This ensures clean reinstallation
+-- This ensures clean reinstallation by removing all payment status automation components
 
 DROP TRIGGER IF EXISTS update_session_payment_status_on_insert ON auction_items CASCADE;
 DROP TRIGGER IF EXISTS update_session_payment_status_on_update ON auction_items CASCADE;
