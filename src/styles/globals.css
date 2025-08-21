@@ -1,19 +1,80 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Force clean, professional colors - no yellow anywhere */
+* {
+  border-color: rgb(226, 232, 240) !important; /* Slate-200 */
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: white !important;
+  color: rgb(30, 41, 59) !important; /* Slate-800 */
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* Force all headings to be slate-800 */
+h1, h2, h3, h4, h5, h6 {
+  color: rgb(30, 41, 59) !important; /* Slate-800 */
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/* Force all borders to be clean gray */
+.border,
+.border-border,
+.border-slate-200,
+[class*="border"] {
+  border-color: rgb(226, 232, 240) !important; /* Slate-200 */
+}
+
+/* Force all cards to be white */
+.bg-card,
+.bg-white,
+[class*="bg-card"] {
+  background-color: white !important;
+}
+
+/* Force all text to proper colors */
+.text-foreground {
+  color: rgb(30, 41, 59) !important; /* Slate-800 */
+}
+
+.text-muted-foreground {
+  color: rgb(100, 116, 139) !important; /* Slate-500 */
+}
+
+/* Professional shadows */
+.shadow-professional {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-professional-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* Override ANY yellow/amber colors */
+.text-amber-500,
+.text-amber-600,
+.text-yellow-500,
+.text-yellow-600,
+.text-yellow-400,
+.text-yellow-300 {
+  color: rgb(30, 41, 59) !important; /* Force to slate-800 */
+}
+
+.bg-amber-500,
+.bg-amber-600,
+.bg-yellow-500,
+.bg-yellow-600,
+.bg-yellow-400,
+.bg-yellow-300 {
+  background-color: white !important;
+}
+
+/* Force browser extension styles to not interfere */
+body[data-new-gr-c-s-check-loaded],
+body[data-gr-ext-installed] {
+  background: white !important;
+  color: rgb(30, 41, 59) !important;
 }

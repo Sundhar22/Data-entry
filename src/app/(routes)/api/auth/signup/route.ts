@@ -4,15 +4,17 @@ import { signAccessToken, signRefreshToken } from '@/lib/jwt';
 import { createSuccessResponse, CommonErrors } from '@/lib/api-response';
 import { withErrorHandling, ConflictError } from '@/lib/error-handler';
 import prisma from '@/lib/prisma';
-import { z } from 'zod';
 import { signupSchema } from '@/schemas/auth';
 
 async function signupHandler(req: NextRequest) {
   const body = await req.json();
+  
+  console.log('Signup request body:', body);
 
   // Validate request body
   const validationResult = signupSchema.safeParse(body);
   if (!validationResult.success) {
+    console.log('Validation errors:', validationResult.error.issues);
     return CommonErrors.ValidationError(
       'Validation failed',
       validationResult.error.issues.map(issue => ({

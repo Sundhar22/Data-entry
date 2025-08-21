@@ -4,9 +4,7 @@ import { withErrorHandling } from "@/lib/error-handler"
 import prisma from "@/lib/prisma";
 import { AuthenticatedRequest } from "@/types/auth";
 
-
 async function getProducts(req: AuthenticatedRequest) {
-
     const { searchParams } = new URL(req.url);
     const query = searchParams.get('q');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -21,18 +19,22 @@ async function getProducts(req: AuthenticatedRequest) {
         })
     };
 
-
     const products = await prisma.product.findMany({
         where: whereClause,
         select: {
             id: true,
             name: true,
+            category: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            }
         },
         take: limit,
     });
 
     return createSuccessResponse(products);
-
 }
 
 export const GET = withAuth(withErrorHandling(getProducts, 'Get Products')); 

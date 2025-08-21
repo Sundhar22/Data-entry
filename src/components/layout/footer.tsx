@@ -1,9 +1,16 @@
-import React from 'react';
+import * as React from "react"
 
-const Footer: React.FC = () => (
-    <footer style={{ textAlign: 'center', padding: '1rem', fontSize: '0.9rem', color: '#888' }}>
-        © {new Date().getFullYear()} My Projects
+interface FooterProps {
+  className?: string
+}
+
+export default function Footer({ className }: FooterProps) {
+  return (
+    <footer className={`border-t border-slate-200 bg-white px-4 py-3 ${className || ''}`}>
+      <div className="flex items-center justify-between text-xs text-slate-500">
+        <p>&copy; 2025 AgriTrade System</p>
+        <p>v1.0</p>
+      </div>
     </footer>
-);
-
-export default Footer;
+  )
+}

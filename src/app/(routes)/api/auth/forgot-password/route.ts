@@ -1,4 +1,3 @@
-import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { randomBytes } from "crypto";
 import { sendResetEmail } from "@/lib/mail";
@@ -50,7 +49,7 @@ async function forgetPassword(req: Request): Promise<NextResponse> {
   });
 
   // Send reset email
-  const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/commissioner/reset-password?token=${token}&email=${email}`;
+  const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password?token=${token}&email=${email}`;
   await sendResetEmail(email, resetLink);
 
   return createSuccessResponse({

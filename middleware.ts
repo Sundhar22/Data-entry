@@ -2,35 +2,64 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromHeaders, verifyAuth } from '@/lib/auth';
 
 export async function middleware(request: NextRequest) {
-  // Define protected routes patterns
-  const protectedRoutes = [
+  const { pathname } = request.nextUrl;
+
+  // Define protected API routes
+  const protectedApiRoutes = [
     '/api/commissioner/me',
-    '/api/farmers',
+    '/api/farmers', 
     '/api/products',
     '/api/bills',
     '/api/auction',
     '/api/sessions',
-    // Add more protected routes as needed
   ];
 
-  const { pathname } = request.nextUrl;
+  // Define protected frontend routes  
+  const protectedFrontendRoutes = [
+    '/',
+    '/farmers',
+    '/products', 
+    '/buyers',
+    '/auctions',
+    '/bills',
+    '/analytics',
+  ];
 
-  // Check if the current path is a protected route
-  const isProtectedRoute = protectedRoutes.some(route => 
+  // Auth routes that should be accessible without authentication
+  const authRoutes = ['/auth/login', '/auth/signup'];
+
+  // Check if the current path is a protected API route
+  const isProtectedApiRoute = protectedApiRoutes.some(route => 
     pathname.startsWith(route)
   );
 
-  // Skip authentication for auth routes
+  // Check if the current path is a protected frontend route
+  const isProtectedFrontendRoute = protectedFrontendRoutes.some(route => 
+    pathname === route
+  );
+
+  // Skip authentication for auth API routes
   if (pathname.startsWith('/api/auth/')) {
     return NextResponse.next();
   }
 
-  // If it's a protected route, verify authentication
-  if (isProtectedRoute) {
+  // Skip authentication for auth frontend routes
+  if (authRoutes.includes(pathname)) {
+    return NextResponse.next();
+  }
+
+  // If it's a protected route (API or frontend), verify authentication
+  if (isProtectedApiRoute || isProtectedFrontendRoute) {
     const authResult = await verifyAuth(request);
     
     if (!authResult.success) {
-      // If authentication fails, return the error response
+      // For frontend routes, redirect to login
+      if (isProtectedFrontendRoute) {
+        const loginUrl = new URL('/auth/login', request.url);
+        return NextResponse.redirect(loginUrl);
+      }
+      
+      // For API routes, return the error response
       return authResult.response!;
     }
 
@@ -40,7 +69,9 @@ export async function middleware(request: NextRequest) {
     }
 
     // Attach user to request headers for API routes
-    return getUserFromHeaders(request);
+    if (isProtectedApiRoute) {
+      return getUserFromHeaders(request);
+    }
   }
 
   return NextResponse.next();
@@ -48,13 +79,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
     '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
 };
