@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { NextResponse } from 'next/server';
+import { z } from "zod";
+import { NextResponse } from "next/server";
 
 // Common validation response types
 export interface ValidationResult<T> {
@@ -10,7 +10,10 @@ export interface ValidationResult<T> {
 }
 
 // Generic validation function
-export function validateSchema<T>(schema: z.ZodSchema<T>, data: unknown): ValidationResult<T> {
+export function validateSchema<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown,
+): ValidationResult<T> {
   try {
     const result = schema.parse(data);
     return {
@@ -21,7 +24,7 @@ export function validateSchema<T>(schema: z.ZodSchema<T>, data: unknown): Valida
     if (error instanceof z.ZodError) {
       const errors: Record<string, string[]> = {};
       error.issues.forEach((issue) => {
-        const path = issue.path.join('.');
+        const path = issue.path.join(".");
         if (!errors[path]) {
           errors[path] = [];
         }
@@ -30,21 +33,25 @@ export function validateSchema<T>(schema: z.ZodSchema<T>, data: unknown): Valida
 
       return {
         success: false,
-        error: 'Validation failed',
+        error: "Validation failed",
         errors,
       };
     }
 
     return {
       success: false,
-      error: 'Unknown validation error',
+      error: "Unknown validation error",
     };
   }
 }
 
 // Validation middleware for API routes
 export function validateRequest<T>(schema: z.ZodSchema<T>) {
-  return async (req: Request): Promise<{ success: true; data: T } | { success: false; response: NextResponse }> => {
+  return async (
+    req: Request,
+  ): Promise<
+    { success: true; data: T } | { success: false; response: NextResponse }
+  > => {
     try {
       const body = await req.json();
       const result = validateSchema(schema, body);
@@ -56,9 +63,9 @@ export function validateRequest<T>(schema: z.ZodSchema<T>) {
             {
               error: result.error,
               errors: result.errors,
-              message: 'Invalid request data'
+              message: "Invalid request data",
             },
-            { status: 400 }
+            { status: 400 },
           ),
         };
       }
@@ -68,12 +75,12 @@ export function validateRequest<T>(schema: z.ZodSchema<T>) {
         data: result.data!,
       };
     } catch (error) {
-      console.error('Error parsing request body:', error);
+      console.error("Error parsing request body:", error);
       return {
         success: false,
         response: NextResponse.json(
-          { error: 'Invalid JSON in request body' },
-          { status: 400 }
+          { error: "Invalid JSON in request body" },
+          { status: 400 },
         ),
       };
     }
@@ -81,7 +88,10 @@ export function validateRequest<T>(schema: z.ZodSchema<T>) {
 }
 
 // Query parameter validation
-export function validateQueryParams<T>(schema: z.ZodSchema<T>, params: URLSearchParams): ValidationResult<T> {
+export function validateQueryParams<T>(
+  schema: z.ZodSchema<T>,
+  params: URLSearchParams,
+): ValidationResult<T> {
   const data: Record<string, string | string[]> = {};
 
   for (const [key, value] of params.entries()) {
@@ -112,7 +122,7 @@ export const PaginationSchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(10),
   sortBy: z.string().optional(),
-  sortOrder: z.enum(['asc', 'desc']).default('asc'),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
 });
 
 export const DateRangeSchema = z.object({

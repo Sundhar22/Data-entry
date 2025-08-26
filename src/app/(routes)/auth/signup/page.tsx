@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
   UserPlus,
   Mail,
   Lock,
@@ -19,21 +19,21 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  CheckCircle
-} from 'lucide-react';
+  CheckCircle,
+} from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    location: '',
-    phone: ''
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    location: "",
+    phone: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -41,30 +41,30 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     // Client-side validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       setLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError("Password must be at least 6 characters long");
       setLoading(false);
       return;
     }
 
     try {
       const { confirmPassword, ...signupData } = formData;
-      
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
+
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(signupData)
+        body: JSON.stringify(signupData),
       });
 
       const data = await response.json();
@@ -73,37 +73,40 @@ export default function SignupPage() {
         setSuccess(true);
         // Redirect to dashboard after 2 seconds since user is now logged in
         setTimeout(() => {
-          router.push('/');
+          router.push("/");
         }, 2000);
       } else {
         // Handle validation errors specifically
-        if (data.error?.code === 'VALIDATION_ERROR' && data.error?.details) {
+        if (data.error?.code === "VALIDATION_ERROR" && data.error?.details) {
           const validationErrors = data.error.details;
           if (Array.isArray(validationErrors) && validationErrors.length > 0) {
             // Show the first validation error
             setError(validationErrors[0].message || data.error.message);
           } else {
-            setError(data.error.message || 'Validation failed. Please check your input.');
+            setError(
+              data.error.message ||
+                "Validation failed. Please check your input.",
+            );
           }
         } else {
-          setError(data.error?.message || 'Signup failed. Please try again.');
+          setError(data.error?.message || "Signup failed. Please try again.");
         }
       }
     } catch (error) {
-      console.error('Signup error:', error);
-      setError('An unexpected error occurred. Please try again.');
+      console.error("Signup error:", error);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
     // Clear error when user starts typing
-    if (error) setError('');
+    if (error) setError("");
   };
 
   if (success) {
@@ -114,11 +117,17 @@ export default function SignupPage() {
             <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="h-8 w-8 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-green-900 mb-2">Account Created!</h2>
+            <h2 className="text-2xl font-bold text-green-900 mb-2">
+              Account Created!
+            </h2>
             <p className="text-green-700 mb-4">
-              Your account has been successfully created and you are now logged in. You will be redirected to the dashboard shortly.
+              Your account has been successfully created and you are now logged
+              in. You will be redirected to the dashboard shortly.
             </p>
-            <Button onClick={() => router.push('/')} className="bg-green-600 hover:bg-green-700">
+            <Button
+              onClick={() => router.push("/")}
+              className="bg-green-600 hover:bg-green-700"
+            >
               Go to Dashboard
             </Button>
           </CardContent>
@@ -135,7 +144,9 @@ export default function SignupPage() {
           <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
             <UserPlus className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Create Account</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            Create Account
+          </h1>
           <p className="text-slate-600">Join AgriTrade as a Commissioner</p>
         </div>
 
@@ -249,7 +260,11 @@ export default function SignupPage() {
                     className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -276,15 +291,19 @@ export default function SignupPage() {
                     className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
 
               {/* Submit Button */}
-              <Button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700" 
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700"
                 disabled={loading}
               >
                 {loading ? (
@@ -304,8 +323,8 @@ export default function SignupPage() {
             {/* Sign In Link */}
             <div className="mt-6 text-center">
               <p className="text-sm text-slate-600">
-                Already have an account?{' '}
-                <Link 
+                Already have an account?{" "}
+                <Link
                   href="/auth/login"
                   className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
                 >

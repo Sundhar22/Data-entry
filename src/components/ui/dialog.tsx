@@ -1,6 +1,6 @@
-import * as React from "react"
-import { X } from "lucide-react"
-import { createPortal } from "react-dom"
+import * as React from "react";
+import { X } from "lucide-react";
+import { createPortal } from "react-dom";
 
 interface DialogProps {
   open?: boolean;
@@ -47,7 +47,7 @@ const DialogContent = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, children, ...props }, ref) => {
   const { open, onOpenChange } = useDialog();
-  
+
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -70,7 +70,7 @@ const DialogContent = React.forwardRef<
 
   return createPortal(
     <div className="fixed inset-0 z-50">
-      <div 
+      <div
         className="fixed inset-0 bg-black/80"
         onClick={() => onOpenChange?.(false)}
       />
@@ -89,7 +89,7 @@ const DialogContent = React.forwardRef<
         </button>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 });
 DialogContent.displayName = "DialogContent";

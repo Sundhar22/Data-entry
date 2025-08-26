@@ -28,12 +28,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     }
 
     const userId = authResult.user!.id;
-    
+
     // Your protected route logic here
     // Access user data via authResult.user
-    
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 ```
@@ -44,16 +46,21 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 import { withAuth, AuthenticatedRequest } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-async function getProtectedData(req: AuthenticatedRequest): Promise<NextResponse> {
+async function getProtectedData(
+  req: AuthenticatedRequest,
+): Promise<NextResponse> {
   try {
     const userId = req.user.id; // User data is automatically attached
-    
+
     // Your protected route logic here
     // Access user data via req.user
-    
+
     return NextResponse.json({ data: "success" });
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -73,16 +80,18 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
     // Get user from headers (set by middleware)
     const user = getUserFromHeaders(req);
-    
+
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    
+
     // Your protected route logic here
     // Access user data via user object
-    
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 ```
@@ -100,17 +109,18 @@ To add new protected routes, update the `protectedRoutes` array in `/middleware.
 
 ```typescript
 const protectedRoutes = [
-  '/api/commissioner/me',
-  '/api/farmers',
-  '/api/farmers/[id]',
-  '/api/products',
-  '/api/bills',
-  '/api/auction',
-  '/api/your-new-protected-route', // Add new routes here
+  "/api/commissioner/me",
+  "/api/farmers",
+  "/api/farmers/[id]",
+  "/api/products",
+  "/api/bills",
+  "/api/auction",
+  "/api/your-new-protected-route", // Add new routes here
 ];
 ```
 
 **Current Protected Routes:**
+
 - `/api/commissioner/me` - Get current commissioner profile
 - `/api/farmers` - All farmer operations (GET, POST, PUT, DELETE)
 - `/api/farmers/[id]` - Get specific farmer by ID
@@ -147,7 +157,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     }
 
     const userId = authResult.user!.id;
-    
+
     // Get farmers for this commissioner only
     const farmers = await prisma.farmer.findMany({
       where: { commissioner_id: userId },
@@ -158,13 +168,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         village: true,
         is_active: true,
         created_at: true,
-        updated_at: true
-      }
+        updated_at: true,
+      },
     });
-    
+
     return NextResponse.json({ farmers });
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -176,7 +189,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     const userId = authResult.user!.id;
-    
+
     // Validate request body
     const validator = validateRequest(CreateFarmerSchema);
     const validation = await validator(req);
@@ -189,13 +202,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const farmer = await prisma.farmer.create({
       data: {
         ...validation.data,
-        commissioner_id: userId
-      }
+        commissioner_id: userId,
+      },
     });
 
     return NextResponse.json(farmer, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 ```
@@ -229,6 +245,7 @@ You can test the authentication by:
 5. **Logout**: POST to `/api/auth/logout` and try accessing protected routes (should return 401)
 
 ### Example Test Flow:
+
 ```bash
 # 1. Login
 curl -X POST "http://localhost:3000/api/auth/login" \

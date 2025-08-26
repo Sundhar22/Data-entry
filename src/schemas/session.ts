@@ -1,11 +1,14 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // Session status enum schema
-export const SessionStatusSchema = z.enum(['ACTIVE', 'COMPLETED']);
+export const SessionStatusSchema = z.enum(["ACTIVE", "COMPLETED"]);
 
 // Create session schema
 export const CreateSessionSchema = z.object({
-  date: z.coerce.date().optional().default(() => new Date()),
+  date: z.coerce
+    .date()
+    .optional()
+    .default(() => new Date()),
 });
 
 // Update session schema
@@ -21,8 +24,8 @@ export const SessionFilterSchema = z.object({
   endDate: z.coerce.date().optional(),
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(10),
-  sortBy: z.enum(['date', 'created_at', 'updated_at']).default('date'),
-  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+  sortBy: z.enum(["date", "created_at", "updated_at"]).default("date"),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
 // Type exports

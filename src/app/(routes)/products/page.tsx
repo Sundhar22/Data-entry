@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/layout/dashboard-layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { 
-  ArrowLeft, 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import DashboardLayout from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  ArrowLeft,
   Search,
   Package,
   Tag,
   Loader2,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
 interface Product {
   id: string;
@@ -48,17 +48,17 @@ export default function ProductsPage() {
       if (query !== undefined) {
         setSearchLoading(true);
       }
-      
+
       const searchParams = new URLSearchParams();
       if (query) {
-        searchParams.set('q', query);
+        searchParams.set("q", query);
       }
-      searchParams.set('limit', '50');
+      searchParams.set("limit", "50");
 
       const response = await fetch(`/api/products?${searchParams}`, {
-        credentials: 'include'
+        credentials: "include",
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -66,7 +66,7 @@ export default function ProductsPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch products:', error);
+      console.error("Failed to fetch products:", error);
     } finally {
       setLoading(false);
       setSearchLoading(false);
@@ -75,10 +75,10 @@ export default function ProductsPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories', {
-        credentials: 'include'
+      const response = await fetch("/api/categories", {
+        credentials: "include",
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -86,7 +86,7 @@ export default function ProductsPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch categories:', error);
+      console.error("Failed to fetch categories:", error);
     }
   };
 
@@ -96,8 +96,8 @@ export default function ProductsPage() {
   };
 
   const clearSearch = () => {
-    setSearchTerm('');
-    fetchProducts('');
+    setSearchTerm("");
+    fetchProducts("");
   };
 
   return (
@@ -107,8 +107,12 @@ export default function ProductsPage() {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Products</h1>
-              <p className="text-slate-600 mt-1">Browse available products and categories</p>
+              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
+                Products
+              </h1>
+              <p className="text-slate-600 mt-1">
+                Browse available products and categories
+              </p>
             </div>
           </div>
         </div>
@@ -117,15 +121,19 @@ export default function ProductsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Products
+              </CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{products.length}</div>
-              <p className="text-xs text-muted-foreground">Active products only</p>
+              <p className="text-xs text-muted-foreground">
+                Active products only
+              </p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Categories</CardTitle>
@@ -133,7 +141,9 @@ export default function ProductsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{categories.length}</div>
-              <p className="text-xs text-muted-foreground">Product categories</p>
+              <p className="text-xs text-muted-foreground">
+                Product categories
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -192,13 +202,12 @@ export default function ProductsPage() {
               <div className="text-center py-12 text-slate-600">
                 <Package className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {searchTerm ? 'No products found' : 'No products available'}
+                  {searchTerm ? "No products found" : "No products available"}
                 </h3>
                 <p className="text-gray-600">
-                  {searchTerm 
+                  {searchTerm
                     ? `No products match "${searchTerm}". Try a different search term.`
-                    : 'No products have been added to the system yet.'
-                  }
+                    : "No products have been added to the system yet."}
                 </p>
                 {searchTerm && (
                   <Button onClick={clearSearch} className="mt-4">
@@ -209,18 +218,24 @@ export default function ProductsPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
                 {products.map((product) => (
-                  <Card key={product.id} className="hover:shadow-md transition-shadow">
+                  <Card
+                    key={product.id}
+                    className="hover:shadow-md transition-shadow"
+                  >
                     <CardContent className="p-4">
                       <div className="space-y-3">
                         <div className="flex items-start justify-between">
                           <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
                             <Package className="h-6 w-6 text-blue-600" />
                           </div>
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 text-green-700 border-green-200"
+                          >
                             Active
                           </Badge>
                         </div>
-                        
+
                         <div>
                           <h3 className="font-semibold text-lg text-slate-900 mb-1">
                             {product.name}
@@ -256,9 +271,9 @@ export default function ProductsPage() {
             ) : (
               <div className="flex flex-wrap gap-2">
                 {categories.map((category) => (
-                  <Badge 
-                    key={category.id} 
-                    variant="outline" 
+                  <Badge
+                    key={category.id}
+                    variant="outline"
                     className="bg-purple-50 text-purple-700 border-purple-200 px-3 py-1"
                   >
                     <Tag className="h-3 w-3 mr-1" />
@@ -277,8 +292,9 @@ export default function ProductsPage() {
               <AlertCircle className="h-5 w-5 text-orange-600" />
               <div>
                 <p className="text-sm text-orange-800">
-                  <strong>No data available.</strong> This could be because you&apos;re not authenticated 
-                  or there&apos;s no data in the system yet.
+                  <strong>No data available.</strong> This could be because
+                  you&apos;re not authenticated or there&apos;s no data in the
+                  system yet.
                 </p>
               </div>
             </CardContent>

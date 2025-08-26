@@ -1,42 +1,42 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert } from '@/components/ui/alert';
-import { Label } from '@/components/ui/label';
-import { Mail, ArrowLeft, Send } from 'lucide-react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
+import { Mail, ArrowLeft, Send } from "lucide-react";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email) {
-      setError('Email is required');
+      setError("Email is required");
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address');
+      setError("Please enter a valid email address");
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email }),
       });
@@ -46,11 +46,14 @@ export default function ForgotPasswordPage() {
       if (response.ok && data.success) {
         setSuccess(true);
       } else {
-        setError(data.error?.message || 'Failed to send reset email. Please try again.');
+        setError(
+          data.error?.message ||
+            "Failed to send reset email. Please try again.",
+        );
       }
     } catch (error) {
-      console.error('Forgot password error:', error);
-      setError('An unexpected error occurred. Please try again.');
+      console.error("Forgot password error:", error);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -59,7 +62,7 @@ export default function ForgotPasswordPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
     // Clear error when user starts typing
-    if (error) setError('');
+    if (error) setError("");
   };
 
   if (success) {
@@ -70,21 +73,24 @@ export default function ForgotPasswordPage() {
             <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Send className="h-8 w-8 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-green-900 mb-2">Check Your Email</h2>
+            <h2 className="text-2xl font-bold text-green-900 mb-2">
+              Check Your Email
+            </h2>
             <p className="text-green-700 mb-6">
-              If an account with that email exists, we&apos;ve sent you a password reset link. 
-              Please check your email and follow the instructions.
+              If an account with that email exists, we&apos;ve sent you a
+              password reset link. Please check your email and follow the
+              instructions.
             </p>
             <div className="space-y-3">
-              <Button 
-                onClick={() => router.push('/auth/login')} 
+              <Button
+                onClick={() => router.push("/auth/login")}
                 className="w-full bg-green-600 hover:bg-green-700"
               >
                 Back to Login
               </Button>
-              <Button 
+              <Button
                 variant="outline"
-                onClick={() => setSuccess(false)} 
+                onClick={() => setSuccess(false)}
                 className="w-full"
               >
                 Send Another Email
@@ -104,8 +110,12 @@ export default function ForgotPasswordPage() {
           <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
             <Mail className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Forgot Password</h1>
-          <p className="text-slate-600">Enter your email to receive a password reset link</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            Forgot Password
+          </h1>
+          <p className="text-slate-600">
+            Enter your email to receive a password reset link
+          </p>
         </div>
 
         {/* Forgot Password Form */}
@@ -144,8 +154,8 @@ export default function ForgotPasswordPage() {
               </div>
 
               {/* Submit Button */}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={loading}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
               >
@@ -165,7 +175,7 @@ export default function ForgotPasswordPage() {
 
             {/* Back to Login Link */}
             <div className="mt-6 text-center">
-              <Link 
+              <Link
                 href="/auth/login"
                 className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors"
               >

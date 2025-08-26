@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
-import DashboardLayout from '@/components/layout/dashboard-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
+import DashboardLayout from "@/components/layout/dashboard-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
   TrendingUp,
   Users,
   Package,
@@ -16,14 +16,14 @@ import {
   RefreshCw,
   ArrowLeft,
   AlertCircle,
-  Loader2
-} from 'lucide-react';
-import Link from 'next/link';
+  Loader2,
+} from "lucide-react";
+import Link from "next/link";
 
 interface AuctionSession {
   id: string;
   date: string;
-  status: 'ACTIVE' | 'COMPLETED';
+  status: "ACTIVE" | "COMPLETED";
   commissioner: {
     id: string;
     name: string;
@@ -68,10 +68,12 @@ interface LiveAnalytics {
 
 export default function LiveAuctionAnalytics() {
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get('session');
-  
+  const sessionId = searchParams.get("session");
+
   // State management
-  const [currentSession, setCurrentSession] = useState<AuctionSession | null>(null);
+  const [currentSession, setCurrentSession] = useState<AuctionSession | null>(
+    null,
+  );
   const [analytics, setAnalytics] = useState<LiveAnalytics>({
     totalItems: 0,
     soldItems: 0,
@@ -80,63 +82,70 @@ export default function LiveAuctionAnalytics() {
     averagePrice: 0,
     uniqueFarmers: 0,
     uniqueCategories: 0,
-    successRate: 0
+    successRate: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   // Calculate analytics from auction items
-  const calculateAnalytics = useCallback((items: AuctionItem[]): LiveAnalytics => {
-    const totalItems = items.length;
-    const soldItems = items.filter(item => item.rate && item.buyer).length;
-    const pendingItems = totalItems - soldItems;
-    
-    // Calculate total revenue: rate * quantity for each sold item
-    const totalRevenue = items
-      .filter(item => item.rate && item.buyer)
-      .reduce((sum, item) => sum + ((item.rate || 0) * item.quantity), 0);
-      
-    const averagePrice = soldItems > 0 ? totalRevenue / soldItems : 0;
-    const uniqueFarmers = new Set(items.map(item => item.farmer?.id)).size;
-    const uniqueCategories = new Set(items.map(item => item.product?.category?.name)).size;
-    const successRate = totalItems > 0 ? (soldItems / totalItems) * 100 : 0;
+  const calculateAnalytics = useCallback(
+    (items: AuctionItem[]): LiveAnalytics => {
+      const totalItems = items.length;
+      const soldItems = items.filter((item) => item.rate && item.buyer).length;
+      const pendingItems = totalItems - soldItems;
 
-    return {
-      totalItems,
-      soldItems,
-      pendingItems,
-      totalRevenue,
-      averagePrice,
-      uniqueFarmers,
-      uniqueCategories,
-      successRate
-    };
-  }, []);
+      // Calculate total revenue: rate * quantity for each sold item
+      const totalRevenue = items
+        .filter((item) => item.rate && item.buyer)
+        .reduce((sum, item) => sum + (item.rate || 0) * item.quantity, 0);
+
+      const averagePrice = soldItems > 0 ? totalRevenue / soldItems : 0;
+      const uniqueFarmers = new Set(items.map((item) => item.farmer?.id)).size;
+      const uniqueCategories = new Set(
+        items.map((item) => item.product?.category?.name),
+      ).size;
+      const successRate = totalItems > 0 ? (soldItems / totalItems) * 100 : 0;
+
+      return {
+        totalItems,
+        soldItems,
+        pendingItems,
+        totalRevenue,
+        averagePrice,
+        uniqueFarmers,
+        uniqueCategories,
+        successRate,
+      };
+    },
+    [],
+  );
 
   // Fetch live auction data
   const fetchLiveData = useCallback(async () => {
     if (!sessionId) {
-      setError('No session ID provided');
+      setError("No session ID provided");
       setIsLoading(false);
       return;
     }
 
     try {
       setIsLoading(true);
-      setError('');
+      setError("");
 
       // Fetch session details
       const sessionResponse = await fetch(`/api/sessions/${sessionId}`, {
-        credentials: 'include', // Include cookies for authentication
+        credentials: "include", // Include cookies for authentication
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       });
-      
+
       if (!sessionResponse.ok) {
         const errorData = await sessionResponse.json().catch(() => null);
-        const errorMessage = errorData?.message || `HTTP ${sessionResponse.status}: ${sessionResponse.statusText}`;
+        const errorMessage =
+          errorData?.message ||
+          `HTTP ${sessionResponse.status}: ${sessionResponse.statusText}`;
         throw new Error(`Failed to fetch session: ${errorMessage}`);
       }
       const sessionData = await sessionResponse.json();
@@ -146,45 +155,49 @@ export default function LiveAuctionAnalytics() {
       let allItems: AuctionItem[] = [];
       let page = 1;
       let hasMore = true;
-      
+
       while (hasMore) {
-        const itemsResponse = await fetch(`/api/sessions/${sessionId}/items?limit=100&page=${page}`, {
-          credentials: 'include', // Include cookies for authentication
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        
+        const itemsResponse = await fetch(
+          `/api/sessions/${sessionId}/items?limit=100&page=${page}`,
+          {
+            credentials: "include", // Include cookies for authentication
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
         if (!itemsResponse.ok) {
           const errorData = await itemsResponse.json().catch(() => null);
-          const errorMessage = errorData?.message || `HTTP ${itemsResponse.status}: ${itemsResponse.statusText}`;
+          const errorMessage =
+            errorData?.message ||
+            `HTTP ${itemsResponse.status}: ${itemsResponse.statusText}`;
           throw new Error(`Failed to fetch session items: ${errorMessage}`);
         }
-        
+
         const itemsData = await itemsResponse.json();
         const items = itemsData.data || [];
         const meta = itemsData.meta || {};
-        
+
         allItems = [...allItems, ...items];
-        
+
         // Debug: Log first item to see structure
         if (items.length > 0 && page === 1) {
-          console.log('First auction item structure:', items[0]);
+          console.log("First auction item structure:", items[0]);
         }
-        
+
         // Check if there are more pages
-        hasMore = meta.hasNext || (items.length === 100);
+        hasMore = meta.hasNext || items.length === 100;
         page++;
-        
+
         // Safety check to prevent infinite loops
         if (page > 50) break; // Max 5000 items
       }
-      
+
       setAnalytics(calculateAnalytics(allItems));
       setLastUpdated(new Date());
-
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -193,7 +206,7 @@ export default function LiveAuctionAnalytics() {
   // Auto-refresh every 30 seconds
   useEffect(() => {
     fetchLiveData();
-    
+
     const interval = setInterval(() => {
       fetchLiveData();
     }, 30000); // 30 seconds
@@ -229,18 +242,28 @@ export default function LiveAuctionAnalytics() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-xl lg:text-3xl font-bold text-slate-900">Live Auction Analytics</h1>
+                <h1 className="text-xl lg:text-3xl font-bold text-slate-900">
+                  Live Auction Analytics
+                </h1>
                 {currentSession && (
                   <p className="text-sm lg:text-base text-slate-600 mt-1">
-                    Session #{currentSession.id?.slice(-8).toUpperCase()} • {currentSession.date ? new Date(currentSession.date).toLocaleDateString() : 'N/A'}
+                    Session #{currentSession.id?.slice(-8).toUpperCase()} •{" "}
+                    {currentSession.date
+                      ? new Date(currentSession.date).toLocaleDateString()
+                      : "N/A"}
                   </p>
                 )}
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={fetchLiveData} disabled={isLoading}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchLiveData}
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -258,7 +281,9 @@ export default function LiveAuctionAnalytics() {
         {error && (
           <Alert className="border-red-200 bg-red-50">
             <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">{error}</AlertDescription>
+            <AlertDescription className="text-red-800">
+              {error}
+            </AlertDescription>
           </Alert>
         )}
 
@@ -266,7 +291,9 @@ export default function LiveAuctionAnalytics() {
         {isLoading && analytics.totalItems === 0 && (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            <span className="ml-3 text-slate-600">Loading auction analytics...</span>
+            <span className="ml-3 text-slate-600">
+              Loading auction analytics...
+            </span>
           </div>
         )}
 
@@ -309,7 +336,10 @@ export default function LiveAuctionAnalytics() {
                     <DollarSign className="h-8 w-8 lg:h-10 lg:w-10 text-purple-600" />
                     <div>
                       <div className="text-xl lg:text-3xl font-bold text-purple-900">
-                        ₹{new Intl.NumberFormat('en-IN').format(analytics.totalRevenue)}
+                        ₹
+                        {new Intl.NumberFormat("en-IN").format(
+                          analytics.totalRevenue,
+                        )}
                       </div>
                       <p className="text-sm text-purple-700">Revenue</p>
                     </div>
@@ -346,27 +376,46 @@ export default function LiveAuctionAnalytics() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center p-3 bg-green-50 border border-green-200 rounded-lg">
                       <div>
-                        <div className="font-semibold text-green-900">Sold Items</div>
-                        <div className="text-sm text-green-700">{Math.round(analytics.successRate)}% of total</div>
+                        <div className="font-semibold text-green-900">
+                          Sold Items
+                        </div>
+                        <div className="text-sm text-green-700">
+                          {Math.round(analytics.successRate)}% of total
+                        </div>
                       </div>
-                      <div className="text-2xl font-bold text-green-900">{analytics.soldItems}</div>
+                      <div className="text-2xl font-bold text-green-900">
+                        {analytics.soldItems}
+                      </div>
                     </div>
-                    
+
                     <div className="flex justify-between items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <div>
-                        <div className="font-semibold text-yellow-900">Pending Items</div>
-                        <div className="text-sm text-yellow-700">{Math.round(100 - analytics.successRate)}% remaining</div>
+                        <div className="font-semibold text-yellow-900">
+                          Pending Items
+                        </div>
+                        <div className="text-sm text-yellow-700">
+                          {Math.round(100 - analytics.successRate)}% remaining
+                        </div>
                       </div>
-                      <div className="text-2xl font-bold text-yellow-900">{analytics.pendingItems}</div>
+                      <div className="text-2xl font-bold text-yellow-900">
+                        {analytics.pendingItems}
+                      </div>
                     </div>
 
                     <div className="flex justify-between items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <div>
-                        <div className="font-semibold text-blue-900">Average Revenue</div>
-                        <div className="text-sm text-blue-700">Total revenue ÷ sold items</div>
+                        <div className="font-semibold text-blue-900">
+                          Average Revenue
+                        </div>
+                        <div className="text-sm text-blue-700">
+                          Total revenue ÷ sold items
+                        </div>
                       </div>
                       <div className="text-xl font-bold text-blue-900">
-                        ₹{new Intl.NumberFormat('en-IN').format(Math.round(analytics.averagePrice))}
+                        ₹
+                        {new Intl.NumberFormat("en-IN").format(
+                          Math.round(analytics.averagePrice),
+                        )}
                       </div>
                     </div>
                   </div>
@@ -385,27 +434,43 @@ export default function LiveAuctionAnalytics() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
                       <div>
-                        <div className="font-semibold text-indigo-900">Participating Farmers</div>
-                        <div className="text-sm text-indigo-700">Unique sellers</div>
+                        <div className="font-semibold text-indigo-900">
+                          Participating Farmers
+                        </div>
+                        <div className="text-sm text-indigo-700">
+                          Unique sellers
+                        </div>
                       </div>
-                      <div className="text-2xl font-bold text-indigo-900">{analytics.uniqueFarmers}</div>
+                      <div className="text-2xl font-bold text-indigo-900">
+                        {analytics.uniqueFarmers}
+                      </div>
                     </div>
 
                     <div className="flex justify-between items-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
                       <div>
-                        <div className="font-semibold text-purple-900">Product Categories</div>
-                        <div className="text-sm text-purple-700">Types of products</div>
+                        <div className="font-semibold text-purple-900">
+                          Product Categories
+                        </div>
+                        <div className="text-sm text-purple-700">
+                          Types of products
+                        </div>
                       </div>
-                      <div className="text-2xl font-bold text-purple-900">{analytics.uniqueCategories}</div>
+                      <div className="text-2xl font-bold text-purple-900">
+                        {analytics.uniqueCategories}
+                      </div>
                     </div>
 
                     <div className="flex justify-between items-center p-3 bg-slate-50 border border-slate-200 rounded-lg">
                       <div>
-                        <div className="font-semibold text-slate-900">Session Status</div>
-                        <div className="text-sm text-slate-700">Current state</div>
+                        <div className="font-semibold text-slate-900">
+                          Session Status
+                        </div>
+                        <div className="text-sm text-slate-700">
+                          Current state
+                        </div>
                       </div>
                       <Badge variant="outline" className="text-sm">
-                        {currentSession?.status || 'UNKNOWN'}
+                        {currentSession?.status || "UNKNOWN"}
                       </Badge>
                     </div>
                   </div>
@@ -422,18 +487,30 @@ export default function LiveAuctionAnalytics() {
                 <CardContent>
                   <div className="grid md:grid-cols-3 gap-4">
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="font-semibold text-gray-900">Commissioner</div>
-                      <div className="text-sm text-gray-600 mt-1">{currentSession.commissioner?.name}</div>
-                      <div className="text-xs text-gray-500 mt-1">{currentSession.commissioner?.phone}</div>
-                    </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="font-semibold text-gray-900">Session Date</div>
+                      <div className="font-semibold text-gray-900">
+                        Commissioner
+                      </div>
                       <div className="text-sm text-gray-600 mt-1">
-                        {currentSession.date ? new Date(currentSession.date).toLocaleDateString() : 'N/A'}
+                        {currentSession.commissioner?.name}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {currentSession.commissioner?.phone}
                       </div>
                     </div>
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="font-semibold text-gray-900">Session ID</div>
+                      <div className="font-semibold text-gray-900">
+                        Session Date
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        {currentSession.date
+                          ? new Date(currentSession.date).toLocaleDateString()
+                          : "N/A"}
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="font-semibold text-gray-900">
+                        Session ID
+                      </div>
                       <div className="text-sm text-gray-600 mt-1 font-mono">
                         {currentSession.id?.slice(-12).toUpperCase()}
                       </div>
@@ -449,12 +526,14 @@ export default function LiveAuctionAnalytics() {
         {!isLoading && analytics.totalItems === 0 && !error && (
           <div className="text-center py-12">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No auction data available</h3>
-            <p className="text-gray-600 mb-4">This session doesn&apos;t have any auction items yet.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No auction data available
+            </h3>
+            <p className="text-gray-600 mb-4">
+              This session doesn&apos;t have any auction items yet.
+            </p>
             <Link href={`/auctions/items?session=${sessionId}`}>
-              <Button variant="outline">
-                Add Auction Items
-              </Button>
+              <Button variant="outline">Add Auction Items</Button>
             </Link>
           </div>
         )}

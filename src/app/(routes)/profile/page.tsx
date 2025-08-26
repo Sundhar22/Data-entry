@@ -50,7 +50,7 @@ export default function ProfilePage() {
     try {
       setIsLoading(true);
       const response = await fetch("/api/commissioner/me");
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch profile");
       }
@@ -74,7 +74,11 @@ export default function ProfilePage() {
     if (!commissioner) return;
 
     // Validation
-    if (!formData.name?.trim() || !formData.email?.trim() || !formData.phone?.trim()) {
+    if (
+      !formData.name?.trim() ||
+      !formData.email?.trim() ||
+      !formData.phone?.trim()
+    ) {
       setFormError("Name, email, and phone are required");
       return;
     }
@@ -83,7 +87,7 @@ export default function ProfilePage() {
       setIsSaving(true);
       setFormError("");
       setSuccessMessage("");
-      
+
       const response = await fetch("/api/commissioner/me", {
         method: "PUT",
         headers: {
@@ -101,12 +105,14 @@ export default function ProfilePage() {
       setCommissioner(data.data);
       setIsEditing(false);
       setSuccessMessage("Profile updated successfully!");
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Error updating profile:", error);
-      setFormError(error instanceof Error ? error.message : "Failed to update profile");
+      setFormError(
+        error instanceof Error ? error.message : "Failed to update profile",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -118,8 +124,11 @@ export default function ProfilePage() {
     setFormError("");
   };
 
-  const handleInputChange = (field: keyof Commissioner, value: string | number) => {
-    setFormData(prev => ({
+  const handleInputChange = (
+    field: keyof Commissioner,
+    value: string | number,
+  ) => {
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -127,12 +136,12 @@ export default function ProfilePage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -155,8 +164,12 @@ export default function ProfilePage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <User className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-lg font-medium text-gray-900">No profile found</h3>
-            <p className="mt-1 text-sm text-gray-500">Unable to load profile information.</p>
+            <h3 className="mt-2 text-lg font-medium text-gray-900">
+              No profile found
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Unable to load profile information.
+            </p>
             <Button onClick={fetchProfile} className="mt-4">
               <RefreshCw className="mr-2 h-4 w-4" />
               Try Again
@@ -173,11 +186,18 @@ export default function ProfilePage() {
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Profile</h1>
-            <p className="text-slate-600 mt-1">Manage your account information and business settings</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
+              Profile
+            </h1>
+            <p className="text-slate-600 mt-1">
+              Manage your account information and business settings
+            </p>
           </div>
           {!isEditing ? (
-            <Button onClick={() => setIsEditing(true)} className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              onClick={() => setIsEditing(true)}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               <Edit className="h-4 w-4 mr-2" />
               Edit Profile
             </Button>
@@ -211,14 +231,18 @@ export default function ProfilePage() {
         {formError && (
           <Alert className="border-red-200 bg-red-50">
             <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">{formError}</AlertDescription>
+            <AlertDescription className="text-red-800">
+              {formError}
+            </AlertDescription>
           </Alert>
         )}
 
         {successMessage && (
           <Alert className="border-green-200 bg-green-50">
             <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+            <AlertDescription className="text-green-800">
+              {successMessage}
+            </AlertDescription>
           </Alert>
         )}
 
@@ -302,7 +326,9 @@ export default function ProfilePage() {
                   <Input
                     id="location"
                     value={formData.location || ""}
-                    onChange={(e) => handleInputChange("location", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("location", e.target.value)
+                    }
                     placeholder="Enter your business location"
                   />
                 ) : (
@@ -323,13 +349,21 @@ export default function ProfilePage() {
                     max="100"
                     step="0.1"
                     value={formData.commission_rate || ""}
-                    onChange={(e) => handleInputChange("commission_rate", parseFloat(e.target.value) || 0)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "commission_rate",
+                        parseFloat(e.target.value) || 0,
+                      )
+                    }
                     placeholder="Enter commission rate"
                   />
                 ) : (
                   <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-md">
                     <Percent className="h-4 w-4 text-slate-400" />
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                    <Badge
+                      variant="secondary"
+                      className="bg-blue-100 text-blue-800"
+                    >
                       {commissioner.commission_rate}%
                     </Badge>
                   </div>
@@ -341,11 +375,15 @@ export default function ProfilePage() {
               <div className="space-y-3 text-sm text-slate-600">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>Account Created: {formatDate(commissioner.created_at)}</span>
+                  <span>
+                    Account Created: {formatDate(commissioner.created_at)}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>Last Updated: {formatDate(commissioner.updated_at)}</span>
+                  <span>
+                    Last Updated: {formatDate(commissioner.updated_at)}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -366,7 +404,9 @@ export default function ProfilePage() {
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <Percent className="mx-auto h-8 w-8 text-green-600 mb-2" />
-                <p className="text-2xl font-bold text-green-600">{commissioner.commission_rate}%</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {commissioner.commission_rate}%
+                </p>
                 <p className="text-sm text-slate-600">Commission Rate</p>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg">

@@ -1,71 +1,73 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
   LogIn,
   Mail,
   Lock,
   Loader2,
   AlertCircle,
   Eye,
-  EyeOff
-} from 'lucide-react';
+  EyeOff,
+} from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
-        body: JSON.stringify(formData)
+        credentials: "include",
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
         // Login successful, redirect to dashboard
-        router.push('/');
+        router.push("/");
       } else {
-        setError(data.error?.message || 'Login failed. Please check your credentials.');
+        setError(
+          data.error?.message || "Login failed. Please check your credentials.",
+        );
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setError('An unexpected error occurred. Please try again.');
+      console.error("Login error:", error);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
     // Clear error when user starts typing
-    if (error) setError('');
+    if (error) setError("");
   };
 
   return (
@@ -76,7 +78,9 @@ export default function LoginPage() {
           <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
             <LogIn className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome Back</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            Welcome Back
+          </h1>
           <p className="text-slate-600">Sign in to your AgriTrade account</p>
         </div>
 
@@ -137,14 +141,18 @@ export default function LoginPage() {
                     className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
 
               {/* Forgot Password Link */}
               <div className="text-right">
-                <Link 
+                <Link
                   href="/auth/forgot-password"
                   className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
                 >
@@ -153,9 +161,9 @@ export default function LoginPage() {
               </div>
 
               {/* Submit Button */}
-              <Button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700" 
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700"
                 disabled={loading}
               >
                 {loading ? (
@@ -175,8 +183,8 @@ export default function LoginPage() {
             {/* Sign Up Link */}
             <div className="mt-6 text-center">
               <p className="text-sm text-slate-600">
-                Don&apos;t have an account?{' '}
-                <Link 
+                Don&apos;t have an account?{" "}
+                <Link
                   href="/auth/signup"
                   className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
                 >

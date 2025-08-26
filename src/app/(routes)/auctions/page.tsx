@@ -1,16 +1,24 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/dashboard-layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
+import { useState, useEffect } from "react";
+import DashboardLayout from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
   Plus,
   Calendar,
   Activity,
@@ -24,16 +32,16 @@ import {
   AlertCircle,
   Save,
   Package,
-  CheckCircle
-} from 'lucide-react';
-import Link from 'next/link';
+  CheckCircle,
+} from "lucide-react";
+import Link from "next/link";
 
 interface AuctionSession {
   id: string;
   date: string;
   commissioner_id: string;
-  status: 'ACTIVE' | 'COMPLETED';
-  payment_status: 'PENDING' | 'COMPLETED';
+  status: "ACTIVE" | "COMPLETED";
+  payment_status: "PENDING" | "COMPLETED";
   created_at: string;
   updated_at: string;
   commissioner?: {
@@ -61,7 +69,7 @@ interface SessionResponse {
 
 interface SessionFormData {
   date: string;
-  status: 'ACTIVE' | 'COMPLETED';
+  status: "ACTIVE" | "COMPLETED";
 }
 
 export default function AuctionsPage() {
@@ -70,34 +78,38 @@ export default function AuctionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalSessions, setTotalSessions] = useState(0);
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'COMPLETED'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "ACTIVE" | "COMPLETED"
+  >("ALL");
 
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
-  const [selectedSession, setSelectedSession] = useState<AuctionSession | null>(null);
-  
+  const [selectedSession, setSelectedSession] = useState<AuctionSession | null>(
+    null,
+  );
+
   // Form states
   const [formData, setFormData] = useState<SessionFormData>({
-    date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
-    status: 'ACTIVE'
+    date: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
+    status: "ACTIVE",
   });
   const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState('');
+  const [formError, setFormError] = useState("");
 
   // Fetch sessions data
   const fetchSessions = async (page = 1, status?: string) => {
     setLoading(page === 1);
-    
+
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "10",
         sortBy: "date",
         sortOrder: "desc",
-        ...(status && status !== 'ALL' && { status })
+        ...(status && status !== "ALL" && { status }),
       });
 
       const response = await fetch(`/api/sessions?${params}`);
@@ -109,7 +121,7 @@ export default function AuctionsPage() {
         setTotalSessions(data.meta.total);
       }
     } catch (error) {
-      console.error('Failed to fetch sessions:', error);
+      console.error("Failed to fetch sessions:", error);
     } finally {
       setLoading(false);
     }
@@ -120,40 +132,40 @@ export default function AuctionsPage() {
   }, []);
 
   const handlePageChange = (page: number) => {
-    fetchSessions(page, statusFilter === 'ALL' ? undefined : statusFilter);
+    fetchSessions(page, statusFilter === "ALL" ? undefined : statusFilter);
   };
 
-  const handleStatusFilter = (status: 'ALL' | 'ACTIVE' | 'COMPLETED') => {
+  const handleStatusFilter = (status: "ALL" | "ACTIVE" | "COMPLETED") => {
     setStatusFilter(status);
-    fetchSessions(1, status === 'ALL' ? undefined : status);
+    fetchSessions(1, status === "ALL" ? undefined : status);
   };
 
   const resetForm = () => {
     setFormData({
-      date: new Date().toISOString().split('T')[0],
-      status: 'ACTIVE'
+      date: new Date().toISOString().split("T")[0],
+      status: "ACTIVE",
     });
-    setFormError('');
+    setFormError("");
   };
 
   const handleAddSession = async () => {
     if (!formData.date) {
-      setFormError('Date is required');
+      setFormError("Date is required");
       return;
     }
 
     setFormLoading(true);
-    setFormError('');
+    setFormError("");
 
     try {
-      const response = await fetch('/api/sessions', {
-        method: 'POST',
+      const response = await fetch("/api/sessions", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           date: new Date(formData.date).toISOString(),
-          status: formData.status
+          status: formData.status,
         }),
       });
 
@@ -162,19 +174,26 @@ export default function AuctionsPage() {
       if (response.ok && data.success) {
         setIsAddDialogOpen(false);
         resetForm();
-        fetchSessions(currentPage, statusFilter === 'ALL' ? undefined : statusFilter);
+        fetchSessions(
+          currentPage,
+          statusFilter === "ALL" ? undefined : statusFilter,
+        );
       } else {
         // Handle specific error cases
         if (response.status === 409 && data.data?.existingSessionId) {
           // Session already exists for today
-          setFormError(`${data.message}. Next session can be created: ${data.data.nextAvailableAtFormatted}`);
+          setFormError(
+            `${data.message}. Next session can be created: ${data.data.nextAvailableAtFormatted}`,
+          );
         } else {
-          setFormError(data.message || data.error?.message || 'Failed to create session');
+          setFormError(
+            data.message || data.error?.message || "Failed to create session",
+          );
         }
       }
     } catch (error) {
-      console.error('Failed to create session:', error);
-      setFormError('An unexpected error occurred');
+      console.error("Failed to create session:", error);
+      setFormError("An unexpected error occurred");
     } finally {
       setFormLoading(false);
     }
@@ -182,22 +201,22 @@ export default function AuctionsPage() {
 
   const handleEditSession = async () => {
     if (!selectedSession || !formData.date) {
-      setFormError('Date is required');
+      setFormError("Date is required");
       return;
     }
 
     setFormLoading(true);
-    setFormError('');
+    setFormError("");
 
     try {
       const response = await fetch(`/api/sessions/${selectedSession.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           date: new Date(formData.date).toISOString(),
-          status: formData.status
+          status: formData.status,
         }),
       });
 
@@ -207,13 +226,16 @@ export default function AuctionsPage() {
         setIsEditDialogOpen(false);
         setSelectedSession(null);
         resetForm();
-        fetchSessions(currentPage, statusFilter === 'ALL' ? undefined : statusFilter);
+        fetchSessions(
+          currentPage,
+          statusFilter === "ALL" ? undefined : statusFilter,
+        );
       } else {
-        setFormError(data.error?.message || 'Failed to update session');
+        setFormError(data.error?.message || "Failed to update session");
       }
     } catch (error) {
-      console.error('Failed to update session:', error);
-      setFormError('An unexpected error occurred');
+      console.error("Failed to update session:", error);
+      setFormError("An unexpected error occurred");
     } finally {
       setFormLoading(false);
     }
@@ -231,24 +253,28 @@ export default function AuctionsPage() {
 
   const handleCompleteSession = async () => {
     if (!selectedSession) return;
-    
+
     setFormLoading(true);
-    setFormError('');
+    setFormError("");
 
     try {
       const response = await fetch(`/api/sessions/${selectedSession.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          status: 'COMPLETED'
+          status: "COMPLETED",
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || errorData.message || 'Failed to complete session');
+        throw new Error(
+          errorData.error?.message ||
+            errorData.message ||
+            "Failed to complete session",
+        );
       }
 
       // Refresh the sessions list
@@ -256,8 +282,10 @@ export default function AuctionsPage() {
       setIsCompleteDialogOpen(false);
       setSelectedSession(null);
     } catch (error) {
-      console.error('Error completing session:', error);
-      setFormError(error instanceof Error ? error.message : 'Failed to complete session');
+      console.error("Error completing session:", error);
+      setFormError(
+        error instanceof Error ? error.message : "Failed to complete session",
+      );
     } finally {
       setFormLoading(false);
     }
@@ -265,18 +293,22 @@ export default function AuctionsPage() {
 
   const handleDeleteSession = async () => {
     if (!selectedSession) return;
-    
+
     setFormLoading(true);
-    setFormError('');
+    setFormError("");
 
     try {
       const response = await fetch(`/api/sessions/${selectedSession.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || errorData.message || 'Failed to delete session');
+        throw new Error(
+          errorData.error?.message ||
+            errorData.message ||
+            "Failed to delete session",
+        );
       }
 
       // Refresh the sessions list
@@ -284,36 +316,38 @@ export default function AuctionsPage() {
       setIsDeleteDialogOpen(false);
       setSelectedSession(null);
     } catch (error) {
-      console.error('Error deleting session:', error);
-      setFormError(error instanceof Error ? error.message : 'Failed to delete session');
+      console.error("Error deleting session:", error);
+      setFormError(
+        error instanceof Error ? error.message : "Failed to delete session",
+      );
     } finally {
       setFormLoading(false);
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'ACTIVE':
+      case "ACTIVE":
         return <Badge className="bg-green-100 text-green-800">Active</Badge>;
-      case 'COMPLETED':
+      case "COMPLETED":
         return <Badge variant="secondary">Completed</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -322,9 +356,9 @@ export default function AuctionsPage() {
 
   const getPaymentStatusBadge = (status: string) => {
     switch (status) {
-      case 'PENDING':
+      case "PENDING":
         return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'COMPLETED':
+      case "COMPLETED":
         return <Badge className="bg-green-100 text-green-800">Completed</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -337,13 +371,23 @@ export default function AuctionsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 truncate">Auction Sessions</h1>
-            <p className="text-slate-600 mt-1 text-sm sm:text-base">Manage auction sessions and monitor live activities</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 truncate">
+              Auction Sessions
+            </h1>
+            <p className="text-slate-600 mt-1 text-sm sm:text-base">
+              Manage auction sessions and monitor live activities
+            </p>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            {sessions.filter(s => s.status === 'ACTIVE').length > 0 && (
-              <Link href={`/auctions/live?session=${sessions.filter(s => s.status === 'ACTIVE')[0].id}`} className="w-full sm:w-auto">
-                <Button variant="outline" className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 w-full sm:w-auto text-sm">
+            {sessions.filter((s) => s.status === "ACTIVE").length > 0 && (
+              <Link
+                href={`/auctions/live?session=${sessions.filter((s) => s.status === "ACTIVE")[0].id}`}
+                className="w-full sm:w-auto"
+              >
+                <Button
+                  variant="outline"
+                  className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 w-full sm:w-auto text-sm"
+                >
                   <Activity className="h-4 w-4 mr-2" />
                   <span className="truncate">Live Auction</span>
                 </Button>
@@ -358,14 +402,17 @@ export default function AuctionsPage() {
                 <DialogHeader>
                   <DialogTitle>Create New Auction Session</DialogTitle>
                   <DialogDescription>
-                    Start a new auction session for today&apos;s agricultural trading.
+                    Start a new auction session for today&apos;s agricultural
+                    trading.
                   </DialogDescription>
                 </DialogHeader>
-                
+
                 {formError && (
                   <Alert className="border-red-200 bg-red-50">
                     <AlertCircle className="h-4 w-4 text-red-600" />
-                    <AlertDescription className="text-red-800">{formError}</AlertDescription>
+                    <AlertDescription className="text-red-800">
+                      {formError}
+                    </AlertDescription>
                   </Alert>
                 )}
 
@@ -376,20 +423,32 @@ export default function AuctionsPage() {
                       id="date"
                       type="date"
                       value={formData.date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                      min={new Date().toISOString().split('T')[0]}
-                      max={new Date().toISOString().split('T')[0]}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          date: e.target.value,
+                        }))
+                      }
+                      min={new Date().toISOString().split("T")[0]}
+                      max={new Date().toISOString().split("T")[0]}
                       readOnly
                       className="bg-gray-50 cursor-not-allowed"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Sessions can only be created for today&apos;s date.</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Sessions can only be created for today&apos;s date.
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="status">Initial Status</Label>
                     <select
                       id="status"
                       value={formData.status}
-                      onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'ACTIVE' | 'COMPLETED' }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          status: e.target.value as "ACTIVE" | "COMPLETED",
+                        }))
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="ACTIVE">Active</option>
@@ -399,7 +458,10 @@ export default function AuctionsPage() {
                 </div>
 
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsAddDialogOpen(false)}
+                  >
                     Cancel
                   </Button>
                   <Button onClick={handleAddSession} disabled={formLoading}>
@@ -425,46 +487,64 @@ export default function AuctionsPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">Total Sessions</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                Total Sessions
+              </CardTitle>
               <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent className="pt-2">
-              <div className="text-lg sm:text-2xl font-bold">{totalSessions}</div>
+              <div className="text-lg sm:text-2xl font-bold">
+                {totalSessions}
+              </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">Active Sessions</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                Active Sessions
+              </CardTitle>
               <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
             </CardHeader>
             <CardContent className="pt-2">
               <div className="text-lg sm:text-2xl font-bold text-green-600">
-                {sessions.filter(s => s.status === 'ACTIVE').length}
+                {sessions.filter((s) => s.status === "ACTIVE").length}
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">Total Value</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                Total Value
+              </CardTitle>
               <IndianRupee className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" />
             </CardHeader>
             <CardContent className="pt-2">
               <div className="text-lg sm:text-2xl font-bold text-blue-600">
-                {formatCurrency(sessions.reduce((sum, s) => sum + (s.summary?.total_value || 0), 0))}
+                {formatCurrency(
+                  sessions.reduce(
+                    (sum, s) => sum + (s.summary?.total_value || 0),
+                    0,
+                  ),
+                )}
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">Total Items</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                Total Items
+              </CardTitle>
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600 flex-shrink-0" />
             </CardHeader>
             <CardContent className="pt-2">
               <div className="text-lg sm:text-2xl font-bold text-purple-600">
-                {sessions.reduce((sum, s) => sum + (s.summary?.total_items || 0), 0)}
+                {sessions.reduce(
+                  (sum, s) => sum + (s.summary?.total_items || 0),
+                  0,
+                )}
               </div>
             </CardContent>
           </Card>
@@ -473,35 +553,40 @@ export default function AuctionsPage() {
         {/* Filters and Actions */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <Button 
-              variant={statusFilter === 'ALL' ? 'default' : 'outline'} 
+            <Button
+              variant={statusFilter === "ALL" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleStatusFilter('ALL')}
+              onClick={() => handleStatusFilter("ALL")}
               className="whitespace-nowrap"
             >
               All Sessions
             </Button>
-            <Button 
-              variant={statusFilter === 'ACTIVE' ? 'default' : 'outline'} 
+            <Button
+              variant={statusFilter === "ACTIVE" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleStatusFilter('ACTIVE')}
+              onClick={() => handleStatusFilter("ACTIVE")}
               className="whitespace-nowrap"
             >
               Active
             </Button>
-            <Button 
-              variant={statusFilter === 'COMPLETED' ? 'default' : 'outline'} 
+            <Button
+              variant={statusFilter === "COMPLETED" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleStatusFilter('COMPLETED')}
+              onClick={() => handleStatusFilter("COMPLETED")}
               className="whitespace-nowrap"
             >
               Completed
             </Button>
           </div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
-            onClick={() => fetchSessions(currentPage, statusFilter === 'ALL' ? undefined : statusFilter)}
+            onClick={() =>
+              fetchSessions(
+                currentPage,
+                statusFilter === "ALL" ? undefined : statusFilter,
+              )
+            }
             className="self-start sm:self-auto"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -525,7 +610,8 @@ export default function AuctionsPage() {
               </div>
             ) : sessions.length === 0 ? (
               <div className="text-center py-12 text-slate-600">
-                No auction sessions found. Create your first session to get started.
+                No auction sessions found. Create your first session to get
+                started.
               </div>
             ) : (
               <div className="space-y-0 max-h-[70vh] overflow-y-auto">
@@ -534,10 +620,14 @@ export default function AuctionsPage() {
                     <div className="p-3 sm:p-4 lg:p-6 hover:bg-slate-50 transition-colors">
                       <div className="flex flex-col space-y-3 sm:space-y-4">
                         <div className="flex items-start space-x-3 min-w-0">
-                          <div className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                            session.status === 'ACTIVE' ? 'bg-green-100' : 'bg-gray-100'
-                          }`}>
-                            {session.status === 'ACTIVE' ? (
+                          <div
+                            className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              session.status === "ACTIVE"
+                                ? "bg-green-100"
+                                : "bg-gray-100"
+                            }`}
+                          >
+                            {session.status === "ACTIVE" ? (
                               <Activity className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-green-600" />
                             ) : (
                               <Clock className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-gray-600" />
@@ -556,38 +646,57 @@ export default function AuctionsPage() {
                             <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-3 text-xs sm:text-sm text-slate-600">
                               <div className="flex items-center space-x-1">
                                 <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                                <span className="truncate">{formatDate(session.date)}</span>
+                                <span className="truncate">
+                                  {formatDate(session.date)}
+                                </span>
                               </div>
                               {session.summary && (
                                 <>
                                   <span className="hidden sm:inline">•</span>
-                                  <span className="truncate">{session.summary.total_items} items</span>
+                                  <span className="truncate">
+                                    {session.summary.total_items} items
+                                  </span>
                                   <span className="hidden sm:inline">•</span>
-                                  <span className="font-medium truncate">{formatCurrency(session.summary.total_value)}</span>
+                                  <span className="font-medium truncate">
+                                    {formatCurrency(
+                                      session.summary.total_value,
+                                    )}
+                                  </span>
                                 </>
                               )}
                             </div>
                             {session.summary && (
                               <div className="flex flex-wrap gap-2 sm:gap-3 text-xs text-slate-500">
                                 <span>Paid: {session.summary.paid_items}</span>
-                                <span>Pending: {session.summary.pending_items}</span>
-                                <span>Progress: {session.summary.completion_percentage}%</span>
+                                <span>
+                                  Pending: {session.summary.pending_items}
+                                </span>
+                                <span>
+                                  Progress:{" "}
+                                  {session.summary.completion_percentage}%
+                                </span>
                               </div>
                             )}
                           </div>
                         </div>
                         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:space-x-2 sm:space-y-0">
-                          {session.status === 'ACTIVE' && (
+                          {session.status === "ACTIVE" && (
                             <>
-                              <Link href={`/auctions/live?session=${session.id}`} className="w-full sm:w-auto">
-                                <Button size="sm" className="bg-red-600 hover:bg-red-700 w-full sm:w-auto text-xs sm:text-sm">
+                              <Link
+                                href={`/auctions/live?session=${session.id}`}
+                                className="w-full sm:w-auto"
+                              >
+                                <Button
+                                  size="sm"
+                                  className="bg-red-600 hover:bg-red-700 w-full sm:w-auto text-xs sm:text-sm"
+                                >
                                   <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                                   <span className="truncate">Go Live</span>
                                 </Button>
                               </Link>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 onClick={() => openCompleteDialog(session)}
                                 className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 w-full sm:w-auto text-xs sm:text-sm"
                               >
@@ -596,14 +705,21 @@ export default function AuctionsPage() {
                               </Button>
                             </>
                           )}
-                          <Link href={`/auctions/items?session=${session.id}`} className="w-full sm:w-auto">
-                            <Button variant="outline" size="sm" className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 w-full sm:w-auto text-xs sm:text-sm">
+                          <Link
+                            href={`/auctions/items?session=${session.id}`}
+                            className="w-full sm:w-auto"
+                          >
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 w-full sm:w-auto text-xs sm:text-sm"
+                            >
                               <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                               <span className="truncate">Manage Items</span>
                             </Button>
                           </Link>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => openDeleteDialog(session)}
                             className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 w-full sm:w-auto text-xs sm:text-sm"
@@ -626,7 +742,9 @@ export default function AuctionsPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between">
             <div className="text-sm text-slate-600">
-              Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, totalSessions)} of {totalSessions} sessions
+              Showing {(currentPage - 1) * 10 + 1} to{" "}
+              {Math.min(currentPage * 10, totalSessions)} of {totalSessions}{" "}
+              sessions
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -637,17 +755,19 @@ export default function AuctionsPage() {
               >
                 Previous
               </Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <Button
-                  key={page}
-                  variant={page === currentPage ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handlePageChange(page)}
-                  className="w-8"
-                >
-                  {page}
-                </Button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <Button
+                    key={page}
+                    variant={page === currentPage ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(page)}
+                    className="w-8"
+                  >
+                    {page}
+                  </Button>
+                ),
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -669,17 +789,21 @@ export default function AuctionsPage() {
                 Update session details and settings.
               </DialogDescription>
             </DialogHeader>
-            
+
             {formError && (
               <Alert className="border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">{formError}</AlertDescription>
+                <AlertDescription className="text-red-800">
+                  {formError}
+                </AlertDescription>
               </Alert>
             )}
 
             <div className="space-y-4">
               <div>
-                <Label htmlFor="edit-date">Session Date * (Cannot be changed)</Label>
+                <Label htmlFor="edit-date">
+                  Session Date * (Cannot be changed)
+                </Label>
                 <Input
                   id="edit-date"
                   type="date"
@@ -687,14 +811,21 @@ export default function AuctionsPage() {
                   readOnly
                   className="bg-gray-50 cursor-not-allowed"
                 />
-                <p className="text-xs text-gray-500 mt-1">Session date cannot be modified after creation.</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Session date cannot be modified after creation.
+                </p>
               </div>
               <div>
                 <Label htmlFor="edit-status">Status</Label>
                 <select
                   id="edit-status"
                   value={formData.status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'ACTIVE' | 'COMPLETED' }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      status: e.target.value as "ACTIVE" | "COMPLETED",
+                    }))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="ACTIVE">Active</option>
@@ -704,7 +835,10 @@ export default function AuctionsPage() {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleEditSession} disabled={formLoading}>
@@ -730,22 +864,32 @@ export default function AuctionsPage() {
             <DialogHeader>
               <DialogTitle>Delete Auction Session</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this session? This action cannot be undone and will remove all associated auction items.
+                Are you sure you want to delete this session? This action cannot
+                be undone and will remove all associated auction items.
               </DialogDescription>
             </DialogHeader>
 
             {formError && (
               <Alert className="border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">{formError}</AlertDescription>
+                <AlertDescription className="text-red-800">
+                  {formError}
+                </AlertDescription>
               </Alert>
             )}
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleDeleteSession} disabled={formLoading}>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteSession}
+                disabled={formLoading}
+              >
                 {formLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -763,27 +907,40 @@ export default function AuctionsPage() {
         </Dialog>
 
         {/* Complete Session Dialog */}
-        <Dialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
+        <Dialog
+          open={isCompleteDialogOpen}
+          onOpenChange={setIsCompleteDialogOpen}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Complete Auction Session</DialogTitle>
               <DialogDescription>
-                Are you sure you want to mark this session as completed? This will finalize the auction and prevent further changes.
+                Are you sure you want to mark this session as completed? This
+                will finalize the auction and prevent further changes.
               </DialogDescription>
             </DialogHeader>
 
             {formError && (
               <Alert className="border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">{formError}</AlertDescription>
+                <AlertDescription className="text-red-800">
+                  {formError}
+                </AlertDescription>
               </Alert>
             )}
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCompleteDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsCompleteDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleCompleteSession} disabled={formLoading} className="bg-green-600 hover:bg-green-700">
+              <Button
+                onClick={handleCompleteSession}
+                disabled={formLoading}
+                className="bg-green-600 hover:bg-green-700"
+              >
                 {formLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

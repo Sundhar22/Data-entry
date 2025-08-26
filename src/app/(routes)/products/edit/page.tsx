@@ -1,23 +1,23 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import DashboardLayout from '@/components/layout/dashboard-layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowLeft, 
-  Save, 
-  Package, 
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import DashboardLayout from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  Save,
+  Package,
   Tag,
   Loader2,
   AlertCircle,
   ToggleLeft,
-  ToggleRight
-} from 'lucide-react';
+  ToggleRight,
+} from "lucide-react";
 
 interface Product {
   id: string;
@@ -51,8 +51,8 @@ interface FormErrors {
 export default function EditProductPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const productId = searchParams.get('id');
-  
+  const productId = searchParams.get("id");
+
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -60,24 +60,24 @@ export default function EditProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState<UpdateProductRequest>({
-    name: '',
-    category_id: '',
-    is_active: true
+    name: "",
+    category_id: "",
+    is_active: true,
   });
 
   useEffect(() => {
     if (!productId) {
-      router.push('/products');
+      router.push("/products");
       return;
     }
-    
+
     const fetchProductAndCategories = async () => {
       try {
         // Fetch categories first
-        const categoriesResponse = await fetch('/api/categories', {
-          credentials: 'include'
+        const categoriesResponse = await fetch("/api/categories", {
+          credentials: "include",
         });
-        
+
         if (categoriesResponse.ok) {
           const categoriesData = await categoriesResponse.json();
           if (categoriesData.success) {
@@ -89,12 +89,12 @@ export default function EditProductPage() {
             { id: "cat-vegetables", name: "Vegetables" },
             { id: "cat-fruits", name: "Fruits" },
             { id: "cat-grains", name: "Grains" },
-            { id: "cat-pulses", name: "Pulses" }
+            { id: "cat-pulses", name: "Pulses" },
           ];
           setCategories(mockCategories);
         }
         setCategoriesLoading(false);
-        
+
         // For now, since we don't have a single product endpoint, we'll use mock data
         // In a real app, you would fetch: `/api/products/${productId}`
         const mockProduct: Product = {
@@ -102,107 +102,114 @@ export default function EditProductPage() {
           name: `Product ${productId.substring(0, 8)}`,
           category: {
             id: "cat-vegetables",
-            name: "Vegetables"
+            name: "Vegetables",
           },
           is_active: true,
-          created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date().toISOString()
+          created_at: new Date(
+            Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          updated_at: new Date().toISOString(),
         };
-        
+
         setProduct(mockProduct);
         setFormData({
           name: mockProduct.name,
           category_id: mockProduct.category.id,
-          is_active: mockProduct.is_active
+          is_active: mockProduct.is_active,
         });
-        
       } catch (error) {
-        console.error('Error fetching product:', error);
-        setErrors({ general: 'Failed to load product data.' });
+        console.error("Error fetching product:", error);
+        setErrors({ general: "Failed to load product data." });
       } finally {
         setFetchLoading(false);
       }
     };
-    
+
     fetchProductAndCategories();
   }, [productId, router]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-    
+
     if (!formData.name.trim()) {
-      newErrors.name = 'Product name is required';
+      newErrors.name = "Product name is required";
     }
-    
+
     if (!formData.category_id) {
-      newErrors.category_id = 'Please select a category';
+      newErrors.category_id = "Please select a category";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setLoading(true);
     setErrors({});
-    
+
     try {
       const response = await fetch(`/api/products/${productId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify({
           name: formData.name.trim(),
           category_id: formData.category_id,
-          is_active: formData.is_active
-        })
+          is_active: formData.is_active,
+        }),
       });
-      
+
       if (response.ok) {
-        router.push('/products');
+        router.push("/products");
       } else if (response.status === 401) {
-        setErrors({ general: 'Authentication required. Please log in.' });
+        setErrors({ general: "Authentication required. Please log in." });
       } else if (response.status === 404) {
-        setErrors({ general: 'Product not found.' });
+        setErrors({ general: "Product not found." });
       } else if (response.status === 409) {
-        setErrors({ name: 'A product with this name already exists.' });
+        setErrors({ name: "A product with this name already exists." });
       } else {
         const errorData = await response.json().catch(() => null);
-        setErrors({ 
-          general: errorData?.message || 'Failed to update product. Please try again.' 
+        setErrors({
+          general:
+            errorData?.message || "Failed to update product. Please try again.",
         });
       }
     } catch (error) {
-      console.error('Error updating product:', error);
-      setErrors({ general: 'Network error. Please check your connection and try again.' });
+      console.error("Error updating product:", error);
+      setErrors({
+        general: "Network error. Please check your connection and try again.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (field: keyof UpdateProductRequest, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (
+    field: keyof UpdateProductRequest,
+    value: string | boolean,
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear field-specific error when user starts typing
-    if (typeof value === 'string' && errors[field as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+    if (typeof value === "string" && errors[field as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -211,7 +218,9 @@ export default function EditProductPage() {
       <DashboardLayout>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <span className="ml-3 text-slate-600">Loading product details...</span>
+          <span className="ml-3 text-slate-600">
+            Loading product details...
+          </span>
         </div>
       </DashboardLayout>
     );
@@ -224,15 +233,19 @@ export default function EditProductPage() {
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
-              onClick={() => router.push('/products')}
+              onClick={() => router.push("/products")}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Products
             </Button>
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Product Not Found</h1>
-              <p className="text-slate-600 mt-1">The requested product could not be found</p>
+              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
+                Product Not Found
+              </h1>
+              <p className="text-slate-600 mt-1">
+                The requested product could not be found
+              </p>
             </div>
           </div>
           {errors.general && (
@@ -260,7 +273,9 @@ export default function EditProductPage() {
             Back
           </Button>
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Edit Product</h1>
+            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
+              Edit Product
+            </h1>
             <p className="text-slate-600 mt-1">Update product information</p>
           </div>
         </div>
@@ -280,16 +295,20 @@ export default function EditProductPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 className="bg-purple-50 text-purple-700 border-purple-200"
               >
                 <Tag className="h-3 w-3 mr-1" />
                 {product.category.name}
               </Badge>
-              <Badge 
+              <Badge
                 variant={product.is_active ? "default" : "secondary"}
-                className={product.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}
+                className={
+                  product.is_active
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-800"
+                }
               >
                 {product.is_active ? "Active" : "Inactive"}
               </Badge>
@@ -315,7 +334,7 @@ export default function EditProductPage() {
                     <span className="text-sm">{errors.general}</span>
                   </div>
                 )}
-                
+
                 {/* Product Name */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
@@ -325,7 +344,7 @@ export default function EditProductPage() {
                   <Input
                     type="text"
                     value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="Enter product name"
                     className={errors.name ? "border-red-500" : ""}
                   />
@@ -343,14 +362,20 @@ export default function EditProductPage() {
                   {categoriesLoading ? (
                     <div className="flex items-center gap-2 py-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm text-slate-600">Loading categories...</span>
+                      <span className="text-sm text-slate-600">
+                        Loading categories...
+                      </span>
                     </div>
                   ) : (
                     <select
                       value={formData.category_id}
-                      onChange={(e) => handleInputChange('category_id', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("category_id", e.target.value)
+                      }
                       className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        errors.category_id ? "border-red-500" : "border-gray-300"
+                        errors.category_id
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                     >
                       <option value="">Select a category</option>
@@ -374,7 +399,9 @@ export default function EditProductPage() {
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={() => handleInputChange('is_active', !formData.is_active)}
+                      onClick={() =>
+                        handleInputChange("is_active", !formData.is_active)
+                      }
                       className="flex items-center gap-2 p-2 rounded-md hover:bg-slate-50 transition-colors"
                     >
                       {formData.is_active ? (
@@ -382,8 +409,10 @@ export default function EditProductPage() {
                       ) : (
                         <ToggleLeft className="h-6 w-6 text-gray-400" />
                       )}
-                      <span className={`text-sm ${formData.is_active ? 'text-green-700' : 'text-gray-600'}`}>
-                        {formData.is_active ? 'Active' : 'Inactive'}
+                      <span
+                        className={`text-sm ${formData.is_active ? "text-green-700" : "text-gray-600"}`}
+                      >
+                        {formData.is_active ? "Active" : "Inactive"}
                       </span>
                     </button>
                   </div>

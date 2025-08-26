@@ -1,4 +1,4 @@
-import bcrypt from 'bcryptjs';
+import bcrypt from "bcryptjs";
 
 const SALT = parseInt(process.env.HASH_SALT!) || 10;
 

@@ -22,39 +22,39 @@
 // 5. Cannot modify anything in COMPLETED sessions
 
 export const ValidationTestCases = {
-  todayActiveCompletedPayments: {
-    sessionDate: new Date().toISOString().split('T')[0], // Today
-    sessionStatus: 'ACTIVE',
-    paymentStatus: 'COMPLETED',
-    expectCanAdd: true,
-    expectCanUpdateUnpaid: true,
-    expectCanUpdatePaid: false
-  },
-  
-  pastActiveCompletedPayments: {
-    sessionDate: new Date(Date.now() - 24*60*60*1000).toISOString().split('T')[0], // Yesterday  
-    sessionStatus: 'ACTIVE',
-    paymentStatus: 'COMPLETED',
-    expectCanAdd: false,
-    expectCanUpdateUnpaid: false,
-    expectCanUpdatePaid: false
-  },
-  
-  todayActivePendingPayments: {
-    sessionDate: new Date().toISOString().split('T')[0], // Today
-    sessionStatus: 'ACTIVE', 
-    paymentStatus: 'PENDING',
-    expectCanAdd: true,
-    expectCanUpdateUnpaid: true,
-    expectCanUpdatePaid: false
-  },
-  
-  completedSession: {
-    sessionDate: new Date().toISOString().split('T')[0], // Today
-    sessionStatus: 'COMPLETED',
-    paymentStatus: 'COMPLETED',
-    expectCanAdd: false,
-    expectCanUpdateUnpaid: false,
-    expectCanUpdatePaid: false
-  }
+todayActiveCompletedPayments: {
+sessionDate: new Date().toISOString().split('T')[0], // Today
+sessionStatus: 'ACTIVE',
+paymentStatus: 'COMPLETED',
+expectCanAdd: true,
+expectCanUpdateUnpaid: true,
+expectCanUpdatePaid: false
+},
+
+pastActiveCompletedPayments: {
+sessionDate: new Date(Date.now() - 24*60*60\*1000).toISOString().split('T')[0], // Yesterday  
+ sessionStatus: 'ACTIVE',
+paymentStatus: 'COMPLETED',
+expectCanAdd: false,
+expectCanUpdateUnpaid: false,
+expectCanUpdatePaid: false
+},
+
+todayActivePendingPayments: {
+sessionDate: new Date().toISOString().split('T')[0], // Today
+sessionStatus: 'ACTIVE',
+paymentStatus: 'PENDING',
+expectCanAdd: true,
+expectCanUpdateUnpaid: true,
+expectCanUpdatePaid: false
+},
+
+completedSession: {
+sessionDate: new Date().toISOString().split('T')[0], // Today
+sessionStatus: 'COMPLETED',
+paymentStatus: 'COMPLETED',
+expectCanAdd: false,
+expectCanUpdateUnpaid: false,
+expectCanUpdatePaid: false
+}
 };

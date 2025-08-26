@@ -1,17 +1,25 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/dashboard-layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Switch } from '@/components/ui/switch';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
+import { useState, useEffect } from "react";
+import DashboardLayout from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
   Search,
   Plus,
   Edit,
@@ -25,8 +33,8 @@ import {
   Loader2,
   RefreshCw,
   AlertCircle,
-  Save
-} from 'lucide-react';
+  Save,
+} from "lucide-react";
 
 interface Farmer {
   id: string;
@@ -64,43 +72,43 @@ export default function FarmersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalFarmers, setTotalFarmers] = useState(0);
   const [searchLoading, setSearchLoading] = useState(false);
-  
+
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedFarmer, setSelectedFarmer] = useState<Farmer | null>(null);
-  
+
   // Form states
   const [formData, setFormData] = useState<FarmerFormData>({
-    name: '',
-    phone: '',
-    village: '',
-    is_active: true
+    name: "",
+    phone: "",
+    village: "",
+    is_active: true,
   });
   const [formLoading, setFormLoading] = useState(false);
-  const [formError, setFormError] = useState('');
+  const [formError, setFormError] = useState("");
 
   // Fetch farmers data with proper error handling
   const fetchFarmers = async (page = 1, search = "") => {
     setLoading(page === 1);
     setSearchLoading(search !== "");
-    
+
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "10",
-        ...(search && { search })
+        ...(search && { search }),
       });
 
       const response = await fetch(`/api/farmers?${params}`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include'
+        credentials: "include",
       });
-      
+
       if (response.ok) {
         const data: FarmerResponse = await response.json();
         setFarmers(data.data);
@@ -108,13 +116,13 @@ export default function FarmersPage() {
         setTotalPages(data.meta.totalPages);
         setTotalFarmers(data.meta.total);
       } else if (response.status === 401) {
-        console.error('Authentication required');
+        console.error("Authentication required");
         // Handle redirect to login if needed
       } else {
-        console.error('Failed to fetch farmers:', response.statusText);
+        console.error("Failed to fetch farmers:", response.statusText);
       }
     } catch (error) {
-      console.error('Failed to fetch farmers:', error);
+      console.error("Failed to fetch farmers:", error);
     } finally {
       setLoading(false);
       setSearchLoading(false);
@@ -136,28 +144,32 @@ export default function FarmersPage() {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      phone: '',
-      village: '',
-      is_active: true
+      name: "",
+      phone: "",
+      village: "",
+      is_active: true,
     });
-    setFormError('');
+    setFormError("");
   };
 
   const handleAddFarmer = async () => {
-    if (!formData.name.trim() || !formData.phone.trim() || !formData.village.trim()) {
-      setFormError('Name, phone, and village are required');
+    if (
+      !formData.name.trim() ||
+      !formData.phone.trim() ||
+      !formData.village.trim()
+    ) {
+      setFormError("Name, phone, and village are required");
       return;
     }
 
     setFormLoading(true);
-    setFormError('');
+    setFormError("");
 
     try {
-      const response = await fetch('/api/farmers', {
-        method: 'POST',
+      const response = await fetch("/api/farmers", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
@@ -169,30 +181,35 @@ export default function FarmersPage() {
         resetForm();
         fetchFarmers(currentPage, searchTerm);
       } else {
-        setFormError(data.error?.message || 'Failed to create farmer');
+        setFormError(data.error?.message || "Failed to create farmer");
       }
     } catch (error) {
-      console.error('Failed to create farmer:', error);
-      setFormError('An unexpected error occurred');
+      console.error("Failed to create farmer:", error);
+      setFormError("An unexpected error occurred");
     } finally {
       setFormLoading(false);
     }
   };
 
   const handleEditFarmer = async () => {
-    if (!selectedFarmer || !formData.name.trim() || !formData.phone.trim() || !formData.village.trim()) {
-      setFormError('Name, phone, and village are required');
+    if (
+      !selectedFarmer ||
+      !formData.name.trim() ||
+      !formData.phone.trim() ||
+      !formData.village.trim()
+    ) {
+      setFormError("Name, phone, and village are required");
       return;
     }
 
     setFormLoading(true);
-    setFormError('');
+    setFormError("");
 
     try {
       const response = await fetch(`/api/farmers/${selectedFarmer.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
@@ -205,11 +222,11 @@ export default function FarmersPage() {
         resetForm();
         fetchFarmers(currentPage, searchTerm);
       } else {
-        setFormError(data.error?.message || 'Failed to update farmer');
+        setFormError(data.error?.message || "Failed to update farmer");
       }
     } catch (error) {
-      console.error('Failed to update farmer:', error);
-      setFormError('An unexpected error occurred');
+      console.error("Failed to update farmer:", error);
+      setFormError("An unexpected error occurred");
     } finally {
       setFormLoading(false);
     }
@@ -222,7 +239,7 @@ export default function FarmersPage() {
 
     try {
       const response = await fetch(`/api/farmers/${selectedFarmer.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (response.ok) {
@@ -231,11 +248,11 @@ export default function FarmersPage() {
         fetchFarmers(currentPage, searchTerm);
       } else {
         const data = await response.json();
-        setFormError(data.error?.message || 'Failed to delete farmer');
+        setFormError(data.error?.message || "Failed to delete farmer");
       }
     } catch (error) {
-      console.error('Failed to delete farmer:', error);
-      setFormError('An unexpected error occurred');
+      console.error("Failed to delete farmer:", error);
+      setFormError("An unexpected error occurred");
     } finally {
       setFormLoading(false);
     }
@@ -247,7 +264,7 @@ export default function FarmersPage() {
       name: farmer.name,
       phone: farmer.phone,
       village: farmer.village,
-      is_active: farmer.is_active
+      is_active: farmer.is_active,
     });
     setIsEditDialogOpen(true);
   };
@@ -258,10 +275,10 @@ export default function FarmersPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
 
@@ -271,13 +288,20 @@ export default function FarmersPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-xl lg:text-2xl font-bold text-slate-900">Farmers</h1>
-            <p className="text-sm text-slate-600 mt-1">Manage your registered farmers and their details</p>
+            <h1 className="text-xl lg:text-2xl font-bold text-slate-900">
+              Farmers
+            </h1>
+            <p className="text-sm text-slate-600 mt-1">
+              Manage your registered farmers and their details
+            </p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-            if (open) resetForm();
-            setIsAddDialogOpen(open);
-          }}>
+          <Dialog
+            open={isAddDialogOpen}
+            onOpenChange={(open) => {
+              if (open) resetForm();
+              setIsAddDialogOpen(open);
+            }}
+          >
             <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-slate-50 shadow hover:bg-blue-700 h-9 px-4 py-2">
               <Plus className="h-4 w-4 mr-2" />
               Add New Farmer
@@ -289,11 +313,13 @@ export default function FarmersPage() {
                   Create a new farmer profile for your agricultural business.
                 </DialogDescription>
               </DialogHeader>
-              
+
               {formError && (
                 <Alert className="border-red-200 bg-red-50">
                   <AlertCircle className="h-4 w-4 text-red-600" />
-                  <AlertDescription className="text-red-800">{formError}</AlertDescription>
+                  <AlertDescription className="text-red-800">
+                    {formError}
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -303,7 +329,9 @@ export default function FarmersPage() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    }
                     placeholder="Enter farmer name"
                   />
                 </div>
@@ -312,7 +340,12 @@ export default function FarmersPage() {
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        phone: e.target.value,
+                      }))
+                    }
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -321,7 +354,12 @@ export default function FarmersPage() {
                   <Input
                     id="village"
                     value={formData.village}
-                    onChange={(e) => setFormData(prev => ({ ...prev, village: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        village: e.target.value,
+                      }))
+                    }
                     placeholder="Enter village name"
                   />
                 </div>
@@ -329,14 +367,19 @@ export default function FarmersPage() {
                   <Switch
                     id="is_active"
                     checked={formData.is_active}
-                    onCheckedChange={(checked: boolean) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                    onCheckedChange={(checked: boolean) =>
+                      setFormData((prev) => ({ ...prev, is_active: checked }))
+                    }
                   />
                   <Label htmlFor="is_active">Active Status</Label>
                 </div>
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button onClick={handleAddFarmer} disabled={formLoading}>
@@ -361,34 +404,42 @@ export default function FarmersPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">Total Farmers</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                Total Farmers
+              </CardTitle>
               <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
             <CardContent className="pt-2">
-              <div className="text-lg sm:text-2xl font-bold">{totalFarmers}</div>
+              <div className="text-lg sm:text-2xl font-bold">
+                {totalFarmers}
+              </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">Active Farmers</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                Active Farmers
+              </CardTitle>
               <UserCheck className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
             </CardHeader>
             <CardContent className="pt-2">
               <div className="text-lg sm:text-2xl font-bold text-green-600">
-                {farmers.filter(f => f.is_active).length}
+                {farmers.filter((f) => f.is_active).length}
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">Inactive Farmers</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                Inactive Farmers
+              </CardTitle>
               <UserX className="h-3 w-3 sm:h-4 sm:w-4 text-red-600 flex-shrink-0" />
             </CardHeader>
             <CardContent className="pt-2">
               <div className="text-lg sm:text-2xl font-bold text-red-600">
-                {farmers.filter(f => !f.is_active).length}
+                {farmers.filter((f) => !f.is_active).length}
               </div>
             </CardContent>
           </Card>
@@ -401,14 +452,20 @@ export default function FarmersPage() {
             <Input
               placeholder="Search farmers by name, phone, or village..."
               value={searchTerm}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                handleSearch(e.target.value)
+              }
               className="pl-10"
             />
             {searchLoading && (
               <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
             )}
           </div>
-          <Button variant="outline" onClick={() => fetchFarmers(currentPage, searchTerm)} className="w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={() => fetchFarmers(currentPage, searchTerm)}
+            className="w-full sm:w-auto"
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -430,7 +487,9 @@ export default function FarmersPage() {
               </div>
             ) : farmers.length === 0 ? (
               <div className="text-center py-12 text-slate-600">
-                {searchTerm ? "No farmers found matching your search." : "No farmers found. Add your first farmer to get started."}
+                {searchTerm
+                  ? "No farmers found matching your search."
+                  : "No farmers found. Add your first farmer to get started."}
               </div>
             ) : (
               <div className="space-y-0 relative max-h-[70vh] overflow-y-auto">
@@ -455,11 +514,15 @@ export default function FarmersPage() {
                               </div>
                               <div className="flex items-center space-x-1 min-w-0">
                                 <MapPin className="h-3 w-3 flex-shrink-0" />
-                                <span className="truncate">{farmer.village}</span>
+                                <span className="truncate">
+                                  {farmer.village}
+                                </span>
                               </div>
                               <div className="flex items-center space-x-1 min-w-0">
                                 <Calendar className="h-3 w-3 flex-shrink-0" />
-                                <span className="truncate">Joined {formatDate(farmer.created_at)}</span>
+                                <span className="truncate">
+                                  Joined {formatDate(farmer.created_at)}
+                                </span>
                               </div>
                             </div>
                             <div className="text-xs text-slate-500 truncate">
@@ -468,21 +531,21 @@ export default function FarmersPage() {
                           </div>
                         </div>
                         <div className="flex items-center justify-end sm:justify-start space-x-2">
-                          <Badge 
+                          <Badge
                             variant={farmer.is_active ? "success" : "secondary"}
                             className={`${farmer.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"} text-xs px-2 py-0.5`}
                           >
                             {farmer.is_active ? "Active" : "Inactive"}
                           </Badge>
                           <div className="flex items-center space-x-1">
-                            <div 
+                            <div
                               className="inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer"
                               onClick={() => openEditDialog(farmer)}
                             >
                               <Edit className="h-3 w-3" />
                               <span className="sr-only">Edit</span>
                             </div>
-                            <div 
+                            <div
                               className="inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer"
                               onClick={() => openDeleteDialog(farmer)}
                             >
@@ -505,7 +568,9 @@ export default function FarmersPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between">
             <div className="text-sm text-slate-600">
-              Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, totalFarmers)} of {totalFarmers} farmers
+              Showing {(currentPage - 1) * 10 + 1} to{" "}
+              {Math.min(currentPage * 10, totalFarmers)} of {totalFarmers}{" "}
+              farmers
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -516,17 +581,19 @@ export default function FarmersPage() {
               >
                 Previous
               </Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <Button
-                  key={page}
-                  variant={page === currentPage ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handlePageChange(page)}
-                  className="w-8"
-                >
-                  {page}
-                </Button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <Button
+                    key={page}
+                    variant={page === currentPage ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(page)}
+                    className="w-8"
+                  >
+                    {page}
+                  </Button>
+                ),
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -548,11 +615,13 @@ export default function FarmersPage() {
                 Update farmer information and settings.
               </DialogDescription>
             </DialogHeader>
-            
+
             {formError && (
               <Alert className="border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">{formError}</AlertDescription>
+                <AlertDescription className="text-red-800">
+                  {formError}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -562,7 +631,9 @@ export default function FarmersPage() {
                 <Input
                   id="edit-name"
                   value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, name: e.target.value }))
+                  }
                   placeholder="Enter farmer name"
                 />
               </div>
@@ -571,7 +642,9 @@ export default function FarmersPage() {
                 <Input
                   id="edit-phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, phone: e.target.value }))
+                  }
                   placeholder="Enter phone number"
                 />
               </div>
@@ -580,7 +653,12 @@ export default function FarmersPage() {
                 <Input
                   id="edit-village"
                   value={formData.village}
-                  onChange={(e) => setFormData(prev => ({ ...prev, village: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      village: e.target.value,
+                    }))
+                  }
                   placeholder="Enter village name"
                 />
               </div>
@@ -588,14 +666,19 @@ export default function FarmersPage() {
                 <Switch
                   id="edit-is_active"
                   checked={formData.is_active}
-                  onCheckedChange={(checked: boolean) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                  onCheckedChange={(checked: boolean) =>
+                    setFormData((prev) => ({ ...prev, is_active: checked }))
+                  }
                 />
                 <Label htmlFor="edit-is_active">Active Status</Label>
               </div>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleEditFarmer} disabled={formLoading}>
@@ -621,22 +704,32 @@ export default function FarmersPage() {
             <DialogHeader>
               <DialogTitle>Delete Farmer</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete {selectedFarmer?.name}? This action cannot be undone.
+                Are you sure you want to delete {selectedFarmer?.name}? This
+                action cannot be undone.
               </DialogDescription>
             </DialogHeader>
 
             {formError && (
               <Alert className="border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">{formError}</AlertDescription>
+                <AlertDescription className="text-red-800">
+                  {formError}
+                </AlertDescription>
               </Alert>
             )}
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteDialogOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleDeleteFarmer} disabled={formLoading}>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteFarmer}
+                disabled={formLoading}
+              >
                 {formLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

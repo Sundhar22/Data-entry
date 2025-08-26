@@ -1,10 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  TrendingUp, TrendingDown, Users, Package, IndianRupee, Activity, 
-  Calendar, FileText, Plus, Eye, BarChart3, PieChart, 
-  Target, Clock, CheckCircle, Loader2
+import {
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Package,
+  IndianRupee,
+  Activity,
+  Calendar,
+  FileText,
+  Plus,
+  Eye,
+  BarChart3,
+  PieChart,
+  Target,
+  Clock,
+  CheckCircle,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,11 +40,11 @@ interface DashboardStats {
 
 interface RecentActivity {
   id: string;
-  type: 'session' | 'farmer' | 'bill' | 'product' | 'payment';
+  type: "session" | "farmer" | "bill" | "product" | "payment";
   title: string;
   description: string;
   time: string;
-  status: 'active' | 'completed' | 'pending' | 'paid' | 'unpaid';
+  status: "active" | "completed" | "pending" | "paid" | "unpaid";
   amount?: number;
   icon: React.ElementType;
 }
@@ -57,7 +70,7 @@ export default function EnhancedDashboard() {
     unpaidBills: 0,
     todayRevenue: 0,
     monthlyGrowth: 0,
-    loading: true
+    loading: true,
   });
 
   const [activities, setActivities] = useState<RecentActivity[]>([]);
@@ -67,37 +80,62 @@ export default function EnhancedDashboard() {
   const fetchDashboardData = async () => {
     try {
       // Fetch real data from multiple APIs (similar to analytics but focused on overview)
-      const [farmersRes, productsRes, billsOverviewRes, sessionsRes, buyersRes] = await Promise.allSettled([
-        fetch('/api/farmers'),
-        fetch('/api/products?limit=10000'), // Get all products to count properly
-        fetch('/api/bills/overview'),
-        fetch('/api/sessions'),
-        fetch('/api/buyer')
+      const [
+        farmersRes,
+        productsRes,
+        billsOverviewRes,
+        sessionsRes,
+        buyersRes,
+      ] = await Promise.allSettled([
+        fetch("/api/farmers"),
+        fetch("/api/products?limit=10000"), // Get all products to count properly
+        fetch("/api/bills/overview"),
+        fetch("/api/sessions"),
+        fetch("/api/buyer"),
       ]);
 
       // Parse successful responses
-      const farmersData = farmersRes.status === 'fulfilled' && farmersRes.value.ok ? 
-        await farmersRes.value.json() : { success: false, meta: { total: 0 } };
-        
-      const productsData = productsRes.status === 'fulfilled' && productsRes.value.ok ? 
-        await productsRes.value.json() : { success: false, data: [] };
+      const farmersData =
+        farmersRes.status === "fulfilled" && farmersRes.value.ok
+          ? await farmersRes.value.json()
+          : { success: false, meta: { total: 0 } };
 
-      const overviewData = billsOverviewRes.status === 'fulfilled' && billsOverviewRes.value.ok ? 
-        await billsOverviewRes.value.json() : { success: false, data: null };
+      const productsData =
+        productsRes.status === "fulfilled" && productsRes.value.ok
+          ? await productsRes.value.json()
+          : { success: false, data: [] };
 
-      const sessionsData = sessionsRes.status === 'fulfilled' && sessionsRes.value.ok ? 
-        await sessionsRes.value.json() : { success: false, meta: { total: 0 }, data: [] };
+      const overviewData =
+        billsOverviewRes.status === "fulfilled" && billsOverviewRes.value.ok
+          ? await billsOverviewRes.value.json()
+          : { success: false, data: null };
 
-      const buyersData = buyersRes.status === 'fulfilled' && buyersRes.value.ok ? 
-        await buyersRes.value.json() : { success: false, meta: { total: 0 } };
+      const sessionsData =
+        sessionsRes.status === "fulfilled" && sessionsRes.value.ok
+          ? await sessionsRes.value.json()
+          : { success: false, meta: { total: 0 }, data: [] };
+
+      const buyersData =
+        buyersRes.status === "fulfilled" && buyersRes.value.ok
+          ? await buyersRes.value.json()
+          : { success: false, meta: { total: 0 } };
 
       // Get real counts from API responses
-      const totalFarmers = farmersData.success ? (farmersData.meta?.total || 0) : 0;
-      const totalProducts = productsData.success ? (productsData.data?.length || 0) : 0;
-      const totalSessions = sessionsData.success ? (sessionsData.meta?.total || 0) : 0;
-      const activeSessions = sessionsData.success ? 
-        (sessionsData.data?.filter((s: { status: string }) => s.status === 'ACTIVE').length || 0) : 0;
-      const totalBuyers = buyersData.success ? (buyersData.meta?.total || 0) : 0;
+      const totalFarmers = farmersData.success
+        ? farmersData.meta?.total || 0
+        : 0;
+      const totalProducts = productsData.success
+        ? productsData.data?.length || 0
+        : 0;
+      const totalSessions = sessionsData.success
+        ? sessionsData.meta?.total || 0
+        : 0;
+      const activeSessions = sessionsData.success
+        ? sessionsData.data?.filter(
+            (s: { status: string }) => s.status === "ACTIVE",
+          ).length || 0
+        : 0;
+      const totalBuyers = buyersData.success ? buyersData.meta?.total || 0 : 0;
 
       // Get bill overview data
       const billData = overviewData.success ? overviewData.data : null;
@@ -112,12 +150,15 @@ export default function EnhancedDashboard() {
         {
           id: "1",
           type: "session",
-          title: activeSessions > 0 ? "Active Auction Sessions" : "No Active Sessions",
+          title:
+            activeSessions > 0
+              ? "Active Auction Sessions"
+              : "No Active Sessions",
           description: `${activeSessions} active of ${totalSessions} total sessions`,
           time: "Live",
           status: activeSessions > 0 ? "active" : "completed",
           amount: totalRevenue,
-          icon: Activity
+          icon: Activity,
         },
         {
           id: "2",
@@ -126,7 +167,7 @@ export default function EnhancedDashboard() {
           description: `${totalFarmers} farmers, ${totalBuyers} buyers with ${totalProducts} products`,
           time: "Updated now",
           status: "active",
-          icon: Users
+          icon: Users,
         },
         {
           id: "3",
@@ -136,7 +177,7 @@ export default function EnhancedDashboard() {
           time: "Real time",
           status: paidBills > unpaidBills ? "paid" : "pending",
           amount: totalRevenue,
-          icon: FileText
+          icon: FileText,
         },
         {
           id: "4",
@@ -146,8 +187,8 @@ export default function EnhancedDashboard() {
           time: "Updated now",
           status: unpaidBills === 0 ? "paid" : "pending",
           amount: todayRevenue,
-          icon: CheckCircle
-        }
+          icon: CheckCircle,
+        },
       ];
 
       // Calculate growth percentage based on payment rate
@@ -163,14 +204,13 @@ export default function EnhancedDashboard() {
         unpaidBills,
         todayRevenue,
         monthlyGrowth: paymentRate, // Use payment rate as growth indicator
-        loading: false
+        loading: false,
       });
 
       setActivities(realActivities);
-      
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
-      setStats(prev => ({ ...prev, loading: false }));
+      console.error("Failed to fetch dashboard data:", error);
+      setStats((prev) => ({ ...prev, loading: false }));
     }
   };
 
@@ -180,20 +220,20 @@ export default function EnhancedDashboard() {
 
   // Add refresh functionality
   const refreshDashboard = () => {
-    setStats(prev => ({ ...prev, loading: true }));
+    setStats((prev) => ({ ...prev, loading: true }));
     fetchDashboardData();
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-IN').format(num);
+    return new Intl.NumberFormat("en-IN").format(num);
   };
 
   // Quick stats configuration
@@ -205,7 +245,7 @@ export default function EnhancedDashboard() {
       icon: Users,
       color: "text-green-600",
       bgColor: "bg-green-50",
-      loading: stats.loading
+      loading: stats.loading,
     },
     {
       title: "Active Products",
@@ -213,8 +253,8 @@ export default function EnhancedDashboard() {
       change: 3.1,
       icon: Package,
       color: "text-blue-600",
-      bgColor: "bg-blue-50", 
-      loading: stats.loading
+      bgColor: "bg-blue-50",
+      loading: stats.loading,
     },
     {
       title: "Total Revenue",
@@ -223,7 +263,7 @@ export default function EnhancedDashboard() {
       icon: IndianRupee,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
-      loading: stats.loading
+      loading: stats.loading,
     },
     {
       title: "Active Sessions",
@@ -232,19 +272,41 @@ export default function EnhancedDashboard() {
       icon: Activity,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
-      loading: stats.loading
-    }
+      loading: stats.loading,
+    },
   ];
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { label: "Active", variant: "default" as const, className: "bg-green-100 text-green-800" },
-      completed: { label: "Completed", variant: "secondary" as const, className: "bg-blue-100 text-blue-800" },
-      pending: { label: "Pending", variant: "outline" as const, className: "bg-yellow-100 text-yellow-800" },
-      paid: { label: "Paid", variant: "default" as const, className: "bg-green-100 text-green-800" },
-      unpaid: { label: "Unpaid", variant: "destructive" as const, className: "bg-red-100 text-red-800" }
+      active: {
+        label: "Active",
+        variant: "default" as const,
+        className: "bg-green-100 text-green-800",
+      },
+      completed: {
+        label: "Completed",
+        variant: "secondary" as const,
+        className: "bg-blue-100 text-blue-800",
+      },
+      pending: {
+        label: "Pending",
+        variant: "outline" as const,
+        className: "bg-yellow-100 text-yellow-800",
+      },
+      paid: {
+        label: "Paid",
+        variant: "default" as const,
+        className: "bg-green-100 text-green-800",
+      },
+      unpaid: {
+        label: "Unpaid",
+        variant: "destructive" as const,
+        className: "bg-red-100 text-red-800",
+      },
     };
-    return statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    return (
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.pending
+    );
   };
 
   return (
@@ -259,10 +321,15 @@ export default function EnhancedDashboard() {
             Agricultural Market Management System
           </p>
         </div>
-        
+
         {/* Quick Actions - Mobile Optimized */}
         <div className="flex flex-wrap gap-2 sm:flex-nowrap">
-          <Button size="sm" variant="outline" onClick={refreshDashboard} disabled={stats.loading}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={refreshDashboard}
+            disabled={stats.loading}
+          >
             {stats.loading ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
@@ -289,23 +356,27 @@ export default function EnhancedDashboard() {
       </div>
 
       {/* Tabs for Mobile Navigation */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+      <Tabs
+        value={selectedTab}
+        onValueChange={setSelectedTab}
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-slate-100 rounded-xl">
-          <TabsTrigger 
-            value="overview" 
+          <TabsTrigger
+            value="overview"
             className="flex items-center gap-2 px-2 py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="analytics"
             className="flex items-center gap-2 px-2 py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
             <PieChart className="h-4 w-4" />
             <span className="hidden sm:inline">Analytics</span>
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="activity"
             className="flex items-center gap-2 px-2 py-2 text-xs sm:text-sm rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
           >
@@ -321,7 +392,10 @@ export default function EnhancedDashboard() {
             {quickStats.map((stat, index) => {
               const IconComponent = stat.icon;
               return (
-                <Card key={index} className="group transition-all duration-200 border-0 shadow-md hover:shadow-xl">
+                <Card
+                  key={index}
+                  className="group transition-all duration-200 border-0 shadow-md hover:shadow-xl"
+                >
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
@@ -331,7 +405,9 @@ export default function EnhancedDashboard() {
                         {stat.loading ? (
                           <div className="flex items-center gap-2">
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            <span className="text-sm text-slate-500">Loading...</span>
+                            <span className="text-sm text-slate-500">
+                              Loading...
+                            </span>
                           </div>
                         ) : (
                           <>
@@ -345,18 +421,27 @@ export default function EnhancedDashboard() {
                                 ) : (
                                   <TrendingDown className="h-3 w-3 text-red-600" />
                                 )}
-                                <span className={`text-xs font-medium ${
-                                  stat.change > 0 ? 'text-green-600' : 'text-red-600'
-                                }`}>
-                                  {stat.change > 0 ? '+' : ''}{stat.change}%
+                                <span
+                                  className={`text-xs font-medium ${
+                                    stat.change > 0
+                                      ? "text-green-600"
+                                      : "text-red-600"
+                                  }`}
+                                >
+                                  {stat.change > 0 ? "+" : ""}
+                                  {stat.change}%
                                 </span>
                               </div>
                             )}
                           </>
                         )}
                       </div>
-                      <div className={`p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-200`}>
-                        <IconComponent className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color}`} />
+                      <div
+                        className={`p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-200`}
+                      >
+                        <IconComponent
+                          className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color}`}
+                        />
                       </div>
                     </div>
                   </CardContent>
@@ -379,33 +464,52 @@ export default function EnhancedDashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-600">Total Bills</p>
-                      <p className="text-2xl font-bold text-slate-900">{formatNumber(stats.totalBills)}</p>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {formatNumber(stats.totalBills)}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-slate-600">Total Amount</p>
-                      <p className="text-2xl font-bold text-purple-600">{formatCurrency(stats.totalRevenue)}</p>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {formatCurrency(stats.totalRevenue)}
+                      </p>
                     </div>
                   </div>
-                  
+
                   {stats.totalBills > 0 && (
                     <div className="space-y-3">
                       <div className="flex justify-between text-sm">
-                        <span className="text-green-600">Paid Bills ({stats.paidBills})</span>
-                        <span className="text-green-600">{((stats.paidBills / stats.totalBills) * 100).toFixed(1)}%</span>
+                        <span className="text-green-600">
+                          Paid Bills ({stats.paidBills})
+                        </span>
+                        <span className="text-green-600">
+                          {((stats.paidBills / stats.totalBills) * 100).toFixed(
+                            1,
+                          )}
+                          %
+                        </span>
                       </div>
-                      <Progress 
-                        value={(stats.paidBills / stats.totalBills) * 100} 
+                      <Progress
+                        value={(stats.paidBills / stats.totalBills) * 100}
                         className="h-2 bg-slate-100"
                       />
-                      
+
                       <div className="grid grid-cols-2 gap-4 pt-2">
                         <div className="text-center p-3 bg-green-50 rounded-lg">
-                          <p className="text-xs text-green-600 font-medium">Paid Bills</p>
-                          <p className="text-lg font-bold text-green-700">{stats.paidBills}</p>
+                          <p className="text-xs text-green-600 font-medium">
+                            Paid Bills
+                          </p>
+                          <p className="text-lg font-bold text-green-700">
+                            {stats.paidBills}
+                          </p>
                         </div>
                         <div className="text-center p-3 bg-red-50 rounded-lg">
-                          <p className="text-xs text-red-600 font-medium">Unpaid Bills</p>
-                          <p className="text-lg font-bold text-red-700">{stats.unpaidBills}</p>
+                          <p className="text-xs text-red-600 font-medium">
+                            Unpaid Bills
+                          </p>
+                          <p className="text-lg font-bold text-red-700">
+                            {stats.unpaidBills}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -423,15 +527,27 @@ export default function EnhancedDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start" size="sm">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  size="sm"
+                >
                   <Calendar className="h-4 w-4 mr-2" />
                   Schedule New Session
                 </Button>
-                <Button variant="outline" className="w-full justify-start" size="sm">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  size="sm"
+                >
                   <FileText className="h-4 w-4 mr-2" />
                   Generate Bills
                 </Button>
-                <Button variant="outline" className="w-full justify-start" size="sm">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  size="sm"
+                >
                   <Eye className="h-4 w-4 mr-2" />
                   View Reports
                 </Button>
@@ -457,18 +573,24 @@ export default function EnhancedDashboard() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl">
-                    <p className="text-3xl font-bold text-purple-600">{formatCurrency(stats.totalRevenue)}</p>
+                    <p className="text-3xl font-bold text-purple-600">
+                      {formatCurrency(stats.totalRevenue)}
+                    </p>
                     <p className="text-sm text-slate-600">Total Revenue</p>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     <div className="text-center p-3 bg-green-50 rounded-lg">
                       <p className="text-sm text-green-600">Today</p>
-                      <p className="font-bold text-green-700">{formatCurrency(stats.todayRevenue)}</p>
+                      <p className="font-bold text-green-700">
+                        {formatCurrency(stats.todayRevenue)}
+                      </p>
                     </div>
                     <div className="text-center p-3 bg-blue-50 rounded-lg">
                       <p className="text-sm text-blue-600">Growth</p>
-                      <p className="font-bold text-blue-700">+{stats.monthlyGrowth}%</p>
+                      <p className="font-bold text-blue-700">
+                        +{stats.monthlyGrowth}%
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -486,19 +608,27 @@ export default function EnhancedDashboard() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <p className="text-2xl font-bold text-green-600">{stats.totalFarmers}</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {stats.totalFarmers}
+                      </p>
                       <p className="text-xs text-green-600">Farmers</p>
                     </div>
                     <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <p className="text-2xl font-bold text-blue-600">{stats.totalProducts}</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {stats.totalProducts}
+                      </p>
                       <p className="text-xs text-blue-600">Products</p>
                     </div>
                     <div className="text-center p-3 bg-orange-50 rounded-lg">
-                      <p className="text-2xl font-bold text-orange-600">{stats.activeSessions}</p>
+                      <p className="text-2xl font-bold text-orange-600">
+                        {stats.activeSessions}
+                      </p>
                       <p className="text-xs text-orange-600">Sessions</p>
                     </div>
                     <div className="text-center p-3 bg-purple-50 rounded-lg">
-                      <p className="text-2xl font-bold text-purple-600">{stats.totalBills}</p>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {stats.totalBills}
+                      </p>
                       <p className="text-xs text-purple-600">Bills</p>
                     </div>
                   </div>
@@ -528,9 +658,12 @@ export default function EnhancedDashboard() {
                   {activities.map((activity) => {
                     const IconComponent = activity.icon;
                     const statusConfig = getStatusBadge(activity.status);
-                    
+
                     return (
-                      <div key={activity.id} className="flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                      <div
+                        key={activity.id}
+                        className="flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors"
+                      >
                         <div className="p-2 bg-slate-100 rounded-lg">
                           <IconComponent className="h-4 w-4 text-slate-600" />
                         </div>
@@ -539,13 +672,19 @@ export default function EnhancedDashboard() {
                             <h4 className="font-medium text-slate-900 text-sm">
                               {activity.title}
                             </h4>
-                            <Badge className={`text-xs ${statusConfig.className} border-0`}>
+                            <Badge
+                              className={`text-xs ${statusConfig.className} border-0`}
+                            >
                               {statusConfig.label}
                             </Badge>
                           </div>
-                          <p className="text-xs text-slate-600">{activity.description}</p>
+                          <p className="text-xs text-slate-600">
+                            {activity.description}
+                          </p>
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-500">{activity.time}</span>
+                            <span className="text-xs text-slate-500">
+                              {activity.time}
+                            </span>
                             {activity.amount && (
                               <span className="text-xs font-medium text-slate-700">
                                 {formatCurrency(activity.amount)}

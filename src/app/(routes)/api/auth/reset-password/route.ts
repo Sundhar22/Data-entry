@@ -1,5 +1,9 @@
 import prisma from "@/lib/prisma";
-import { withErrorHandling, ValidationError, NotFoundError } from "@/lib/error-handler";
+import {
+  withErrorHandling,
+  ValidationError,
+  NotFoundError,
+} from "@/lib/error-handler";
 import { NextResponse } from "next/server";
 import { createSuccessResponse } from "@/lib/api-response";
 import { resetPasswordSchema } from "@/schemas/auth";
@@ -10,14 +14,17 @@ async function resetPassword(req: Request): Promise<NextResponse> {
   const result = resetPasswordSchema.safeParse(body);
 
   if (!result.success) {
-    throw new ValidationError("Validation failed", result.error.flatten().fieldErrors);
+    throw new ValidationError(
+      "Validation failed",
+      result.error.flatten().fieldErrors,
+    );
   }
 
   const { token, email, password } = result.data;
 
   // Find the commissioner
   const commissioner = await prisma.commissioner.findUnique({
-    where: { email }
+    where: { email },
   });
 
   if (!commissioner) {
@@ -30,8 +37,8 @@ async function resetPassword(req: Request): Promise<NextResponse> {
       token,
       commissioner_id: commissioner.id,
       used: false,
-      expires_at: { gt: new Date() }
-    }
+      expires_at: { gt: new Date() },
+    },
   });
 
   if (!passwordReset) {
@@ -46,21 +53,21 @@ async function resetPassword(req: Request): Promise<NextResponse> {
     // Update commissioner password
     prisma.commissioner.update({
       where: { id: commissioner.id },
-      data: { password: hashedPassword }
+      data: { password: hashedPassword },
     }),
-    
+
     // Mark token as used
     prisma.passwordReset.update({
       where: { id: passwordReset.id },
-      data: { 
+      data: {
         used: true,
-        used_at: new Date()
-      }
-    })
+        used_at: new Date(),
+      },
+    }),
   ]);
 
   return createSuccessResponse({
-    message: "Password reset successfully"
+    message: "Password reset successfully",
   });
 }
 

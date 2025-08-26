@@ -1,6 +1,7 @@
 # Deployment Guide
 
 ## Overview
+
 This guide provides comprehensive instructions for deploying the Data Entry application to various environments including production, staging, and development setups.
 
 ---
@@ -8,13 +9,16 @@ This guide provides comprehensive instructions for deploying the Data Entry appl
 ## 🚀 **Quick Start Deployment**
 
 ### Prerequisites
+
 Before deploying, ensure you have:
+
 - Node.js 18+ installed
 - PostgreSQL database access
 - Environment variables configured
 - Domain name (for production)
 
 ### Basic Deployment Steps
+
 1. Clone the repository
 2. Install dependencies
 3. Configure environment variables
@@ -27,6 +31,7 @@ Before deploying, ensure you have:
 ## 📋 **Environment Setup**
 
 ### Environment Variables
+
 Create a `.env.local` file with the following variables:
 
 ```bash
@@ -55,6 +60,7 @@ REDIS_URL="redis://localhost:6379"
 ### Environment-Specific Configurations
 
 #### Development Environment
+
 ```bash
 NODE_ENV="development"
 DATABASE_URL="postgresql://localhost:5432/data_entry_dev"
@@ -62,6 +68,7 @@ NEXTAUTH_URL="http://localhost:3000"
 ```
 
 #### Staging Environment
+
 ```bash
 NODE_ENV="staging"
 DATABASE_URL="postgresql://staging-db:5432/data_entry_staging"
@@ -69,6 +76,7 @@ NEXTAUTH_URL="https://staging.yourdomain.com"
 ```
 
 #### Production Environment
+
 ```bash
 NODE_ENV="production"
 DATABASE_URL="postgresql://prod-db:5432/data_entry_prod"
@@ -80,6 +88,7 @@ NEXTAUTH_URL="https://yourdomain.com"
 ## 🐳 **Docker Deployment**
 
 ### Dockerfile
+
 Create a `Dockerfile` in the project root:
 
 ```dockerfile
@@ -113,10 +122,11 @@ CMD ["pnpm", "start"]
 ```
 
 ### Docker Compose
+
 Create a `docker-compose.yml` file:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   # Application service
@@ -159,6 +169,7 @@ volumes:
 ```
 
 ### Docker Deployment Commands
+
 ```bash
 # Build and start services
 docker-compose up -d
@@ -183,11 +194,13 @@ docker-compose down
 ### Vercel Deployment
 
 1. **Install Vercel CLI**
+
 ```bash
 npm install -g vercel
 ```
 
 2. **Configure vercel.json**
+
 ```json
 {
   "version": 2,
@@ -212,6 +225,7 @@ npm install -g vercel
 ```
 
 3. **Deploy to Vercel**
+
 ```bash
 # Login to Vercel
 vercel login
@@ -228,11 +242,13 @@ vercel env add JWT_REFRESH_SECRET
 ### Railway Deployment
 
 1. **Install Railway CLI**
+
 ```bash
 npm install -g @railway/cli
 ```
 
 2. **Deploy to Railway**
+
 ```bash
 # Login to Railway
 railway login
@@ -254,39 +270,41 @@ railway variables set JWT_REFRESH_SECRET=your-refresh-secret
 ### DigitalOcean App Platform
 
 1. **Create App Spec**
-Create `app.yaml`:
+   Create `app.yaml`:
+
 ```yaml
 name: data-entry-app
 services:
-- name: web
-  source_dir: /
-  github:
-    repo: your-username/data-entry
-    branch: main
-  run_command: pnpm start
-  environment_slug: node-js
-  instance_count: 1
-  instance_size_slug: basic-xxs
-  env:
-  - key: NODE_ENV
-    value: production
-  - key: DATABASE_URL
-    value: ${db.DATABASE_URL}
-  - key: JWT_SECRET
-    value: your-jwt-secret
-    type: SECRET
-  - key: JWT_REFRESH_SECRET
-    value: your-refresh-secret
-    type: SECRET
+  - name: web
+    source_dir: /
+    github:
+      repo: your-username/data-entry
+      branch: main
+    run_command: pnpm start
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    env:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+      - key: JWT_SECRET
+        value: your-jwt-secret
+        type: SECRET
+      - key: JWT_REFRESH_SECRET
+        value: your-refresh-secret
+        type: SECRET
 
 databases:
-- name: db
-  engine: PG
-  version: "15"
-  size_slug: db-s-dev-database
+  - name: db
+    engine: PG
+    version: "15"
+    size_slug: db-s-dev-database
 ```
 
 2. **Deploy using doctl**
+
 ```bash
 doctl apps create --spec app.yaml
 ```
@@ -298,6 +316,7 @@ doctl apps create --spec app.yaml
 ### PostgreSQL Setup
 
 #### Local PostgreSQL
+
 ```bash
 # Install PostgreSQL (Ubuntu)
 sudo apt update
@@ -318,24 +337,28 @@ GRANT ALL PRIVILEGES ON DATABASE data_entry TO data_entry_user;
 #### Cloud Database Options
 
 **Supabase (Recommended)**
+
 1. Create account at supabase.com
 2. Create new project
 3. Get connection string from Settings > Database
 4. Update DATABASE_URL in environment variables
 
 **PlanetScale**
+
 1. Create account at planetscale.com
 2. Create new database
 3. Get connection string from Connect tab
 4. Update DATABASE_URL in environment variables
 
 **Neon**
+
 1. Create account at neon.tech
 2. Create new project
 3. Get connection string from Connection Details
 4. Update DATABASE_URL in environment variables
 
 ### Database Migration
+
 ```bash
 # Generate Prisma client
 pnpm prisma generate
@@ -355,6 +378,7 @@ pnpm prisma studio
 ## 🔧 **Build & Optimization**
 
 ### Build Commands
+
 ```bash
 # Install dependencies
 pnpm install
@@ -372,6 +396,7 @@ pnpm start
 ### Performance Optimizations
 
 #### Next.js Optimizations
+
 ```javascript
 // next.config.ts
 /** @type {import('next').NextConfig} */
@@ -380,47 +405,48 @@ const nextConfig = {
   experimental: {
     turbopack: true,
   },
-  
+
   // Optimize images
   images: {
-    formats: ['image/avif', 'image/webp'],
+    formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60,
   },
-  
+
   // Enable compression
   compress: true,
-  
+
   // Optimize fonts
   optimizeFonts: true,
-  
+
   // Security headers
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: "/(.*)",
         headers: [
           {
-            key: 'X-Frame-Options',
-            value: 'DENY'
+            key: "X-Frame-Options",
+            value: "DENY",
           },
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
+            key: "X-Content-Type-Options",
+            value: "nosniff",
           },
           {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
-          }
-        ]
-      }
+            key: "Referrer-Policy",
+            value: "origin-when-cross-origin",
+          },
+        ],
+      },
     ];
-  }
+  },
 };
 
 export default nextConfig;
 ```
 
 #### Database Optimizations
+
 ```sql
 -- Add indexes for better performance
 CREATE INDEX idx_farmer_commissioner ON farmer(commissioner_id);
@@ -435,6 +461,7 @@ CREATE INDEX idx_bill_status ON bill(payment_status, farmer_id);
 ## 🔒 **Security Configuration**
 
 ### SSL/TLS Setup
+
 ```bash
 # Using Let's Encrypt with Certbot
 sudo apt install certbot
@@ -442,6 +469,7 @@ sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 ```
 
 ### Nginx Configuration
+
 ```nginx
 server {
     listen 80;
@@ -471,6 +499,7 @@ server {
 ```
 
 ### Firewall Configuration
+
 ```bash
 # Configure UFW firewall
 sudo ufw enable
@@ -486,6 +515,7 @@ sudo ufw allow 5432  # PostgreSQL (only if external access needed)
 ## 📊 **Monitoring & Logging**
 
 ### PM2 Process Management
+
 ```bash
 # Install PM2
 npm install -g pm2
@@ -516,6 +546,7 @@ pm2 startup
 ```
 
 ### Log Management
+
 ```bash
 # View PM2 logs
 pm2 logs
@@ -528,18 +559,20 @@ pm2 monit
 ```
 
 ### Health Checks
+
 Create a health check endpoint:
+
 ```javascript
 // pages/api/health.js
 export default function handler(req, res) {
   // Check database connection
   // Check essential services
-  res.status(200).json({ 
-    status: 'healthy',
+  res.status(200).json({
+    status: "healthy",
     timestamp: new Date().toISOString(),
-    database: 'connected',
+    database: "connected",
     memory: process.memoryUsage(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
   });
 }
 ```
@@ -549,6 +582,7 @@ export default function handler(req, res) {
 ## 🔄 **CI/CD Pipeline**
 
 ### GitHub Actions Workflow
+
 Create `.github/workflows/deploy.yml`:
 
 ```yaml
@@ -561,7 +595,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -576,45 +610,45 @@ jobs:
           --health-retries 5
 
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'pnpm'
-    
-    - name: Install pnpm
-      run: npm install -g pnpm
-    
-    - name: Install dependencies
-      run: pnpm install --frozen-lockfile
-    
-    - name: Generate Prisma client
-      run: pnpm prisma generate
-    
-    - name: Run database migrations
-      run: pnpm prisma migrate deploy
-      env:
-        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
-    
-    - name: Run tests
-      run: pnpm test
-      env:
-        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "pnpm"
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+
+      - name: Run database migrations
+        run: pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+
+      - name: Run tests
+        run: pnpm test
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
 
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Deploy to production
-      uses: your-deployment-action@v1
-      with:
-        api-key: ${{ secrets.DEPLOYMENT_API_KEY }}
-        environment: production
+      - uses: actions/checkout@v3
+
+      - name: Deploy to production
+        uses: your-deployment-action@v1
+        with:
+          api-key: ${{ secrets.DEPLOYMENT_API_KEY }}
+          environment: production
 ```
 
 ---
@@ -624,6 +658,7 @@ jobs:
 ### Common Issues
 
 #### Database Connection Issues
+
 ```bash
 # Check database connection
 pnpm prisma db pull
@@ -636,6 +671,7 @@ pnpm prisma generate
 ```
 
 #### Build Issues
+
 ```bash
 # Clear Next.js cache
 rm -rf .next
@@ -649,6 +685,7 @@ pnpm type-check
 ```
 
 #### Performance Issues
+
 ```bash
 # Monitor memory usage
 htop
@@ -661,6 +698,7 @@ pnpm prisma studio
 ```
 
 ### Log Analysis
+
 ```bash
 # Application logs
 tail -f /var/log/app.log
@@ -678,6 +716,7 @@ tail -f /var/log/nginx/access.log
 ## 📋 **Deployment Checklist**
 
 ### Pre-Deployment
+
 - [ ] Environment variables configured
 - [ ] Database setup and migrations run
 - [ ] SSL certificates installed
@@ -686,6 +725,7 @@ tail -f /var/log/nginx/access.log
 - [ ] Backup strategy implemented
 
 ### Post-Deployment
+
 - [ ] Health checks passing
 - [ ] Authentication working
 - [ ] Database connections stable
@@ -695,6 +735,7 @@ tail -f /var/log/nginx/access.log
 - [ ] Logs configured
 
 ### Performance Verification
+
 - [ ] Page load times < 2 seconds
 - [ ] API response times < 500ms
 - [ ] Database query performance acceptable

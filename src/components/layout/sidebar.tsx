@@ -80,13 +80,24 @@ export default function Sidebar() {
     const fetchCounts = async () => {
       try {
         // Fetch counts from APIs
-        const [farmersRes, productsRes, buyersRes, auctionsRes, billsRes] = await Promise.all([
-          fetch('/api/farmers?limit=1', { credentials: 'include' }).catch(() => null),
-          fetch('/api/products?limit=1', { credentials: 'include' }).catch(() => null),
-          fetch('/api/buyer?limit=1', { credentials: 'include' }).catch(() => null), // Note: API is /api/buyer not /api/buyers
-          fetch('/api/sessions?limit=1', { credentials: 'include' }).catch(() => null),
-          fetch('/api/bills?limit=1', { credentials: 'include' }).catch(() => null),
-        ]);
+        const [farmersRes, productsRes, buyersRes, auctionsRes, billsRes] =
+          await Promise.all([
+            fetch("/api/farmers?limit=1", { credentials: "include" }).catch(
+              () => null,
+            ),
+            fetch("/api/products?limit=1", { credentials: "include" }).catch(
+              () => null,
+            ),
+            fetch("/api/buyer?limit=1", { credentials: "include" }).catch(
+              () => null,
+            ), // Note: API is /api/buyer not /api/buyers
+            fetch("/api/sessions?limit=1", { credentials: "include" }).catch(
+              () => null,
+            ),
+            fetch("/api/bills?limit=1", { credentials: "include" }).catch(
+              () => null,
+            ),
+          ]);
 
         const newCounts = {
           farmers: 0,
@@ -123,7 +134,7 @@ export default function Sidebar() {
 
         setCounts(newCounts);
       } catch (error) {
-        console.error('Failed to fetch navigation counts:', error);
+        console.error("Failed to fetch navigation counts:", error);
       }
     };
 
@@ -134,18 +145,18 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
       });
 
       if (response.ok) {
-        router.push('/auth/login');
+        router.push("/auth/login");
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       // Force redirect even if logout fails
-      router.push('/auth/login');
+      router.push("/auth/login");
     }
   };
 
@@ -158,7 +169,9 @@ export default function Sidebar() {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">A</span>
             </div>
-            <span className="ml-2 lg:ml-3 text-lg lg:text-xl font-bold text-slate-900">AgriTrade</span>
+            <span className="ml-2 lg:ml-3 text-lg lg:text-xl font-bold text-slate-900">
+              AgriTrade
+            </span>
           </div>
         </div>
 
@@ -174,7 +187,7 @@ export default function Sidebar() {
                     "w-full justify-start h-10 lg:h-12 text-left text-sm lg:text-base",
                     isActive
                       ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+                      : "text-slate-600 hover:text-blue-600 hover:bg-blue-50",
                   )}
                 >
                   <item.icon className="mr-2 lg:mr-3 h-4 lg:h-5 w-4 lg:w-5" />
@@ -184,7 +197,7 @@ export default function Sidebar() {
                       variant={isActive ? "secondary" : "secondary"}
                       className={cn(
                         "ml-auto",
-                        isActive ? "bg-blue-100 text-blue-800" : ""
+                        isActive ? "bg-blue-100 text-blue-800" : "",
                       )}
                     >
                       {item.badge}
@@ -201,13 +214,16 @@ export default function Sidebar() {
         {/* Bottom Actions */}
         <div className="px-3 lg:px-4 py-3 lg:py-4 space-y-1 lg:space-y-2">
           <Link href="/profile">
-            <Button variant="ghost" className="w-full justify-start h-9 lg:h-10 text-slate-600 text-sm lg:text-base">
+            <Button
+              variant="ghost"
+              className="w-full justify-start h-9 lg:h-10 text-slate-600 text-sm lg:text-base"
+            >
               <Settings className="mr-2 lg:mr-3 h-3 lg:h-4 w-3 lg:w-4" />
               Profile
             </Button>
           </Link>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="w-full justify-start h-9 lg:h-10 text-slate-600 hover:text-red-600 hover:bg-red-50 text-sm lg:text-base"
             onClick={handleLogout}
           >

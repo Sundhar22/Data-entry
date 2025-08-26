@@ -1,23 +1,22 @@
-import '@/styles/globals.css'
-import AuthProvider from '@/components/auth/auth-provider';
+import "@/styles/globals.css";
+import AuthProvider from "@/components/auth/auth-provider";
 
 export const metadata = {
-  title: 'DataEntry - Agricultural Market Management',
-  description: 'Professional agricultural market management system for commissioners',
-}
+  title: "DataEntry - Agricultural Market Management",
+  description:
+    "Professional agricultural market management system for commissioners",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
       <body suppressHydrationWarning={true}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
-  )
+  );
 }

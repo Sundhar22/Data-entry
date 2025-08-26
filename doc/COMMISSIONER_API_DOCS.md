@@ -1,16 +1,20 @@
 # Commissioner API Documentation
 
 ## Base URL
+
 All endpoints are relative to your application base URL: `http://localhost:3000`
 
 ## Authentication
+
 **🔐 Authentication Required**: All endpoints require JWT authentication via cookies. See the [Authentication Guide](./AUTHENTICATION_GUIDE.md) for details.
 
 **Headers Required:**
+
 - Requests must include valid `access_token` and `refresh_token` cookies
 - The system automatically handles token refresh when needed
 
 **Authentication Flow:**
+
 1. Login via `/api/auth/login` to get authentication cookies
 2. Include cookies in all subsequent requests
 3. System will automatically refresh tokens when needed
@@ -24,11 +28,13 @@ All endpoints are relative to your application base URL: `http://localhost:3000`
 **Authentication:** Required (Commissioner can only access their own profile)
 
 **Example Request:**
+
 ```bash
 GET /api/commissioner/me
 ```
 
 **Example Response:**
+
 ```json
 {
   "id": "cm123abc",
@@ -43,6 +49,7 @@ GET /api/commissioner/me
 ```
 
 **Error Response (401):**
+
 ```json
 {
   "error": "Unauthorized"
@@ -50,6 +57,7 @@ GET /api/commissioner/me
 ```
 
 **Error Response (404):**
+
 ```json
 {
   "error": "Commissioner not found"
@@ -63,6 +71,7 @@ GET /api/commissioner/me
 **Authentication:** Required (Commissioner can only update their own profile)
 
 **Request Body:**
+
 ```json
 {
   "name": "Updated Commissioner Name",
@@ -74,6 +83,7 @@ GET /api/commissioner/me
 ```
 
 **Validation Rules (UpdateCommissionerSchema):**
+
 - `name`: Optional, minimum 1 character if provided
 - `email`: Optional, valid email format if provided
 - `phone`: Optional, minimum 1 character if provided
@@ -81,6 +91,7 @@ GET /api/commissioner/me
 - `commission_rate`: Optional, number between 0 and 100
 
 **Example Response (Success):**
+
 ```json
 {
   "id": "cm123abc",
@@ -95,6 +106,7 @@ GET /api/commissioner/me
 ```
 
 **Example Response (Validation Error):**
+
 ```json
 {
   "error": "Validation failed",
@@ -106,6 +118,7 @@ GET /api/commissioner/me
 ```
 
 **Error Response (404):**
+
 ```json
 {
   "error": "Commissioner not found"
@@ -120,6 +133,7 @@ GET /api/commissioner/me
 **Note:** This endpoint may be restricted based on your permission system
 
 **Query Parameters:**
+
 - `page` (optional): Page number (default: 1)
 - `limit` (optional): Items per page (default: 10)
 - `location` (optional): Filter by location
@@ -127,11 +141,13 @@ GET /api/commissioner/me
 - `max_commission_rate` (optional): Filter by maximum commission rate
 
 **Example Request:**
+
 ```bash
 GET /api/commissioner?page=1&limit=10&location=Mumbai
 ```
 
 **Example Response:**
+
 ```json
 {
   "commissioners": [
@@ -168,9 +184,9 @@ GET /api/commissioner?page=1&limit=10&location=Mumbai
 const fetchWithAuth = async (url, options = {}) => {
   return fetch(url, {
     ...options,
-    credentials: 'include', // Include cookies for authentication
+    credentials: "include", // Include cookies for authentication
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...options.headers,
     },
   });
@@ -178,26 +194,26 @@ const fetchWithAuth = async (url, options = {}) => {
 
 // Get current commissioner profile
 const getProfile = async () => {
-  const response = await fetchWithAuth('/api/commissioner/me');
+  const response = await fetchWithAuth("/api/commissioner/me");
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Failed to fetch profile');
+    throw new Error(error.error || "Failed to fetch profile");
   }
   return await response.json();
 };
 
 // Update commissioner profile
 const updateProfile = async (profileData) => {
-  const response = await fetchWithAuth('/api/commissioner/me', {
-    method: 'PUT',
+  const response = await fetchWithAuth("/api/commissioner/me", {
+    method: "PUT",
     body: JSON.stringify(profileData),
   });
-  
+
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Failed to update profile');
+    throw new Error(error.error || "Failed to update profile");
   }
-  
+
   return await response.json();
 };
 
@@ -205,14 +221,14 @@ const updateProfile = async (profileData) => {
 const fetchCommissioners = async (page = 1, filters = {}) => {
   const params = new URLSearchParams({
     page: page.toString(),
-    limit: '10',
-    ...filters
+    limit: "10",
+    ...filters,
   });
-  
+
   const response = await fetchWithAuth(`/api/commissioner?${params}`);
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Failed to fetch commissioners');
+    throw new Error(error.error || "Failed to fetch commissioners");
   }
   return await response.json();
 };
@@ -228,7 +244,7 @@ const CommissionerProfile = () => {
         const data = await getProfile();
         setProfile(data);
       } catch (error) {
-        console.error('Error loading profile:', error.message);
+        console.error("Error loading profile:", error.message);
       } finally {
         setLoading(false);
       }
@@ -241,7 +257,7 @@ const CommissionerProfile = () => {
     try {
       const updated = await updateProfile(updatedData);
       setProfile(updated);
-      alert('Profile updated successfully!');
+      alert("Profile updated successfully!");
     } catch (error) {
       alert(`Error: ${error.message}`);
     }
@@ -307,6 +323,7 @@ All endpoints return consistent error responses:
 ```
 
 **For validation errors:**
+
 ```json
 {
   "error": "Validation failed",
@@ -317,6 +334,7 @@ All endpoints return consistent error responses:
 ```
 
 **Common HTTP Status Codes:**
+
 - `200`: Success
 - `400`: Bad request / Validation error
 - `401`: Unauthorized (authentication required)
@@ -324,10 +342,12 @@ All endpoints return consistent error responses:
 - `500`: Internal server error
 
 **Authentication Errors:**
+
 - `401 Unauthorized`: No tokens, invalid tokens, or user not found
 - Auto-refresh: System automatically tries refresh token if access token is expired
 
 **Validation Error Examples:**
+
 ```json
 {
   "error": "Validation failed",
@@ -344,16 +364,19 @@ All endpoints return consistent error responses:
 ## 🎯 **Testing the API**
 
 ### Prerequisites
+
 1. **Authentication**: Login via `/api/auth/login` first to get authentication cookies
 2. **Database**: Make sure your database is running and migrated
 
 ### Testing Steps
+
 1. **Login**: Use `/api/auth/login` to authenticate
 2. **Get Profile**: Use GET `/api/commissioner/me` to get current profile
 3. **Update Profile**: Use PUT `/api/commissioner/me` with updated data
 4. **List Commissioners**: Use GET `/api/commissioner` (if admin access available)
 
 ### Test Data Examples
+
 ```json
 // Valid profile update data
 {
@@ -372,12 +395,14 @@ All endpoints return consistent error responses:
 ```
 
 ### Commission Rate Guidelines
+
 - Commission rate should be a number between 0 and 100
 - Represents the percentage of commission charged
 - Typical values range from 2% to 10%
 - Default value is usually 5.0%
 
 ### Related Documentation
+
 - [Authentication Guide](./AUTHENTICATION_GUIDE.md) - Learn about authentication system
 - [Validation Guide](./VALIDATION_GUIDE.md) - Learn about Zod validation schemas
 - [API Overview](./API_OVERVIEW.md) - Complete API documentation

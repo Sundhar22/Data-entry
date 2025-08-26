@@ -1,22 +1,22 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/layout/dashboard-layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowLeft, 
-  Save, 
-  User, 
-  Phone, 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import DashboardLayout from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  Save,
+  User,
+  Phone,
   MapPin,
   Loader2,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
 interface CreateFarmerRequest {
   name: string;
@@ -36,82 +36,88 @@ export default function AddFarmerPage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [formData, setFormData] = useState<CreateFarmerRequest>({
-    name: '',
-    phone: '',
-    village: ''
+    name: "",
+    phone: "",
+    village: "",
   });
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-    
+
     if (!formData.name.trim()) {
-      newErrors.name = 'Farmer name is required';
+      newErrors.name = "Farmer name is required";
     }
-    
+
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^[0-9]{10}$/.test(formData.phone.replace(/\s+/g, ''))) {
-      newErrors.phone = 'Please enter a valid 10-digit phone number';
+      newErrors.phone = "Phone number is required";
+    } else if (!/^[0-9]{10}$/.test(formData.phone.replace(/\s+/g, ""))) {
+      newErrors.phone = "Please enter a valid 10-digit phone number";
     }
-    
+
     if (!formData.village.trim()) {
-      newErrors.village = 'Village name is required';
+      newErrors.village = "Village name is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setLoading(true);
     setErrors({});
-    
+
     try {
-      const response = await fetch('/api/farmers', {
-        method: 'POST',
+      const response = await fetch("/api/farmers", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify({
           name: formData.name.trim(),
           phone: formData.phone.trim(),
-          village: formData.village.trim()
-        })
+          village: formData.village.trim(),
+        }),
       });
-      
+
       if (response.ok) {
         await response.json();
-        router.push('/farmers');
+        router.push("/farmers");
       } else if (response.status === 401) {
-        setErrors({ general: 'Authentication required. Please log in.' });
+        setErrors({ general: "Authentication required. Please log in." });
       } else if (response.status === 409) {
-        setErrors({ phone: 'A farmer with this phone number already exists.' });
+        setErrors({ phone: "A farmer with this phone number already exists." });
       } else {
         const errorData = await response.json().catch(() => null);
-        setErrors({ 
-          general: errorData?.message || 'Failed to create farmer. Please try again.' 
+        setErrors({
+          general:
+            errorData?.message || "Failed to create farmer. Please try again.",
         });
       }
     } catch (error) {
-      console.error('Error creating farmer:', error);
-      setErrors({ general: 'Network error. Please check your connection and try again.' });
+      console.error("Error creating farmer:", error);
+      setErrors({
+        general: "Network error. Please check your connection and try again.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (field: keyof CreateFarmerRequest, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (
+    field: keyof CreateFarmerRequest,
+    value: string,
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear field-specific error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
@@ -129,8 +135,12 @@ export default function AddFarmerPage() {
             Back
           </Button>
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Add New Farmer</h1>
-            <p className="text-slate-600 mt-1">Register a new farmer in the system</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
+              Add New Farmer
+            </h1>
+            <p className="text-slate-600 mt-1">
+              Register a new farmer in the system
+            </p>
           </div>
         </div>
 
@@ -152,7 +162,7 @@ export default function AddFarmerPage() {
                     <span className="text-sm">{errors.general}</span>
                   </div>
                 )}
-                
+
                 {/* Farmer Name */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
@@ -162,7 +172,7 @@ export default function AddFarmerPage() {
                   <Input
                     type="text"
                     value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="Enter farmer's full name"
                     className={errors.name ? "border-red-500" : ""}
                   />
@@ -180,7 +190,7 @@ export default function AddFarmerPage() {
                   <Input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="Enter 10-digit phone number"
                     className={errors.phone ? "border-red-500" : ""}
                   />
@@ -198,7 +208,9 @@ export default function AddFarmerPage() {
                   <Input
                     type="text"
                     value={formData.village}
-                    onChange={(e) => handleInputChange('village', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("village", e.target.value)
+                    }
                     placeholder="Enter village name"
                     className={errors.village ? "border-red-500" : ""}
                   />
@@ -254,19 +266,27 @@ export default function AddFarmerPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-start gap-3">
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                <Badge
+                  variant="outline"
+                  className="bg-blue-50 text-blue-700 border-blue-200"
+                >
                   Phone
                 </Badge>
                 <p className="text-sm text-slate-600">
-                  Phone numbers must be unique. Each farmer can only be registered once.
+                  Phone numbers must be unique. Each farmer can only be
+                  registered once.
                 </p>
               </div>
               <div className="flex items-start gap-3">
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                <Badge
+                  variant="outline"
+                  className="bg-green-50 text-green-700 border-green-200"
+                >
                   Status
                 </Badge>
                 <p className="text-sm text-slate-600">
-                  New farmers are automatically set to active status and can participate in auctions immediately.
+                  New farmers are automatically set to active status and can
+                  participate in auctions immediately.
                 </p>
               </div>
             </CardContent>

@@ -11,18 +11,21 @@ async function forgetPassword(req: Request): Promise<NextResponse> {
   const result = forgotPasswordSchema.safeParse(body);
 
   if (!result.success) {
-    throw new ValidationError("Invalid email format", result.error.flatten().fieldErrors);
+    throw new ValidationError(
+      "Invalid email format",
+      result.error.flatten().fieldErrors,
+    );
   }
 
   const { email } = result.data;
 
   const commissioner = await prisma.commissioner.findUnique({
-    where: { email }
+    where: { email },
   });
 
   if (!commissioner) {
     return createSuccessResponse({
-      message: "If this email exists, a reset link has been sent"
+      message: "If this email exists, a reset link has been sent",
     });
   }
 
@@ -34,9 +37,9 @@ async function forgetPassword(req: Request): Promise<NextResponse> {
     where: {
       commissioner_id: commissioner.id,
       used: false,
-      expires_at: { gt: new Date() }
+      expires_at: { gt: new Date() },
     },
-    data: { used: true }
+    data: { used: true },
   });
 
   // Create new password reset record
@@ -44,8 +47,8 @@ async function forgetPassword(req: Request): Promise<NextResponse> {
     data: {
       commissioner_id: commissioner.id,
       token,
-      expires_at: expiresAt
-    }
+      expires_at: expiresAt,
+    },
   });
 
   // Send reset email
@@ -53,7 +56,7 @@ async function forgetPassword(req: Request): Promise<NextResponse> {
   await sendResetEmail(email, resetLink);
 
   return createSuccessResponse({
-    message: "If this email exists, a reset link has been sent"
+    message: "If this email exists, a reset link has been sent",
   });
 }
 

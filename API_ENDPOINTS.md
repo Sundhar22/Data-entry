@@ -1,9 +1,9 @@
-
 # API Endpoints Documentation
 
 This document provides a comprehensive list of all API endpoints with their request and response formats for the Data Entry application.
 
 ## Table of Contents
+
 - [Authentication Endpoints](#-authentication-endpoints)
 - [Commissioner Endpoints](#-commissioner-endpoints)
 - [Farmer Endpoints](#-farmer-endpoints)
@@ -18,9 +18,11 @@ This document provides a comprehensive list of all API endpoints with their requ
 ## 🔐 Authentication Endpoints
 
 ### POST /api/auth/login
+
 Login to the system with email and password.
 
 **Request:**
+
 ```json
 {
   "email": "commissioner@example.com",
@@ -29,6 +31,7 @@ Login to the system with email and password.
 ```
 
 **Response:**
+
 ```json
 {
   "user": {
@@ -41,9 +44,11 @@ Login to the system with email and password.
 ```
 
 ### POST /api/auth/logout
+
 Logout from the current session.
 
 **Response:**
+
 ```json
 {
   "message": "Logout successful"
@@ -51,9 +56,11 @@ Logout from the current session.
 ```
 
 ### POST /api/auth/signup
+
 Register a new commissioner account.
 
 **Request:**
+
 ```json
 {
   "name": "Commissioner Name",
@@ -65,6 +72,7 @@ Register a new commissioner account.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "cm123abc",
@@ -79,9 +87,11 @@ Register a new commissioner account.
 ```
 
 ### POST /api/auth/refresh
+
 Refresh the authentication token.
 
 **Response:**
+
 ```json
 {
   "message": "Token refreshed successfully"
@@ -93,9 +103,11 @@ Refresh the authentication token.
 ## 👤 Commissioner Endpoints
 
 ### GET /api/commissioner/me
+
 Get current commissioner's profile information.
 
 **Response:**
+
 ```json
 {
   "id": "cm123abc",
@@ -110,9 +122,11 @@ Get current commissioner's profile information.
 ```
 
 ### PUT /api/commissioner/me
+
 Update current commissioner's profile.
 
 **Request:**
+
 ```json
 {
   "name": "Updated Name",
@@ -122,6 +136,7 @@ Update current commissioner's profile.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "cm123abc",
@@ -135,9 +150,11 @@ Update current commissioner's profile.
 ```
 
 ### GET /api/commissioner
+
 Get list of all commissioners with pagination and filtering.
 
 **Query Parameters:**
+
 - `page` (number): Page number for pagination
 - `limit` (number): Number of items per page
 - `location` (string): Filter by location
@@ -145,6 +162,7 @@ Get list of all commissioners with pagination and filtering.
 - `max_commission_rate` (number): Maximum commission rate filter
 
 **Response:**
+
 ```json
 {
   "commissioners": [
@@ -175,13 +193,16 @@ Get list of all commissioners with pagination and filtering.
 ## 🌾 Farmer Endpoints
 
 ### GET /api/farmers
+
 Get list of farmers with pagination.
 
 **Query Parameters:**
+
 - `page` (number): Page number for pagination
 - `limit` (number): Number of items per page
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -206,9 +227,11 @@ Get list of farmers with pagination.
 ```
 
 ### POST /api/farmers
+
 Create a new farmer.
 
 **Request:**
+
 ```json
 {
   "name": "John Doe",
@@ -219,6 +242,7 @@ Create a new farmer.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "cm123abc",
@@ -233,9 +257,11 @@ Create a new farmer.
 ```
 
 ### GET /api/farmers/[id]
+
 Get a specific farmer by ID.
 
 **Response:**
+
 ```json
 {
   "id": "cm123abc",
@@ -249,9 +275,11 @@ Get a specific farmer by ID.
 ```
 
 ### PUT /api/farmers
+
 Update an existing farmer.
 
 **Request:**
+
 ```json
 {
   "id": "cm123abc",
@@ -263,6 +291,7 @@ Update an existing farmer.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "cm123abc",
@@ -277,9 +306,11 @@ Update an existing farmer.
 ```
 
 ### DELETE /api/farmers
+
 Delete a farmer.
 
 **Request:**
+
 ```json
 {
   "id": "cm123abc"
@@ -287,6 +318,7 @@ Delete a farmer.
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Farmer deleted successfully"
@@ -298,15 +330,18 @@ Delete a farmer.
 ## 📦 Product Endpoints
 
 ### GET /api/products
+
 Get list of products with pagination and filtering.
 
 **Query Parameters:**
+
 - `page` (number): Page number for pagination
 - `limit` (number): Number of items per page
 - `category` (string): Filter by product category
 - `is_active` (boolean): Filter by active status
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -331,9 +366,11 @@ Get list of products with pagination and filtering.
 ```
 
 ### POST /api/products
+
 Create a new product.
 
 **Request:**
+
 ```json
 {
   "name": "Tomatoes",
@@ -345,6 +382,7 @@ Create a new product.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "cm123abc",
@@ -360,9 +398,11 @@ Create a new product.
 ```
 
 ### GET /api/products/[id]
+
 Get a specific product by ID.
 
 **Response:**
+
 ```json
 {
   "id": "cm123abc",
@@ -377,9 +417,11 @@ Get a specific product by ID.
 ```
 
 ### PUT /api/products
+
 Update an existing product.
 
 **Request:**
+
 ```json
 {
   "id": "cm123abc",
@@ -392,6 +434,7 @@ Update an existing product.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "cm123abc",
@@ -407,9 +450,11 @@ Update an existing product.
 ```
 
 ### DELETE /api/products
+
 Delete a product.
 
 **Request:**
+
 ```json
 {
   "id": "cm123abc"
@@ -417,6 +462,7 @@ Delete a product.
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Product deleted successfully"
@@ -427,14 +473,17 @@ Delete a product.
 
 ## 🛒 Buyer Endpoints
 
-### GET /api/buyer
+### GET /api/buyers
+
 Get list of buyers with pagination.
 
 **Query Parameters:**
+
 - `page` (number): Page number for pagination
 - `limit` (number): Number of items per page
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -457,10 +506,12 @@ Get list of buyers with pagination.
 }
 ```
 
-### POST /api/buyer
+### POST /api/buyers
+
 Create a new buyer.
 
 **Request:**
+
 ```json
 {
   "name": "New Buyer",
@@ -470,6 +521,7 @@ Create a new buyer.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "buyer_id",
@@ -486,9 +538,11 @@ Create a new buyer.
 ## 📅 Session Endpoints
 
 ### GET /api/sessions
+
 Get list of auction sessions with filtering and pagination.
 
 **Query Parameters:**
+
 - `status` (string): Filter by session status (ACTIVE, COMPLETED, CANCELLED)
 - `startDate` (string): Filter sessions from this date
 - `endDate` (string): Filter sessions until this date
@@ -498,6 +552,7 @@ Get list of auction sessions with filtering and pagination.
 - `sortOrder` (string): Sort order (asc, desc)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -515,7 +570,7 @@ Get list of auction sessions with filtering and pagination.
       },
       "summary": {
         "total_items": 5,
-        "total_value": 2500.00,
+        "total_value": 2500.0,
         "paid_items": 2,
         "pending_items": 3,
         "completion_percentage": 40
@@ -532,9 +587,11 @@ Get list of auction sessions with filtering and pagination.
 ```
 
 ### POST /api/sessions
+
 Create a new auction session.
 
 **Request:**
+
 ```json
 {
   "date": "2025-08-03T10:00:00.000Z"
@@ -542,6 +599,7 @@ Create a new auction session.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -561,9 +619,11 @@ Create a new auction session.
 ```
 
 ### GET /api/sessions/[id]
+
 Get detailed information about a specific session.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -613,9 +673,11 @@ Get detailed information about a specific session.
 ```
 
 ### PUT /api/sessions/[id]
+
 Update a session's details.
 
 **Request:**
+
 ```json
 {
   "status": "COMPLETED",
@@ -624,6 +686,7 @@ Update a session's details.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -643,9 +706,11 @@ Update a session's details.
 ```
 
 ### DELETE /api/sessions/[id]
+
 Delete a session and all its related data.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -660,12 +725,15 @@ Delete a session and all its related data.
 ## 🔨 Session Items Endpoints
 
 ### GET /api/sessions/[id]/items
+
 Get all auction items for a specific session.
 
 **Query Parameters:**
+
 - Standard pagination and filtering options
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -678,7 +746,7 @@ Get all auction items for a specific session.
       "buyer_id": "buyer_id",
       "unit": "KG",
       "quantity": 50.5,
-      "final_price": 2525.00,
+      "final_price": 2525.0,
       "bill_id": null,
       "created_at": "2025-08-03T10:15:00.000Z",
       "updated_at": "2025-08-03T10:15:00.000Z",
@@ -709,9 +777,11 @@ Get all auction items for a specific session.
 ```
 
 ### POST /api/sessions/[id]/items
+
 Add a new auction item to a session.
 
 **Request:**
+
 ```json
 {
   "farmer_id": "farmer_id",
@@ -719,11 +789,12 @@ Add a new auction item to a session.
   "buyer_id": "buyer_id",
   "unit": "KG",
   "quantity": 50.5,
-  "final_price": 2525.00
+  "final_price": 2525.0
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -735,7 +806,7 @@ Add a new auction item to a session.
     "buyer_id": "buyer_id",
     "unit": "KG",
     "quantity": 50.5,
-    "final_price": 2525.00,
+    "final_price": 2525.0,
     "bill_id": null,
     "created_at": "2025-08-03T10:15:00.000Z",
     "updated_at": "2025-08-03T10:15:00.000Z",
@@ -747,19 +818,22 @@ Add a new auction item to a session.
 ```
 
 ### GET /api/sessions/[id]/items/[itemId]
+
 Get details of a specific auction item.
 
 **Response:**
 Same structure as individual item in the list above.
 
 ### PUT /api/sessions/[id]/items/[itemId]
+
 Update an existing auction item.
 
 **Request:**
+
 ```json
 {
   "quantity": 45.0,
-  "final_price": 2250.00
+  "final_price": 2250.0
 }
 ```
 
@@ -767,9 +841,11 @@ Update an existing auction item.
 Updated item with same structure as GET response.
 
 ### DELETE /api/sessions/[id]/items/[itemId]
+
 Delete an auction item from a session.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -784,9 +860,11 @@ Delete an auction item from a session.
 ## 🧾 Bills Endpoints
 
 ### GET /api/bills
+
 Get list of bills with advanced filtering and pagination.
 
 **Query Parameters:**
+
 - `farmer_id` (string): Filter by farmer ID
 - `product_id` (string): Filter by product ID
 - `session_id` (string): Filter by session ID
@@ -798,6 +876,7 @@ Get list of bills with advanced filtering and pagination.
 - `sortBy` (string): Sort field
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -809,10 +888,10 @@ Get list of bills with advanced filtering and pagination.
       "product_id": "product_id",
       "session_id": "session_id",
       "total_quantity": 100.5,
-      "gross_amount": 5000.00,
+      "gross_amount": 5000.0,
       "commission_rate": 5.0,
-      "commission_amount": 250.00,
-      "net_payable": 4750.00,
+      "commission_amount": 250.0,
+      "net_payable": 4750.0,
       "payment_status": "UNPAID",
       "payment_method": null,
       "payment_date": null,
@@ -839,12 +918,15 @@ Get list of bills with advanced filtering and pagination.
 ```
 
 ### GET /api/bills/preview
+
 Preview bills before generation for a specific farmer.
 
 **Query Parameters:**
+
 - `farmer_id` (string): Required - Farmer ID to preview bills for
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -884,9 +966,11 @@ Preview bills before generation for a specific farmer.
 ```
 
 ### GET /api/bills/statistics
+
 Get billing statistics and summary.
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -894,9 +978,9 @@ Get billing statistics and summary.
     "total_bills": 10,
     "paid_bills": 5,
     "unpaid_bills": 5,
-    "total_amount": 50000.00,
-    "paid_amount": 25000.00,
-    "pending_amount": 25000.00
+    "total_amount": 50000.0,
+    "paid_amount": 25000.0,
+    "pending_amount": 25000.0
   }
 }
 ```
@@ -928,6 +1012,7 @@ All endpoints may return standard error responses:
 ```
 
 Common error codes:
+
 - `UNAUTHORIZED` - Authentication required or invalid
 - `FORBIDDEN` - Access denied
 - `NOT_FOUND` - Resource not found

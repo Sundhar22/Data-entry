@@ -1,219 +1,278 @@
 import { withAuth } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { createSuccessResponse, createPaginatedResponse } from "@/lib/api-response";
+import {
+  createSuccessResponse,
+  createPaginatedResponse,
+} from "@/lib/api-response";
 import { withErrorHandling } from "@/lib/error-handler";
 import prisma from "@/lib/prisma";
 import { AuthenticatedRequest } from "@/types/auth";
-import { CreateSessionData, CreateSessionSchema, SessionFilterSchema, SessionFilters } from "@/schemas/session";
+import {
+  CreateSessionData,
+  CreateSessionSchema,
+  SessionFilterSchema,
+  SessionFilters,
+} from "@/schemas/session";
 import { validateRequest } from "@/lib/validation";
 
 /**
  * GET /api/sessions
  * List auction sessions with filtering, pagination, and search
  */
-async function getSessionsHandler(req: AuthenticatedRequest): Promise<NextResponse> {
-    const userId = req.user.id;
-    const { searchParams } = new URL(req.url);
+async function getSessionsHandler(
+  req: AuthenticatedRequest,
+): Promise<NextResponse> {
+  const userId = req.user.id;
+  const { searchParams } = new URL(req.url);
 
-    // Parse and validate query parameters
-    const filterParams: Partial<SessionFilters> = {
-        status: searchParams.get('status') as 'ACTIVE' | 'COMPLETED' | undefined || undefined,
-        startDate: searchParams.get('startDate') ? new Date(searchParams.get('startDate')!) : undefined,
-        endDate: searchParams.get('endDate') ? new Date(searchParams.get('endDate')!) : undefined,
-        page: parseInt(searchParams.get('page') || '1'),
-        limit: parseInt(searchParams.get('limit') || '10'),
-        sortBy: (searchParams.get('sortBy') as 'date' | 'created_at' | 'updated_at') || 'date',
-        sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc',
-    };
+  // Parse and validate query parameters
+  const filterParams: Partial<SessionFilters> = {
+    status:
+      (searchParams.get("status") as "ACTIVE" | "COMPLETED" | undefined) ||
+      undefined,
+    startDate: searchParams.get("startDate")
+      ? new Date(searchParams.get("startDate")!)
+      : undefined,
+    endDate: searchParams.get("endDate")
+      ? new Date(searchParams.get("endDate")!)
+      : undefined,
+    page: parseInt(searchParams.get("page") || "1"),
+    limit: parseInt(searchParams.get("limit") || "10"),
+    sortBy:
+      (searchParams.get("sortBy") as "date" | "created_at" | "updated_at") ||
+      "date",
+    sortOrder: (searchParams.get("sortOrder") as "asc" | "desc") || "desc",
+  };
 
-    const validation = SessionFilterSchema.safeParse(filterParams);
-    if (!validation.success) {
-        return NextResponse.json({
-            success: false,
-            message: "Invalid filter parameters",
-            errors: validation.error.issues
-        }, { status: 400 });
-    }
+  const validation = SessionFilterSchema.safeParse(filterParams);
+  if (!validation.success) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Invalid filter parameters",
+        errors: validation.error.issues,
+      },
+      { status: 400 },
+    );
+  }
 
-    const filters = validation.data;
-    const skip = (filters.page - 1) * filters.limit;
+  const filters = validation.data;
+  const skip = (filters.page - 1) * filters.limit;
 
-    // Build where clause
-    const whereClause = {
-        commissioner_id: userId,
-        ...(filters.status && { status: filters.status }),
-        ...(filters.startDate || filters.endDate) && {
-            date: {
-                ...(filters.startDate && { gte: filters.startDate }),
-                ...(filters.endDate && { lte: filters.endDate }),
-            }
-        }
-    };
+  // Build where clause
+  const whereClause = {
+    commissioner_id: userId,
+    ...(filters.status && { status: filters.status }),
+    ...((filters.startDate || filters.endDate) && {
+      date: {
+        ...(filters.startDate && { gte: filters.startDate }),
+        ...(filters.endDate && { lte: filters.endDate }),
+      },
+    }),
+  };
 
-    // Build order by clause
-    const orderBy = {
-        [filters.sortBy]: filters.sortOrder
-    };
+  // Build order by clause
+  const orderBy = {
+    [filters.sortBy]: filters.sortOrder,
+  };
 
-    try {
-        // Get sessions with counts and aggregated data
-        const [sessions, totalCount] = await Promise.all([
-            prisma.auctionSession.findMany({
-                where: whereClause,
-                select: {
-                    id: true,
-                    date: true,
-                    status: true,
-                    payment_status: true,
-                    created_at: true,
-                    updated_at: true,
-                    // Include aggregated auction items data
-                    auction_items: {
-                        select: {
-                            id: true,
-                            quantity: true,
-                            rate: true,
-                            bill_id: true
-                        }
-                    },
-                    // Include commissioner info
-                    commissioner: {
-                        select: {
-                            id: true,
-                            name: true
-                        }
-                    }
-                },
-                skip,
-                take: filters.limit,
-                orderBy
-            }),
-            prisma.auctionSession.count({ where: whereClause })
-        ]);
+  try {
+    // Get sessions with counts and aggregated data
+    const [sessions, totalCount] = await Promise.all([
+      prisma.auctionSession.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          date: true,
+          status: true,
+          payment_status: true,
+          created_at: true,
+          updated_at: true,
+          // Include aggregated auction items data
+          auction_items: {
+            select: {
+              id: true,
+              quantity: true,
+              rate: true,
+              bill_id: true,
+            },
+          },
+          // Include commissioner info
+          commissioner: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        skip,
+        take: filters.limit,
+        orderBy,
+      }),
+      prisma.auctionSession.count({ where: whereClause }),
+    ]);
 
-        // Transform sessions to include summary data
-        const transformedSessions = sessions.map(session => {
-            const totalItems = session.auction_items.length;
-            const totalValue = session.auction_items.reduce((sum, item) => sum + (item.rate || 0), 0);
-            const paidItems = session.auction_items.filter(item => item.bill_id !== null).length;
-            const pendingItems = totalItems - paidItems;
+    // Transform sessions to include summary data
+    const transformedSessions = sessions.map((session) => {
+      const totalItems = session.auction_items.length;
+      const totalValue = session.auction_items.reduce(
+        (sum, item) => sum + (item.rate || 0),
+        0,
+      );
+      const paidItems = session.auction_items.filter(
+        (item) => item.bill_id !== null,
+      ).length;
+      const pendingItems = totalItems - paidItems;
 
-            return {
-                id: session.id,
-                date: session.date,
-                status: session.status,
-                payment_status: session.payment_status,
-                created_at: session.created_at,
-                updated_at: session.updated_at,
-                commissioner: session.commissioner,
-                summary: {
-                    total_items: totalItems,
-                    total_value: totalValue,
-                    paid_items: paidItems,
-                    pending_items: pendingItems,
-                    completion_percentage: totalItems > 0 ? Math.round((paidItems / totalItems) * 100) : 0
-                }
-            };
-        });
+      return {
+        id: session.id,
+        date: session.date,
+        status: session.status,
+        payment_status: session.payment_status,
+        created_at: session.created_at,
+        updated_at: session.updated_at,
+        commissioner: session.commissioner,
+        summary: {
+          total_items: totalItems,
+          total_value: totalValue,
+          paid_items: paidItems,
+          pending_items: pendingItems,
+          completion_percentage:
+            totalItems > 0 ? Math.round((paidItems / totalItems) * 100) : 0,
+        },
+      };
+    });
 
-        return createPaginatedResponse(transformedSessions, filters.page, filters.limit, totalCount);
-    } catch (error) {
-        throw new Error(`Failed to fetch sessions: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    return createPaginatedResponse(
+      transformedSessions,
+      filters.page,
+      filters.limit,
+      totalCount,
+    );
+  } catch (error) {
+    throw new Error(
+      `Failed to fetch sessions: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
 }
 
 /**
  * POST /api/sessions
  * Create a new auction session
  */
-async function createSessionHandler(req: AuthenticatedRequest): Promise<NextResponse> {
-    const userId = req.user.id;
+async function createSessionHandler(
+  req: AuthenticatedRequest,
+): Promise<NextResponse> {
+  const userId = req.user.id;
 
-    // Validate request body
-    const validator = validateRequest(CreateSessionSchema);
-    const validation = await validator(req);
+  // Validate request body
+  const validator = validateRequest(CreateSessionSchema);
+  const validation = await validator(req);
 
-    if (!validation.success) {
-        return validation.response;
+  if (!validation.success) {
+    return validation.response;
+  }
+
+  const validatedData: CreateSessionData = validation.data;
+
+  try {
+    // Validate that the requested date is today's date only
+    const today = new Date();
+    const startOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+    const requestedDate = new Date(
+      validatedData.date.getFullYear(),
+      validatedData.date.getMonth(),
+      validatedData.date.getDate(),
+    );
+
+    if (requestedDate.getTime() !== startOfToday.getTime()) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Sessions can only be created for today's date. Past or future dates are not allowed.",
+          data: {
+            requestedDate: validatedData.date.toISOString(),
+            allowedDate: startOfToday.toISOString(),
+          },
+        },
+        { status: 400 },
+      );
     }
 
-    const validatedData: CreateSessionData = validation.data;
+    // Check if there's already ANY session for today for this commissioner (ACTIVE or COMPLETED)
+    const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
 
-    try {
-        // Validate that the requested date is today's date only
-        const today = new Date();
-        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const requestedDate = new Date(validatedData.date.getFullYear(), validatedData.date.getMonth(), validatedData.date.getDate());
-        
-        if (requestedDate.getTime() !== startOfToday.getTime()) {
-            return NextResponse.json({
-                success: false,
-                message: "Sessions can only be created for today's date. Past or future dates are not allowed.",
-                data: {
-                    requestedDate: validatedData.date.toISOString(),
-                    allowedDate: startOfToday.toISOString()
-                }
-            }, { status: 400 });
-        }
+    const existingSession = await prisma.auctionSession.findFirst({
+      where: {
+        commissioner_id: userId,
+        date: {
+          gte: startOfToday,
+          lt: endOfToday,
+        },
+        // Removed status filter - now checks for ANY session regardless of status
+      },
+    });
 
-        // Check if there's already ANY session for today for this commissioner (ACTIVE or COMPLETED)
-        const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
+    if (existingSession) {
+      const nextAvailableTime = new Date(
+        startOfToday.getTime() + 24 * 60 * 60 * 1000,
+      ); // Tomorrow at 00:00 AM
 
-        const existingSession = await prisma.auctionSession.findFirst({
-            where: {
-                commissioner_id: userId,
-                date: {
-                    gte: startOfToday,
-                    lt: endOfToday
-                }
-                // Removed status filter - now checks for ANY session regardless of status
-            }
-        });
-
-        if (existingSession) {
-            const nextAvailableTime = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000); // Tomorrow at 00:00 AM
-            
-            return NextResponse.json({
-                success: false,
-                message: `A session already exists for today (Status: ${existingSession.status})`,
-                data: { 
-                    existingSessionId: existingSession.id,
-                    existingSessionStatus: existingSession.status,
-                    nextAvailableAt: nextAvailableTime.toISOString(),
-                    nextAvailableAtFormatted: nextAvailableTime.toLocaleString()
-                }
-            }, { status: 409 });
-        }
-
-        // Create new session
-        const session = await prisma.auctionSession.create({
-            data: {
-                date: validatedData.date,
-                commissioner_id: userId,
-                status: 'ACTIVE',
-                payment_status: 'PENDING'
-            },
-            select: {
-                id: true,
-                date: true,
-                status: true,
-                payment_status: true,
-                created_at: true,
-                updated_at: true,
-                commissioner: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                }
-            }
-        });
-
-        return createSuccessResponse(session, 201);
-    } catch (error) {
-        throw new Error(`Failed to create session: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return NextResponse.json(
+        {
+          success: false,
+          message: `A session already exists for today (Status: ${existingSession.status})`,
+          data: {
+            existingSessionId: existingSession.id,
+            existingSessionStatus: existingSession.status,
+            nextAvailableAt: nextAvailableTime.toISOString(),
+            nextAvailableAtFormatted: nextAvailableTime.toLocaleString(),
+          },
+        },
+        { status: 409 },
+      );
     }
+
+    // Create new session
+    const session = await prisma.auctionSession.create({
+      data: {
+        date: validatedData.date,
+        commissioner_id: userId,
+        status: "ACTIVE",
+        payment_status: "PENDING",
+      },
+      select: {
+        id: true,
+        date: true,
+        status: true,
+        payment_status: true,
+        created_at: true,
+        updated_at: true,
+        commissioner: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return createSuccessResponse(session, 201);
+  } catch (error) {
+    throw new Error(
+      `Failed to create session: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
 }
 
-export const GET = withAuth(withErrorHandling(getSessionsHandler, 'Get Sessions'));
-export const POST = withAuth(withErrorHandling(createSessionHandler, 'Create Session'));
+export const GET = withAuth(
+  withErrorHandling(getSessionsHandler, "Get Sessions"),
+);
+export const POST = withAuth(
+  withErrorHandling(createSessionHandler, "Create Session"),
+);

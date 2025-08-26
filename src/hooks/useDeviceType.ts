@@ -1,22 +1,22 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-export type DeviceType = 'mobile' | 'tablet' | 'desktop';
+export type DeviceType = "mobile" | "tablet" | "desktop";
 
 export function useDeviceType(): DeviceType {
-  const [deviceType, setDeviceType] = useState<DeviceType>('desktop');
+  const [deviceType, setDeviceType] = useState<DeviceType>("desktop");
 
   useEffect(() => {
     const checkDeviceType = () => {
       const width = window.innerWidth;
-      
+
       if (width < 768) {
-        setDeviceType('mobile');
+        setDeviceType("mobile");
       } else if (width < 1024) {
-        setDeviceType('tablet');
+        setDeviceType("tablet");
       } else {
-        setDeviceType('desktop');
+        setDeviceType("desktop");
       }
     };
 
@@ -24,10 +24,10 @@ export function useDeviceType(): DeviceType {
     checkDeviceType();
 
     // Add event listener for window resize
-    window.addEventListener('resize', checkDeviceType);
+    window.addEventListener("resize", checkDeviceType);
 
     // Cleanup
-    return () => window.removeEventListener('resize', checkDeviceType);
+    return () => window.removeEventListener("resize", checkDeviceType);
   }, []);
 
   return deviceType;
@@ -35,20 +35,20 @@ export function useDeviceType(): DeviceType {
 
 export function useIsMobile(): boolean {
   const deviceType = useDeviceType();
-  return deviceType === 'mobile';
+  return deviceType === "mobile";
 }
 
 export function useIsTablet(): boolean {
   const deviceType = useDeviceType();
-  return deviceType === 'tablet';
+  return deviceType === "tablet";
 }
 
 export function useIsDesktop(): boolean {
   const deviceType = useDeviceType();
-  return deviceType === 'desktop';
+  return deviceType === "desktop";
 }
 
 export function useIsMobileOrTablet(): boolean {
   const deviceType = useDeviceType();
-  return deviceType === 'mobile' || deviceType === 'tablet';
+  return deviceType === "mobile" || deviceType === "tablet";
 }

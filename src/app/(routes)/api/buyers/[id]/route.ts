@@ -10,11 +10,13 @@ import { AuthenticatedRequest } from "@/types/auth";
 // GET /api/buyers/:id
 async function getBuyerByIdHandler(
   _req: AuthenticatedRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const userId = _req.user.id;
   const { id } = await params;
-  const buyer = await prisma.buyer.findUnique({ where: { id, commissioner_id: userId } });
+  const buyer = await prisma.buyer.findUnique({
+    where: { id, commissioner_id: userId },
+  });
   if (!buyer) throw new NotFoundError("Buyer not found");
   return createSuccessResponse(buyer);
 }
@@ -22,7 +24,7 @@ async function getBuyerByIdHandler(
 // PUT /api/buyers/:id
 async function updateBuyerByIdHandler(
   req: AuthenticatedRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const userId = req.user.id;
   const { id } = await params;
@@ -30,15 +32,17 @@ async function updateBuyerByIdHandler(
   const validation = await validator(req);
   if (!validation.success) return validation.response;
 
-  const existing = await prisma.buyer.findUnique({ where: { id, commissioner_id: userId } });
+  const existing = await prisma.buyer.findUnique({
+    where: { id, commissioner_id: userId },
+  });
   if (!existing) throw new NotFoundError("Buyer not found");
 
   const updated = await prisma.buyer.update({
     where: { id, commissioner_id: userId },
     data: {
       ...validation.data,
-      is_active: validation.data.is_active ?? existing.is_active
-    }
+      is_active: validation.data.is_active ?? existing.is_active,
+    },
   });
 
   return createSuccessResponse(updated);
@@ -47,50 +51,52 @@ async function updateBuyerByIdHandler(
 // DELETE /api/buyers/:id
 async function deleteBuyerByIdHandler(
   _req: AuthenticatedRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const userId = _req.user.id;
   const { id } = await params;
-  const existing = await prisma.buyer.findUnique({ where: { id, commissioner_id: userId } });
+  const existing = await prisma.buyer.findUnique({
+    where: { id, commissioner_id: userId },
+  });
   if (!existing) throw new NotFoundError("Buyer not found");
 
-  await prisma.buyer.delete({ where: { id, commissioner_id: userId} });
+  await prisma.buyer.delete({ where: { id, commissioner_id: userId } });
   return new NextResponse(null, { status: 204 });
 }
 
 // Handler exports
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   return withAuth(
     withErrorHandling(
       (req: AuthenticatedRequest) => getBuyerByIdHandler(req, { params }),
-      "Get Buyer by ID"
-    )
+      "Get Buyer by ID",
+    ),
   )(req);
 }
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   return withAuth(
     withErrorHandling(
       (req: AuthenticatedRequest) => updateBuyerByIdHandler(req, { params }),
-      "Update Buyer by ID"
-    )
+      "Update Buyer by ID",
+    ),
   )(req);
 }
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   return withAuth(
     withErrorHandling(
       (req: AuthenticatedRequest) => deleteBuyerByIdHandler(req, { params }),
-      "Delete Buyer by ID"
-    )
+      "Delete Buyer by ID",
+    ),
   )(req);
 }

@@ -1,22 +1,27 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth";
 import { withErrorHandling } from "@/lib/error-handler";
-import { createSuccessResponse, createPaginatedResponse } from "@/lib/api-response";
+import {
+  createSuccessResponse,
+  createPaginatedResponse,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/lib/validation";
 import { BuyerApiSchema } from "@/schemas/buyer";
 import { AuthenticatedRequest } from "@/types/auth";
 
 // GET /api/buyer
-async function listBuyersHandler(req: AuthenticatedRequest): Promise<NextResponse> {
+async function listBuyersHandler(
+  req: AuthenticatedRequest,
+): Promise<NextResponse> {
   const userId = req.user.id;
   const { searchParams } = new URL(req.url);
 
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '10');
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "10");
   const skip = (page - 1) * limit;
-  const search = searchParams.get('search') || '';
-  const activeOnly = searchParams.get('active') === 'true';
+  const search = searchParams.get("search") || "";
+  const activeOnly = searchParams.get("active") === "true";
 
   // Build where clause with search functionality
   const whereClause = {
@@ -24,10 +29,10 @@ async function listBuyersHandler(req: AuthenticatedRequest): Promise<NextRespons
     ...(activeOnly && { is_active: true }),
     ...(search && {
       OR: [
-        { name: { contains: search, mode: 'insensitive' as const } },
-        { phone: { contains: search, mode: 'insensitive' as const } }
-      ]
-    })
+        { name: { contains: search, mode: "insensitive" as const } },
+        { phone: { contains: search, mode: "insensitive" as const } },
+      ],
+    }),
   };
 
   // Get buyers for this commissioner with pagination and search
@@ -40,22 +45,24 @@ async function listBuyersHandler(req: AuthenticatedRequest): Promise<NextRespons
         phone: true,
         is_active: true,
         created_at: true,
-        updated_at: true
+        updated_at: true,
       },
       skip,
       take: limit,
-      orderBy: { created_at: "desc" }
+      orderBy: { created_at: "desc" },
     }),
     prisma.buyer.count({
-      where: whereClause
-    })
+      where: whereClause,
+    }),
   ]);
 
   return createPaginatedResponse(buyers, page, limit, totalCount);
 }
 
 // POST /api/buyer
-async function createBuyerHandler(req: AuthenticatedRequest): Promise<NextResponse> {
+async function createBuyerHandler(
+  req: AuthenticatedRequest,
+): Promise<NextResponse> {
   const userId = req.user.id;
   const validator = validateRequest(BuyerApiSchema);
   const validation = await validator(req);
@@ -64,14 +71,13 @@ async function createBuyerHandler(req: AuthenticatedRequest): Promise<NextRespon
   const newBuyer = await prisma.buyer.create({
     data: {
       ...validation.data,
-      commissioner_id: userId
-    }
+      commissioner_id: userId,
+    },
   });
 
   return createSuccessResponse(newBuyer, 201);
 }
 
-export const GET = withAuth(withErrorHandling(listBuyersHandler))
+export const GET = withAuth(withErrorHandling(listBuyersHandler));
 
-export const POST = withAuth(withErrorHandling(createBuyerHandler))
-
+export const POST = withAuth(withErrorHandling(createBuyerHandler));

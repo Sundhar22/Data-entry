@@ -1,9 +1,9 @@
 "use client";
 
-import { ReactNode } from 'react';
-import { useIsMobileOrTablet } from '@/hooks/useDeviceType';
-import { Card, CardContent } from '@/components/ui/card';
-import { Monitor, Smartphone, Tablet } from 'lucide-react';
+import { ReactNode } from "react";
+import { useIsMobileOrTablet } from "@/hooks/useDeviceType";
+import { Card, CardContent } from "@/components/ui/card";
+import { Monitor, Smartphone, Tablet } from "lucide-react";
 
 interface DesktopOnlyProps {
   children: ReactNode;
@@ -11,10 +11,10 @@ interface DesktopOnlyProps {
   showIcon?: boolean;
 }
 
-export default function DesktopOnly({ 
-  children, 
+export default function DesktopOnly({
+  children,
   message = "This feature is only available on desktop devices for better usability and accuracy.",
-  showIcon = true 
+  showIcon = true,
 }: DesktopOnlyProps) {
   const isMobileOrTablet = useIsMobileOrTablet();
 
@@ -35,11 +35,10 @@ export default function DesktopOnly({
           <h3 className="text-lg font-semibold text-gray-700 mb-2">
             Desktop Required
           </h3>
-          <p className="text-gray-600 max-w-md leading-relaxed">
-            {message}
-          </p>
+          <p className="text-gray-600 max-w-md leading-relaxed">{message}</p>
           <div className="mt-4 text-sm text-gray-500">
-            Please use a desktop or laptop computer to access this functionality.
+            Please use a desktop or laptop computer to access this
+            functionality.
           </div>
         </CardContent>
       </Card>

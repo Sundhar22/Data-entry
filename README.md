@@ -28,6 +28,7 @@ A comprehensive agricultural data management system built with Next.js, designed
 ## 📦 **Installation**
 
 ### Prerequisites
+
 - Node.js 18 or higher
 - PostgreSQL database
 - pnpm package manager
@@ -35,18 +36,21 @@ A comprehensive agricultural data management system built with Next.js, designed
 ### Setup Steps
 
 1. **Clone the repository**
+
 ```bash
 git clone <repository-url>
 cd data-entry
 ```
 
 2. **Install dependencies**
+
 ```bash
 pnpm install
 ```
 
 3. **Environment Configuration**
-Create a `.env.local` file in the root directory:
+   Create a `.env.local` file in the root directory:
+
 ```bash
 # Database
 DATABASE_URL="postgresql://username:password@localhost:5432/data_entry"
@@ -61,6 +65,7 @@ NEXTAUTH_URL="http://localhost:3000"
 ```
 
 4. **Database Setup**
+
 ```bash
 # Generate Prisma client
 pnpm prisma generate
@@ -73,6 +78,7 @@ pnpm prisma db seed
 ```
 
 5. **Start Development Server**
+
 ```bash
 pnpm dev
 ```
@@ -112,7 +118,7 @@ Comprehensive documentation is available in the `doc/` directory:
 - **[API Overview](./doc/API_OVERVIEW.md)** - Complete API documentation
 - **[Authentication Guide](./doc/AUTHENTICATION_GUIDE.md)** - Authentication system details
 - **[Farmers API](./doc/FARMERS_API_DOCS.md)** - Farmer management endpoints
-- **[Products API](./doc/PRODUCTS_API_DOCS.md)** - Product management endpoints  
+- **[Products API](./doc/PRODUCTS_API_DOCS.md)** - Product management endpoints
 - **[Commissioner API](./doc/COMMISSIONER_API_DOCS.md)** - Commissioner endpoints
 - **[Validation Guide](./doc/VALIDATION_GUIDE.md)** - Zod validation system
 - **[Error Handling](./doc/ERROR_HANDLING_GUIDE.md)** - Error handling patterns
@@ -130,7 +136,9 @@ The application uses JWT-based authentication with the following flow:
 4. System handles token refresh automatically
 
 ### API Authentication
+
 All protected endpoints require authentication cookies:
+
 ```bash
 # Login first
 curl -X POST "http://localhost:3000/api/auth/login" \
@@ -145,6 +153,7 @@ curl -X GET "http://localhost:3000/api/farmers" -b cookies.txt
 ## 🧪 **Testing**
 
 ### API Testing
+
 Use the provided test flows in the API documentation:
 
 ```bash
@@ -163,6 +172,7 @@ curl -X POST "http://localhost:3000/api/farmers" \
 ```
 
 ### Database Testing
+
 ```bash
 # View data in Prisma Studio
 pnpm prisma studio
@@ -174,6 +184,7 @@ pnpm prisma migrate reset
 ## 🚀 **Deployment**
 
 ### Quick Deployment with Docker
+
 ```bash
 # Build and run with Docker Compose
 docker-compose up -d
@@ -183,6 +194,7 @@ docker-compose exec app pnpm prisma migrate deploy
 ```
 
 ### Manual Deployment
+
 ```bash
 # Build the application
 pnpm build

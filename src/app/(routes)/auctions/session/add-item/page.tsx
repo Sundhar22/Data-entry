@@ -1,10 +1,10 @@
 "use client";
 
-import DashboardLayout from '@/components/layout/dashboard-layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { 
+import DashboardLayout from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import {
   ArrowLeft,
   Save,
   Plus,
@@ -16,15 +16,39 @@ import {
   Upload,
   AlertCircle,
   CheckCircle,
-  Info
-} from 'lucide-react';
-import Link from 'next/link';
+  Info,
+} from "lucide-react";
+import Link from "next/link";
 
 const farmersData = [
-  { id: "F001", name: "Rajesh Kumar", location: "Pune, Maharashtra", phone: "+91 98765 43210", verified: true },
-  { id: "F002", name: "Priya Sharma", location: "Nashik, Maharashtra", phone: "+91 98765 43211", verified: true },
-  { id: "F003", name: "Suresh Patil", location: "Aurangabad, Maharashtra", phone: "+91 98765 43212", verified: true },
-  { id: "F004", name: "Meera Devi", location: "Solapur, Maharashtra", phone: "+91 98765 43213", verified: false }
+  {
+    id: "F001",
+    name: "Rajesh Kumar",
+    location: "Pune, Maharashtra",
+    phone: "+91 98765 43210",
+    verified: true,
+  },
+  {
+    id: "F002",
+    name: "Priya Sharma",
+    location: "Nashik, Maharashtra",
+    phone: "+91 98765 43211",
+    verified: true,
+  },
+  {
+    id: "F003",
+    name: "Suresh Patil",
+    location: "Aurangabad, Maharashtra",
+    phone: "+91 98765 43212",
+    verified: true,
+  },
+  {
+    id: "F004",
+    name: "Meera Devi",
+    location: "Solapur, Maharashtra",
+    phone: "+91 98765 43213",
+    verified: false,
+  },
 ];
 
 const categories = [
@@ -32,15 +56,35 @@ const categories = [
   { id: "vegetables", name: "Vegetables", units: ["kg", "crate", "box"] },
   { id: "cash_crops", name: "Cash Crops", units: ["kg", "bale", "ton"] },
   { id: "fruits", name: "Fruits", units: ["kg", "crate", "box"] },
-  { id: "pulses", name: "Pulses", units: ["kg", "quintal", "bag"] }
+  { id: "pulses", name: "Pulses", units: ["kg", "quintal", "bag"] },
 ];
 
 const qualityGrades = [
-  { value: "A+", label: "Grade A+ (Premium)", description: "Export quality, premium grade" },
-  { value: "A", label: "Grade A (Excellent)", description: "High quality, domestic premium" },
-  { value: "B+", label: "Grade B+ (Good)", description: "Good quality, standard market" },
-  { value: "B", label: "Grade B (Average)", description: "Average quality, local market" },
-  { value: "C", label: "Grade C (Below Average)", description: "Below average, processing grade" }
+  {
+    value: "A+",
+    label: "Grade A+ (Premium)",
+    description: "Export quality, premium grade",
+  },
+  {
+    value: "A",
+    label: "Grade A (Excellent)",
+    description: "High quality, domestic premium",
+  },
+  {
+    value: "B+",
+    label: "Grade B+ (Good)",
+    description: "Good quality, standard market",
+  },
+  {
+    value: "B",
+    label: "Grade B (Average)",
+    description: "Average quality, local market",
+  },
+  {
+    value: "C",
+    label: "Grade C (Below Average)",
+    description: "Below average, processing grade",
+  },
 ];
 
 export default function AddItemPage() {
@@ -56,8 +100,12 @@ export default function AddItemPage() {
             </Button>
           </Link>
           <div className="flex-1">
-            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Add Auction Item</h1>
-            <p className="text-slate-600 mt-1">Add a new product to the auction session</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
+              Add Auction Item
+            </h1>
+            <p className="text-slate-600 mt-1">
+              Add a new product to the auction session
+            </p>
           </div>
         </div>
 
@@ -90,15 +138,26 @@ export default function AddItemPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-slate-900">{farmer.name}</span>
+                            <span className="font-medium text-slate-900">
+                              {farmer.name}
+                            </span>
                             {farmer.verified && (
                               <CheckCircle className="h-3 w-3 text-green-600" />
                             )}
                           </div>
-                          <div className="text-xs text-slate-500 mt-1">{farmer.location}</div>
-                          <div className="text-xs text-slate-500">{farmer.phone}</div>
+                          <div className="text-xs text-slate-500 mt-1">
+                            {farmer.location}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {farmer.phone}
+                          </div>
                         </div>
-                        <input type="radio" name="farmer" value={farmer.id} className="text-blue-600" />
+                        <input
+                          type="radio"
+                          name="farmer"
+                          value={farmer.id}
+                          className="text-blue-600"
+                        />
                       </div>
                     </div>
                   ))}
@@ -117,7 +176,9 @@ export default function AddItemPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Product Name *</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Product Name *
+                    </label>
                     <input
                       type="text"
                       placeholder="e.g., Premium Basmati Rice"
@@ -125,7 +186,9 @@ export default function AddItemPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Category *</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Category *
+                    </label>
                     <select className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                       <option value="">Select Category</option>
                       {categories.map((category) => (
@@ -139,7 +202,9 @@ export default function AddItemPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Quantity *</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Quantity *
+                    </label>
                     <input
                       type="number"
                       placeholder="500"
@@ -147,7 +212,9 @@ export default function AddItemPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Unit *</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Unit *
+                    </label>
                     <select className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                       <option value="">Select Unit</option>
                       <option value="kg">Kilogram (kg)</option>
@@ -159,7 +226,9 @@ export default function AddItemPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Weight per Unit (kg)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Weight per Unit (kg)
+                    </label>
                     <input
                       type="number"
                       placeholder="25"
@@ -169,7 +238,9 @@ export default function AddItemPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Quality Grade *</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Quality Grade *
+                  </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {qualityGrades.map((grade) => (
                       <div
@@ -177,17 +248,28 @@ export default function AddItemPage() {
                         className="p-3 border border-slate-200 rounded-lg hover:border-blue-300 cursor-pointer transition-colors"
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-slate-900 text-sm">{grade.label}</span>
-                          <input type="radio" name="quality" value={grade.value} className="text-blue-600" />
+                          <span className="font-medium text-slate-900 text-sm">
+                            {grade.label}
+                          </span>
+                          <input
+                            type="radio"
+                            name="quality"
+                            value={grade.value}
+                            className="text-blue-600"
+                          />
                         </div>
-                        <p className="text-xs text-slate-500">{grade.description}</p>
+                        <p className="text-xs text-slate-500">
+                          {grade.description}
+                        </p>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Product Description</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Product Description
+                  </label>
                   <textarea
                     rows={3}
                     placeholder="Describe the product quality, origin, special characteristics, storage conditions, etc."
@@ -208,7 +290,9 @@ export default function AddItemPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Base Price (₹/unit) *</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Base Price (₹/unit) *
+                    </label>
                     <input
                       type="number"
                       step="0.01"
@@ -217,7 +301,9 @@ export default function AddItemPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Minimum Bid Increment (₹)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Minimum Bid Increment (₹)
+                    </label>
                     <input
                       type="number"
                       step="0.01"
@@ -226,10 +312,12 @@ export default function AddItemPage() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Reserve Price (₹/unit)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Reserve Price (₹/unit)
+                    </label>
                     <input
                       type="number"
                       step="0.01"
@@ -238,7 +326,9 @@ export default function AddItemPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Buy Now Price (₹/unit)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Buy Now Price (₹/unit)
+                    </label>
                     <input
                       type="number"
                       step="0.01"
@@ -261,8 +351,12 @@ export default function AddItemPage() {
               <CardContent className="space-y-4">
                 <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
                   <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                  <p className="text-slate-600 mb-2">Click to upload or drag and drop</p>
-                  <p className="text-xs text-slate-500">PNG, JPG up to 10MB (Max 5 images)</p>
+                  <p className="text-slate-600 mb-2">
+                    Click to upload or drag and drop
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    PNG, JPG up to 10MB (Max 5 images)
+                  </p>
                   <Button variant="outline" className="mt-4">
                     Choose Files
                   </Button>
@@ -283,13 +377,17 @@ export default function AddItemPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-3 bg-slate-50 rounded-lg">
-                  <div className="text-sm font-medium text-slate-600 mb-1">Estimated Total Value</div>
+                  <div className="text-sm font-medium text-slate-600 mb-1">
+                    Estimated Total Value
+                  </div>
                   <div className="text-2xl font-bold text-slate-900">₹0</div>
-                  <div className="text-xs text-slate-500">Based on quantity × base price</div>
+                  <div className="text-xs text-slate-500">
+                    Based on quantity × base price
+                  </div>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">Total Weight:</span>
@@ -308,7 +406,9 @@ export default function AddItemPage() {
                 <Separator />
 
                 <div className="space-y-2">
-                  <h4 className="font-medium text-slate-900 text-sm">Required Fields</h4>
+                  <h4 className="font-medium text-slate-900 text-sm">
+                    Required Fields
+                  </h4>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs">
                       <AlertCircle className="h-3 w-3 text-orange-500" />
@@ -320,7 +420,9 @@ export default function AddItemPage() {
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       <AlertCircle className="h-3 w-3 text-orange-500" />
-                      <span className="text-slate-600">Category & quantity</span>
+                      <span className="text-slate-600">
+                        Category & quantity
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       <AlertCircle className="h-3 w-3 text-orange-500" />
@@ -338,7 +440,9 @@ export default function AddItemPage() {
             {/* Quick Tips */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">💡 Tips for Better Auctions</CardTitle>
+                <CardTitle className="text-sm">
+                  💡 Tips for Better Auctions
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 text-xs text-slate-600">
