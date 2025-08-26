@@ -6,8 +6,8 @@ import DesktopOnly from '@/components/ui/desktop-only';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  TrendingUp, 
+import {
+  TrendingUp,
   BarChart3,
   Users,
   IndianRupee,
@@ -17,18 +17,18 @@ import {
   Loader2,
   RefreshCw
 } from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
   Cell,
   ResponsiveContainer,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend 
+  Legend
 } from 'recharts';
 
 interface AnalyticsData {
@@ -100,7 +100,7 @@ export default function AnalyticsPage() {
       // Get date range based on selection
       const endDate = new Date().toISOString();
       const startDate = new Date();
-      
+
       if (dateRange === '7days') {
         startDate.setDate(startDate.getDate() - 7);
       } else if (dateRange === '30days') {
@@ -110,36 +110,36 @@ export default function AnalyticsPage() {
       } else if (dateRange === 'year') {
         startDate.setFullYear(startDate.getFullYear() - 1);
       }
-      
+
       const startDateStr = startDate.toISOString();
-      
-            // Make parallel API requests to get all necessary data
+
+      // Make parallel API requests to get all necessary data
       const [billStatsResponse, farmersResponse, sessionsResponse, productsResponse, buyersResponse] = await Promise.all([
         fetch(`/api/bills/statistics?start_date=${startDateStr}&end_date=${endDate}`),
         fetch('/api/farmers'),
         fetch('/api/sessions'),
         fetch('/api/products?limit=10000'), // Get all products to count them properly
-        fetch('/api/buyer')
+        fetch('/api/buyers')
       ]);
-      
+
       // Check if all responses are OK
       if (!billStatsResponse.ok || !farmersResponse.ok || !sessionsResponse.ok || !productsResponse.ok || !buyersResponse.ok) {
         throw new Error('Failed to fetch analytics data');
       }
-      
+
       // Parse JSON responses
       const billStatsData = await billStatsResponse.json();
       const farmers = await farmersResponse.json();
       const sessions = await sessionsResponse.json();
       const products = await productsResponse.json();
       const buyers = await buyersResponse.json();
-      
+
       // Debug logging
       console.log('Sessions API response:', sessions);
       console.log('Farmers API response:', farmers);
       console.log('Products API response:', products);
       console.log('Buyers API response:', buyers);
-      
+
       if (!billStatsData.success || !farmers.success || !sessions.success || !products.success || !buyers.success) {
         console.error('API errors:', {
           billStats: billStatsData.success,
@@ -150,25 +150,25 @@ export default function AnalyticsPage() {
         });
         throw new Error('API returned unsuccessful response');
       }
-      
+
       // Store bill stats for charts
       setBillStats(billStatsData.data);
-      
+
       // Prepare aggregated data from API responses based on actual API structure
       const analyticsDataResult: AnalyticsData = {
         // Sessions API returns paginated response with meta.total
         totalSessions: sessions.meta?.total || 0,
         activeSessions: sessions.data?.filter((s: { status: string }) => s.status === 'ACTIVE').length || 0,
-        
+
         // Farmers API returns paginated response with meta.total  
         totalFarmers: farmers.meta?.total || 0,
-        
+
         // Buyers API returns paginated response with meta.total
         totalBuyers: buyers.meta?.total || 0,
-        
+
         // Products API returns simple success response with data array - get all products to count
         totalProducts: products.data?.length || 0,
-        
+
         // Bill stats API returns nested data structure
         totalBills: billStatsData.data?.overview?.total_bills || 0,
         totalRevenue: billStatsData.data?.overview?.total_amount || 0,
@@ -176,9 +176,9 @@ export default function AnalyticsPage() {
         paidBills: billStatsData.data?.overview?.paid_bills || 0,
         unpaidBills: billStatsData.data?.overview?.unpaid_bills || 0,
       };
-      
+
       console.log('Processed analytics data:', analyticsDataResult);
-      
+
       setAnalyticsData(analyticsDataResult);
     } catch (error) {
       console.error('Failed to fetch analytics data:', error);
@@ -217,29 +217,29 @@ export default function AnalyticsPage() {
             <div className="flex items-center space-x-4">
               {/* Date Range Selector */}
               <div className="flex space-x-2">
-                <Button 
-                  variant={dateRange === '7days' ? 'default' : 'outline'} 
+                <Button
+                  variant={dateRange === '7days' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setDateRange('7days')}
                 >
                   7D
                 </Button>
-                <Button 
-                  variant={dateRange === '30days' ? 'default' : 'outline'} 
+                <Button
+                  variant={dateRange === '30days' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setDateRange('30days')}
                 >
                   30D
                 </Button>
-                <Button 
-                  variant={dateRange === '90days' ? 'default' : 'outline'} 
+                <Button
+                  variant={dateRange === '90days' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setDateRange('90days')}
                 >
                   90D
                 </Button>
-                <Button 
-                  variant={dateRange === 'year' ? 'default' : 'outline'} 
+                <Button
+                  variant={dateRange === 'year' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setDateRange('year')}
                 >
@@ -368,10 +368,10 @@ export default function AnalyticsPage() {
                       </div>
                       <div className="pt-2">
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-green-600 h-2 rounded-full" 
-                            style={{ 
-                              width: `${calculatePercentage(analyticsData.totalSessions - analyticsData.activeSessions, analyticsData.totalSessions)}%` 
+                          <div
+                            className="bg-green-600 h-2 rounded-full"
+                            style={{
+                              width: `${calculatePercentage(analyticsData.totalSessions - analyticsData.activeSessions, analyticsData.totalSessions)}%`
                             }}
                           ></div>
                         </div>
@@ -444,10 +444,10 @@ export default function AnalyticsPage() {
                       </div>
                       <div className="pt-2">
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-green-600 h-2 rounded-full" 
-                            style={{ 
-                              width: `${calculatePercentage(analyticsData.paidBills, analyticsData.totalBills)}%` 
+                          <div
+                            className="bg-green-600 h-2 rounded-full"
+                            style={{
+                              width: `${calculatePercentage(analyticsData.paidBills, analyticsData.totalBills)}%`
                             }}
                           ></div>
                         </div>
@@ -550,7 +550,7 @@ export default function AnalyticsPage() {
                           >
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="name" angle={-45} textAnchor="end" height={60} />
-                            <YAxis tickFormatter={(value) => `₹${value/1000}K`} />
+                            <YAxis tickFormatter={(value) => `₹${value / 1000}K`} />
                             <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                             <Bar dataKey="amount" fill="#3b82f6" />
                           </BarChart>

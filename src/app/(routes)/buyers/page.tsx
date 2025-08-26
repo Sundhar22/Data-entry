@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
+import {
   Search,
   Plus,
   Edit,
@@ -62,13 +62,13 @@ export default function BuyersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalBuyers, setTotalBuyers] = useState(0);
   const [searchLoading, setSearchLoading] = useState(false);
-  
+
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
-  
+
   // Form states
   const [formData, setFormData] = useState<BuyerFormData>({
     name: '',
@@ -82,7 +82,7 @@ export default function BuyersPage() {
   const fetchBuyers = async (page = 1, search = "") => {
     setLoading(page === 1);
     setSearchLoading(search !== "");
-    
+
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -90,7 +90,7 @@ export default function BuyersPage() {
         ...(search && { search })
       });
 
-      const response = await fetch(`/api/buyer?${params}`);
+      const response = await fetch(`/api/buyers?${params}`);
       if (response.ok) {
         const data: BuyerResponse = await response.json();
         setBuyers(data.data);
@@ -138,7 +138,7 @@ export default function BuyersPage() {
     setFormError('');
 
     try {
-      const response = await fetch('/api/buyer', {
+      const response = await fetch('/api/buyers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -173,7 +173,7 @@ export default function BuyersPage() {
     setFormError('');
 
     try {
-      const response = await fetch(`/api/buyer/${selectedBuyer.id}`, {
+      const response = await fetch(`/api/buyers/${selectedBuyer.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -205,7 +205,7 @@ export default function BuyersPage() {
     setFormLoading(true);
 
     try {
-      const response = await fetch(`/api/buyer/${selectedBuyer.id}`, {
+      const response = await fetch(`/api/buyers/${selectedBuyer.id}`, {
         method: 'DELETE',
       });
 
@@ -272,7 +272,7 @@ export default function BuyersPage() {
                   Create a new buyer profile for your agricultural business.
                 </DialogDescription>
               </DialogHeader>
-              
+
               {formError && (
                 <Alert className="border-red-200 bg-red-50">
                   <AlertCircle className="h-4 w-4 text-red-600" />
@@ -342,7 +342,7 @@ export default function BuyersPage() {
               <div className="text-lg sm:text-2xl font-bold">{totalBuyers}</div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs sm:text-sm font-medium truncate">Active Buyers</CardTitle>
@@ -354,7 +354,7 @@ export default function BuyersPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs sm:text-sm font-medium truncate">Inactive Buyers</CardTitle>
@@ -436,21 +436,21 @@ export default function BuyersPage() {
                           </div>
                         </div>
                         <div className="flex items-center justify-end sm:justify-start space-x-2">
-                          <Badge 
+                          <Badge
                             variant={buyer.is_active ? "success" : "secondary"}
                             className={`${buyer.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"} text-xs px-2 py-0.5`}
                           >
                             {buyer.is_active ? "Active" : "Inactive"}
                           </Badge>
                           <div className="flex items-center space-x-1">
-                            <div 
+                            <div
                               className="inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer"
                               onClick={() => openEditDialog(buyer)}
                             >
                               <Edit className="h-3 w-3" />
                               <span className="sr-only">Edit</span>
                             </div>
-                            <div 
+                            <div
                               className="inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer"
                               onClick={() => openDeleteDialog(buyer)}
                             >
@@ -516,7 +516,7 @@ export default function BuyersPage() {
                 Update buyer information and settings.
               </DialogDescription>
             </DialogHeader>
-            
+
             {formError && (
               <Alert className="border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4 text-red-600" />
