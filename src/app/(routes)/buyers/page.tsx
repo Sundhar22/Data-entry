@@ -250,22 +250,20 @@ export default function BuyersPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Buyers</h1>
-            <p className="text-slate-600 mt-1">Manage buyers and their purchase activities</p>
+            <h1 className="text-xl lg:text-2xl font-bold text-slate-900">Buyers</h1>
+            <p className="text-sm text-slate-600 mt-1">Manage buyers and their purchase activities</p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => {
-                resetForm();
-                setIsAddDialogOpen(true);
-              }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Buyer
-              </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+            if (open) resetForm();
+            setIsAddDialogOpen(open);
+          }}>
+            <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-slate-50 shadow hover:bg-blue-700 h-9 px-4 py-2">
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Buyer
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -334,24 +332,24 @@ export default function BuyersPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Buyers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">Total Buyers</CardTitle>
+              <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalBuyers}</div>
+            <CardContent className="pt-2">
+              <div className="text-lg sm:text-2xl font-bold">{totalBuyers}</div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Buyers</CardTitle>
-              <UserCheck className="h-4 w-4 text-green-600" />
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">Active Buyers</CardTitle>
+              <UserCheck className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+            <CardContent className="pt-2">
+              <div className="text-lg sm:text-2xl font-bold text-green-600">
                 {buyers.filter(b => b.is_active).length}
               </div>
             </CardContent>
@@ -359,11 +357,11 @@ export default function BuyersPage() {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Inactive Buyers</CardTitle>
-              <UserX className="h-4 w-4 text-red-600" />
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">Inactive Buyers</CardTitle>
+              <UserX className="h-3 w-3 sm:h-4 sm:w-4 text-red-600 flex-shrink-0" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+            <CardContent className="pt-2">
+              <div className="text-lg sm:text-2xl font-bold text-red-600">
                 {buyers.filter(b => !b.is_active).length}
               </div>
             </CardContent>
@@ -371,7 +369,7 @@ export default function BuyersPage() {
         </div>
 
         {/* Search and Actions */}
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -384,21 +382,21 @@ export default function BuyersPage() {
               <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
             )}
           </div>
-          <Button variant="outline" onClick={() => fetchBuyers(currentPage, searchTerm)}>
+          <Button variant="outline" onClick={() => fetchBuyers(currentPage, searchTerm)} className="w-full sm:w-auto">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
         </div>
 
         {/* Buyers List */}
-        <Card>
-          <CardHeader>
+        <Card className="flex flex-col">
+          <CardHeader className="pb-3 flex-shrink-0">
             <CardTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
               Buyers List
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-hidden">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -409,48 +407,56 @@ export default function BuyersPage() {
                 {searchTerm ? "No buyers found matching your search." : "No buyers found. Add your first buyer to get started."}
               </div>
             ) : (
-              <div className="space-y-0">
+              <div className="space-y-0 relative max-h-[70vh] overflow-y-auto">
                 {buyers.map((buyer, index) => (
                   <div key={buyer.id}>
-                    <div className="p-6 hover:bg-slate-50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-start space-x-4">
-                          <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                            <span className="text-purple-600 font-semibold text-lg">
+                    <div className="p-3 sm:p-4 hover:bg-slate-50 transition-colors">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                        <div className="flex items-start space-x-2 sm:space-x-3 min-w-0 flex-1">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                            <span className="text-purple-600 font-semibold text-sm sm:text-base">
                               {buyer.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <div className="space-y-1">
-                            <h3 className="font-semibold text-lg text-slate-900">{buyer.name}</h3>
-                            <div className="flex items-center space-x-4 text-sm text-slate-600">
-                              <div className="flex items-center space-x-1">
-                                <Phone className="h-4 w-4" />
-                                <span>{buyer.phone}</span>
+                          <div className="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
+                            <h3 className="font-semibold text-sm sm:text-base text-slate-900 truncate">{buyer.name}</h3>
+                            <div className="flex flex-col sm:flex-row sm:items-center space-y-0.5 sm:space-y-0 sm:space-x-3 text-xs text-slate-600">
+                              <div className="flex items-center space-x-1 min-w-0">
+                                <Phone className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">{buyer.phone}</span>
                               </div>
-                              <div className="flex items-center space-x-1">
-                                <Calendar className="h-4 w-4" />
-                                <span>Registered {formatDate(buyer.created_at)}</span>
+                              <div className="flex items-center space-x-1 min-w-0">
+                                <Calendar className="h-3 w-3 flex-shrink-0" />
+                                <span className="truncate">Registered {formatDate(buyer.created_at)}</span>
                               </div>
                             </div>
-                            <div className="text-xs text-slate-500">
+                            <div className="text-xs text-slate-500 truncate">
                               Last updated: {formatDate(buyer.updated_at)}
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center justify-end sm:justify-start space-x-2">
                           <Badge 
                             variant={buyer.is_active ? "success" : "secondary"}
-                            className={buyer.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}
+                            className={`${buyer.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"} text-xs px-2 py-0.5`}
                           >
                             {buyer.is_active ? "Active" : "Inactive"}
                           </Badge>
-                          <div className="flex items-center space-x-2">
-                            <Button variant="outline" size="sm" onClick={() => openEditDialog(buyer)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => openDeleteDialog(buyer)}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                          <div className="flex items-center space-x-1">
+                            <div 
+                              className="inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                              onClick={() => openEditDialog(buyer)}
+                            >
+                              <Edit className="h-3 w-3" />
+                              <span className="sr-only">Edit</span>
+                            </div>
+                            <div 
+                              className="inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                              onClick={() => openDeleteDialog(buyer)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              <span className="sr-only">Delete</span>
+                            </div>
                           </div>
                         </div>
                       </div>

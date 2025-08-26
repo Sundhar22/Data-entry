@@ -7,13 +7,15 @@ export const BillPreviewQuerySchema = z.object({
 });
 
 export const BillGenerateRequestSchema = z.object({
-  farmer_id: z.string().min(1, "Farmer ID is required"),
+  farmer_id: z.string().cuid('Invalid farmer ID format'),
   previews: z.array(z.object({
-    product_id: z.string().min(1, "Product ID is required"),
-    session_id: z.string().min(1, "Session ID is required"),
-    other_charges: z.record(z.string(), z.number().min(0)).optional(),
-    notes: z.string().optional(),
-  })).min(1, "At least one bill preview is required"),
+    product_id: z.string().cuid('Invalid product ID format'),
+    session_id: z.string().cuid('Invalid session ID format'),
+    other_charges: z.record(z.string(), z.number()).optional().default({}),
+    notes: z.string().optional()
+  })).min(1, "At least one preview must be provided"),
+  mark_as_paid: z.boolean().optional().default(false),
+  payment_method: z.string().optional()
 });
 
 export const BillPaymentRequestSchema = z.object({
@@ -24,6 +26,7 @@ export const BillPaymentRequestSchema = z.object({
 
 export const BillFilterSchema = z.object({
   farmer_id: z.string().optional(),
+  farmer_name: z.string().optional(),
   product_id: z.string().optional(),
   session_id: z.string().optional(),
   payment_status: z.enum(['PAID', 'UNPAID']).optional(),

@@ -16,10 +16,12 @@ async function listBuyersHandler(req: AuthenticatedRequest): Promise<NextRespons
   const limit = parseInt(searchParams.get('limit') || '10');
   const skip = (page - 1) * limit;
   const search = searchParams.get('search') || '';
+  const activeOnly = searchParams.get('active') === 'true';
 
   // Build where clause with search functionality
   const whereClause = {
     commissioner_id: userId,
+    ...(activeOnly && { is_active: true }),
     ...(search && {
       OR: [
         { name: { contains: search, mode: 'insensitive' as const } },

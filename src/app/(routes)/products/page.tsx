@@ -106,14 +106,6 @@ export default function ProductsPage() {
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => router.back()}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">Products</h1>
               <p className="text-slate-600 mt-1">Browse available products and categories</p>

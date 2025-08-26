@@ -72,7 +72,8 @@ async function getBillStatisticsHandler(req: AuthenticatedRequest): Promise<Next
                     }
                 },
                 _sum: {
-                    net_payable: true
+                    net_payable: true,
+                    commission_amount: true
                 },
                 _count: true
             }),
@@ -192,6 +193,8 @@ async function getBillStatisticsHandler(req: AuthenticatedRequest): Promise<Next
                 total_amount: totalAmount,
                 paid_amount: paidAmount,
                 unpaid_amount: unpaidAmount,
+                commission_amount: convertBigIntToNumber(totalBills._sum.commission_amount),
+                gross_amount: convertBigIntToNumber(totalBills._sum.gross_amount),
                 avg_bill_amount: Math.round(avgBillAmount),
                 payment_rate: Math.round(paymentRate * 100) / 100
             },

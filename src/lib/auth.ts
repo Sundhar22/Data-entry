@@ -84,6 +84,7 @@ export async function verifyAuth(req: NextRequest): Promise<{
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
+          path: '/',
           maxAge: 15 * 60 // 15 minutes
         });
 
@@ -139,6 +140,7 @@ export function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextRes
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
+          path: '/',
           maxAge: 15 * 60 // 15 minutes
         });
       }

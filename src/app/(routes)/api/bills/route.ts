@@ -17,6 +17,7 @@ async function getBillsHandler(req: AuthenticatedRequest): Promise<NextResponse>
 
     const queryParams = {
         farmer_id: searchParams.get('farmer_id') || undefined,
+        farmer_name: searchParams.get('farmer_name') || undefined,
         product_id: searchParams.get('product_id') || undefined,
         session_id: searchParams.get('session_id') || undefined,
         payment_status: (() => {
@@ -54,6 +55,14 @@ async function getBillsHandler(req: AuthenticatedRequest): Promise<NextResponse>
     const whereClause = {
         commissioner_id: userId,
         ...(filters.farmer_id && { farmer_id: filters.farmer_id }),
+        ...(filters.farmer_name && { 
+            farmer: {
+                name: {
+                    contains: filters.farmer_name,
+                    mode: 'insensitive' as const
+                }
+            }
+        }),
         ...(filters.product_id && { product_id: filters.product_id }),
         ...(filters.session_id && { session_id: filters.session_id }),
         ...(filters.payment_status && { payment_status: filters.payment_status }),

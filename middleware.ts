@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromHeaders, verifyAuth } from '@/lib/auth';
+import { verifyAuth } from '@/lib/auth';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -70,7 +70,11 @@ export async function middleware(request: NextRequest) {
 
     // Attach user to request headers for API routes
     if (isProtectedApiRoute) {
-      return getUserFromHeaders(request);
+      const response = NextResponse.next();
+      response.headers.set('x-user-id', authResult.user!.id);
+      response.headers.set('x-user-email', authResult.user!.email);
+      response.headers.set('x-user-name', authResult.user!.name);
+      return response;
     }
   }
 

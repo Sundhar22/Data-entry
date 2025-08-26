@@ -1,9 +1,11 @@
 import prisma from "@/lib/prisma";
 
 /**
- * Generate a unique bill number in format BILL001, BILL002, etc.
+ * Generate multiple unique bill numbers in sequence
+ * This ensures we don't have race conditions when generating multiple bills at once
  */
-export async function generateBillNumber(): Promise<string> {
+export async function generateBillNumbers(count: number): Promise<string[]> {
+  // Find the highest bill number in the database
   const lastBill = await prisma.bill.findFirst({
     select: { bill_number: true },
     orderBy: { bill_number: 'desc' },
@@ -14,16 +16,27 @@ export async function generateBillNumber(): Promise<string> {
     }
   });
 
-  if (!lastBill) {
-    return 'BILL001';
+  // Start from 1 if no bills exist, otherwise increment from last number
+  let nextNumber = 1;
+  if (lastBill) {
+    nextNumber = parseInt(lastBill.bill_number.replace('BILL', '')) + 1;
   }
-
-  // Extract number from bill number (e.g., "BILL001" -> 1)
-  const lastNumber = parseInt(lastBill.bill_number.replace('BILL', ''));
-  const nextNumber = lastNumber + 1;
   
-  // Format with leading zeros
-  return `BILL${nextNumber.toString().padStart(3, '0')}`;
+  // Generate the requested number of sequential bill numbers
+  const billNumbers: string[] = [];
+  for (let i = 0; i < count; i++) {
+    billNumbers.push(`BILL${(nextNumber + i).toString().padStart(3, '0')}`);
+  }
+  
+  return billNumbers;
+}
+
+/**
+ * Generate a single unique bill number (for backward compatibility)
+ */
+export async function generateBillNumber(): Promise<string> {
+  const numbers = await generateBillNumbers(1);
+  return numbers[0];
 }
 
 /**

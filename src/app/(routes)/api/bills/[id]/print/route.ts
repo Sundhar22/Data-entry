@@ -1,19 +1,29 @@
 import { withAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { withErrorHandling, NotFoundError } from "@/lib/error-handler";
+import { withErrorHandling, NotFoundError, ValidationError } from "@/lib/error-handler";
 import { AuthenticatedRequest } from "@/types/auth";
 import prisma from "@/lib/prisma";
 import { groupQuantitiesByRate } from "@/lib/bill-utils";
 import { generateBillHTML, generateBillText } from "@/lib/bill-print";
+import { isMobileOrTabletRequest } from "@/lib/device-detection";
 
 /**
  * GET /api/bills/[id]/print?format=html|text
  * Get printable format of a bill
+ * DESKTOP ONLY - Restricted for mobile and tablet devices
  */
 async function printBillHandler(
     req: AuthenticatedRequest,
     { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
+    // Check if request is from mobile or tablet - restrict access
+    if (isMobileOrTabletRequest(req)) {
+        throw new ValidationError(
+            'Bill printing is restricted to desktop devices only for proper formatting and printing capabilities.',
+            'DESKTOP_REQUIRED'
+        );
+    }
+
     const userId = req.user.id;
     const { id: billId } = await params;
     const { searchParams } = new URL(req.url);

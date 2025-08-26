@@ -15,6 +15,7 @@ export interface SessionValidationResult {
 
 /**
  * Comprehensive session validation for auction item operations
+ * Note: Only one session per day is allowed per commissioner (ACTIVE or COMPLETED)
  */
 export async function validateSessionForOperation(
   sessionId: string,
@@ -55,14 +56,18 @@ export async function validateSessionForOperation(
     canModify = true;
   }
 
-  // Payment status validation
-  if (session.payment_status === 'COMPLETED') {
-    restrictions.push('Session payments are COMPLETED - modifications restricted');
+  // Payment status validation - allow modifications for current day even if payments completed
+  const today = new Date();
+  const sessionDate = new Date(session.date);
+  const isToday = sessionDate.toDateString() === today.toDateString();
+  
+  if (session.payment_status === 'COMPLETED' && !isToday) {
+    restrictions.push('Session payments are COMPLETED and session date is not today - modifications restricted');
     canModify = false;
   }
+  // If it's today's session, allow modifications even if payments are completed
 
-  // Date validation for ACTIVE sessions
-  const today = new Date();
+  // Date validation for ACTIVE sessions (only restrict if not today)
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   if (session.status === 'ACTIVE' && session.date < startOfToday) {
     restrictions.push('Cannot modify past date ACTIVE sessions');
@@ -108,6 +113,7 @@ export async function validateSessionForOperation(
 
 /**
  * Validate auction item for modification based on payment status
+ * Items can be modified/deleted if they are not paid (no bill_id), regardless of session payment status
  */
 export async function validateAuctionItemForOperation(
   itemId: string,
@@ -139,16 +145,16 @@ export async function validateAuctionItemForOperation(
   const restrictions: string[] = [];
   let canModify = true;
 
-  // Check if item is already paid
+  // Check if item is already paid (has a bill)
+  // Only restrict modification/deletion of items that have been paid
   if (item.bill_id && item.bill) {
-    restrictions.push(`Item is already paid (Bill: ${item.bill.bill_number})`);
+    restrictions.push(`Item is already paid (Bill: ${item.bill.bill_number}) - cannot be modified or deleted`);
     canModify = false;
-  }
-
-  if (!canModify) {
+    
     throw new ConflictError(`Cannot ${operation.toLowerCase()} auction item: ${restrictions.join(', ')}`);
   }
 
+  // If item is not paid (no bill_id), allow modification regardless of session payment status
   return { canModify, restrictions };
 }
 
@@ -186,6 +192,21 @@ export async function getSessionOverview(sessionId: string, commissionerId: stri
   const unpaidItems = session.auction_items.filter(item => item.bill_id === null);
   const incompleteItems = session.auction_items.filter(item => !item.rate || !item.bill_id);
 
+  // Check if modifications are allowed
+  const today = new Date();
+  const sessionDate = new Date(session.date);
+  const isToday = sessionDate.toDateString() === today.toDateString();
+  
+  const canModify = session.status === 'ACTIVE' && 
+    (session.payment_status !== 'COMPLETED' || isToday);
+  
+  const restrictions: string[] = [];
+  if (session.status === 'COMPLETED') {
+    restrictions.push('Session is completed');
+  } else if (session.payment_status === 'COMPLETED' && !isToday) {
+    restrictions.push('Payments are completed and session is not for today');
+  }
+
   return {
     ...session,
     summary: {
@@ -196,13 +217,58 @@ export async function getSessionOverview(sessionId: string, commissionerId: stri
       completion_rate: session.auction_items.length > 0 
         ? Math.round((paidItems.length / session.auction_items.length) * 100) 
         : 0,
-      can_modify: session.status === 'ACTIVE' && session.payment_status !== 'COMPLETED',
+      can_modify: canModify,
       can_complete: unpaidItems.length === 0 && incompleteItems.length === 0,
-      restrictions: session.status === 'COMPLETED' 
-        ? ['Session is completed'] 
-        : session.payment_status === 'COMPLETED' 
-          ? ['Payments are completed'] 
-          : []
+      restrictions
     }
+  };
+}
+
+/**
+ * Check if a new session can be created for a specific date
+ * Only one session per day is allowed per commissioner, and only for today's date
+ */
+export async function validateNewSessionCreation(
+  commissionerId: string, 
+  requestedDate: Date
+): Promise<{ canCreate: boolean; existingSession?: { id: string; status: string; payment_status: string; date: Date }; nextAvailableDate: Date; error?: string }> {
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const requestedStartOfDay = new Date(requestedDate.getFullYear(), requestedDate.getMonth(), requestedDate.getDate());
+  
+  // Check if requested date is today
+  if (requestedStartOfDay.getTime() !== startOfToday.getTime()) {
+    return {
+      canCreate: false,
+      nextAvailableDate: startOfToday,
+      error: "Sessions can only be created for today's date. Past or future dates are not allowed."
+    };
+  }
+
+  const endOfDay = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
+
+  // Check for any existing session (ACTIVE or COMPLETED) on today's date
+  const existingSession = await prisma.auctionSession.findFirst({
+    where: {
+      commissioner_id: commissionerId,
+      date: {
+        gte: startOfToday,
+        lt: endOfDay
+      }
+    },
+    select: {
+      id: true,
+      status: true,
+      payment_status: true,
+      date: true
+    }
+  });
+
+  const nextAvailableDate = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000); // Next day at 00:00 AM
+
+  return {
+    canCreate: !existingSession,
+    existingSession: existingSession || undefined,
+    nextAvailableDate
   };
 }

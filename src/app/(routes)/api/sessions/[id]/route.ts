@@ -179,7 +179,14 @@ async function getSessionByIdHandler(
             payment_status: true,
             created_at: true,
             updated_at: true,
-            commissioner_id: true
+            commissioner_id: true,
+            commissioner: {
+                select: {
+                    id: true,
+                    name: true,
+                    phone: true
+                }
+            }
         }
     });
 

@@ -140,33 +140,48 @@ async function createSessionHandler(req: AuthenticatedRequest): Promise<NextResp
     const validatedData: CreateSessionData = validation.data;
 
     try {
-        // Check if there's already an active session for today for this commissioner
+        // Validate that the requested date is today's date only
         const today = new Date();
         const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const requestedDate = new Date(validatedData.date.getFullYear(), validatedData.date.getMonth(), validatedData.date.getDate());
+        
+        if (requestedDate.getTime() !== startOfToday.getTime()) {
+            return NextResponse.json({
+                success: false,
+                message: "Sessions can only be created for today's date. Past or future dates are not allowed.",
+                data: {
+                    requestedDate: validatedData.date.toISOString(),
+                    allowedDate: startOfToday.toISOString()
+                }
+            }, { status: 400 });
+        }
+
+        // Check if there's already ANY session for today for this commissioner (ACTIVE or COMPLETED)
         const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
 
-        const existingActiveSession = await prisma.auctionSession.findFirst({
+        const existingSession = await prisma.auctionSession.findFirst({
             where: {
-            commissioner_id: userId,
-            status: 'ACTIVE',
-            date: {
-                gte: startOfToday,
-                lt: endOfToday
-            }
+                commissioner_id: userId,
+                date: {
+                    gte: startOfToday,
+                    lt: endOfToday
+                }
+                // Removed status filter - now checks for ANY session regardless of status
             }
         });
 
-        if (existingActiveSession) {
+        if (existingSession) {
             const nextAvailableTime = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000); // Tomorrow at 00:00 AM
             
             return NextResponse.json({
-            success: false,
-            message: "An active session already exists for today",
-            data: { 
-                existingSessionId: existingActiveSession.id,
-                nextAvailableAt: nextAvailableTime.toISOString(),
-                nextAvailableAtFormatted: nextAvailableTime.toLocaleString()
-            }
+                success: false,
+                message: `A session already exists for today (Status: ${existingSession.status})`,
+                data: { 
+                    existingSessionId: existingSession.id,
+                    existingSessionStatus: existingSession.status,
+                    nextAvailableAt: nextAvailableTime.toISOString(),
+                    nextAvailableAtFormatted: nextAvailableTime.toLocaleString()
+                }
             }, { status: 409 });
         }
 

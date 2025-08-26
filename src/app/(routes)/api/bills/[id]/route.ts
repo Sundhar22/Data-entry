@@ -40,11 +40,19 @@ async function getBillHandler(
             payment_date: true,
             notes: true,
             created_at: true,
+            updated_at: true,
+            // Count auction items
+            _count: {
+                select: {
+                    auction_items: true
+                }
+            },
             // Only essential farmer data
             farmer: {
                 select: {
                     name: true,
-                    village: true
+                    village: true,
+                    phone: true
                 }
             },
             // Only essential product data
@@ -58,7 +66,12 @@ async function getBillHandler(
                 select: {
                     quantity: true,
                     rate: true,
-                    unit: true
+                    unit: true,
+                    session: {
+                        select: {
+                            date: true
+                        }
+                    }
                 },
                 orderBy: {
                     rate: 'asc'

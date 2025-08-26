@@ -8,12 +8,22 @@ import { validateSchema } from "@/lib/validation";
 import { BillPreviewQuerySchema } from "@/schemas/bill";
 import { calculateBillAmounts, getSuggestedOtherCharges, countBags } from "@/lib/bill-utils";
 import { BillPreview } from "@/types/bill";
+import { isMobileOrTabletRequest } from "@/lib/device-detection";
 
 /**
  * GET /api/bills/preview
  * Get bill preview for unpaid auction items grouped by farmer, product, and session
+ * DESKTOP ONLY - Restricted for mobile and tablet devices
  */
 async function getBillPreviewHandler(req: AuthenticatedRequest): Promise<NextResponse> {
+    // Check if request is from mobile or tablet - restrict access
+    if (isMobileOrTabletRequest(req)) {
+        throw new ValidationError(
+            'Bill preview generation is restricted to desktop devices only for better accuracy and usability.',
+            'DESKTOP_REQUIRED'
+        );
+    }
+
     const userId = req.user.id;
     const { searchParams } = new URL(req.url);
 
@@ -94,7 +104,15 @@ async function getBillPreviewHandler(req: AuthenticatedRequest): Promise<NextRes
     });
 
     if (auctionItems.length === 0) {
-        return createSuccessResponse([], 200);
+        return createSuccessResponse({
+            farmer: { name: farmer.name, village: farmer.village },
+            previews: [],
+            summary: {
+                total_previews: 0,
+                total_gross_amount: 0,
+                total_net_payable: 0
+            }
+        });
     }
 
     // Group items by [product_id, session_id]
