@@ -30,7 +30,7 @@ interface Farmer {
 interface Product {
   id: string;
   name: string;
-  category: string;
+  category: { id: string; name: string } | string;
   current_price?: number;
 }
 
@@ -164,11 +164,18 @@ export default function BillPreviewPage() {
       farmer.village.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(productSearchTerm.toLowerCase()),
-  );
+  const filteredProducts = products.filter((product) => {
+    const categoryName =
+      typeof product.category === "string"
+        ? product.category
+        : product.category?.name || "";
+    return (
+      product.name
+        .toLowerCase()
+        .includes(productSearchTerm.toLowerCase()) ||
+      categoryName.toLowerCase().includes(productSearchTerm.toLowerCase())
+    );
+  });
 
   const filteredSessions = sessions.filter(
     (session) =>
@@ -407,7 +414,7 @@ export default function BillPreviewPage() {
               console.error("Bill generation errors:", errors);
             }
 
-            alert(successMessage);
+            try { (await import('@/components/ui/alert')).showToast(successMessage); } catch { }
 
             // Reset the form
             setSelectedFarmerId("");
@@ -428,13 +435,13 @@ export default function BillPreviewPage() {
               errors.forEach((err: { error: string }, index: number) => {
                 errorMessage += `${index + 1}. ${err.error}\n`;
               });
-              alert(errorMessage);
+              try { (await import('@/components/ui/alert')).showToast(errorMessage); } catch { }
             } else {
-              alert("No bills were generated. Please try again.");
+              try { (await import('@/components/ui/alert')).showToast("No bills were generated. Please try again."); } catch { }
             }
           }
         } else {
-          alert(`Failed to generate bills: ${data.message || "Unknown error"}`);
+          try { (await import('@/components/ui/alert')).showToast(`Failed to generate bills: ${data.message || "Unknown error"}`); } catch { }
         }
       } else {
         let errorMessage = "Failed to generate bills";
@@ -447,11 +454,11 @@ export default function BillPreviewPage() {
           // If we can't parse the error response, use the default message
           errorMessage = `Failed to generate bills: ${response.status} ${response.statusText}`;
         }
-        alert(errorMessage);
+        try { (await import('@/components/ui/alert')).showToast(errorMessage); } catch { }
       }
     } catch (error) {
       console.error("Failed to generate bills:", error);
-      alert("Failed to generate bills. Please try again.");
+      try { (await import('@/components/ui/alert')).showToast("Failed to generate bills. Please try again."); } catch { }
     } finally {
       setGeneratingBills(false);
     }
@@ -529,11 +536,10 @@ export default function BillPreviewPage() {
                       {filteredFarmers.map((farmer) => (
                         <div
                           key={farmer.id}
-                          className={`px-3 py-2 hover:bg-gray-100 cursor-pointer ${
-                            selectedFarmerId === farmer.id
-                              ? "bg-blue-50 border-l-4 border-blue-500"
-                              : ""
-                          }`}
+                          className={`px-3 py-2 hover:bg-gray-100 cursor-pointer ${selectedFarmerId === farmer.id
+                            ? "bg-blue-50 border-l-4 border-blue-500"
+                            : ""
+                            }`}
                           onClick={() => {
                             setSelectedFarmerId(farmer.id);
                             setSearchTerm(`${farmer.name} - ${farmer.village}`);
@@ -593,7 +599,9 @@ export default function BillPreviewPage() {
                         >
                           <div className="font-medium">{product.name}</div>
                           <div className="text-sm text-gray-500">
-                            {product.category}
+                            {typeof product.category === "string"
+                              ? product.category
+                              : product.category?.name}
                           </div>
                         </div>
                       ))}
@@ -845,12 +853,12 @@ export default function BillPreviewPage() {
                               ))}
                               {Object.keys(customCharges[previewId] || {})
                                 .length === 0 && (
-                                <div className="text-xs text-gray-500 text-center py-2">
-                                  No additional charges. Click &quot;Add
-                                  Charge&quot; to add custom charges or
-                                  deductions.
-                                </div>
-                              )}
+                                  <div className="text-xs text-gray-500 text-center py-2">
+                                    No additional charges. Click &quot;Add
+                                    Charge&quot; to add custom charges or
+                                    deductions.
+                                  </div>
+                                )}
                             </div>
                           </div>
 

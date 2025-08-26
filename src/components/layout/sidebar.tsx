@@ -88,7 +88,7 @@ export default function Sidebar() {
             fetch("/api/products?limit=1", { credentials: "include" }).catch(
               () => null,
             ),
-            fetch("/api/buyer?limit=1", { credentials: "include" }).catch(
+            fetch("/api/buyers?limit=1", { credentials: "include" }).catch(
               () => null,
             ), // Note: API is /api/buyer not /api/buyers
             fetch("/api/sessions?limit=1", { credentials: "include" }).catch(
@@ -114,7 +114,7 @@ export default function Sidebar() {
 
         if (productsRes?.ok) {
           const productsData = await productsRes.json();
-          newCounts.products = productsData.meta?.total || 0;
+          newCounts.products = productsData.meta?.total ?? productsData.data?.length ?? 0;
         }
 
         if (buyersRes?.ok) {

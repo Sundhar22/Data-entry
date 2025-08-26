@@ -78,6 +78,12 @@ async function createBuyerHandler(
   return createSuccessResponse(newBuyer, 201);
 }
 
-export const GET = withAuth(withErrorHandling(listBuyersHandler));
+export const GET = withAuth(
+  withErrorHandling(async (req) => {
+    const res = await listBuyersHandler(req as any);
+    res.headers.set('Cache-Control', 'private, max-age=30');
+    return res;
+  }),
+);
 
 export const POST = withAuth(withErrorHandling(createBuyerHandler));

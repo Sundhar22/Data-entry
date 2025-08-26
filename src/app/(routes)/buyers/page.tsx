@@ -270,6 +270,8 @@ export default function BuyersPage() {
     });
   };
 
+  const buyersList = buyers.length > 0 ? buyers : (buyersQuery.data?.data ?? []);
+  const totalBuyersDisplay = buyersQuery.data?.meta?.total ?? totalBuyers;
   return (
     <DashboardLayout>
       <ErrorBoundary>
@@ -389,7 +391,7 @@ export default function BuyersPage() {
               </CardHeader>
               <CardContent className="pt-2">
                 <div className="text-lg sm:text-2xl font-bold">
-                  {totalBuyers}
+                  {totalBuyersDisplay}
                 </div>
               </CardContent>
             </Card>
@@ -403,7 +405,7 @@ export default function BuyersPage() {
               </CardHeader>
               <CardContent className="pt-2">
                 <div className="text-lg sm:text-2xl font-bold text-green-600">
-                  {buyers.filter((b) => b.is_active).length}
+                  {buyersList.filter((b) => b.is_active).length}
                 </div>
               </CardContent>
             </Card>
@@ -417,7 +419,7 @@ export default function BuyersPage() {
               </CardHeader>
               <CardContent className="pt-2">
                 <div className="text-lg sm:text-2xl font-bold text-red-600">
-                  {buyers.filter((b) => !b.is_active).length}
+                  {buyersList.filter((b) => !b.is_active).length}
                 </div>
               </CardContent>
             </Card>
@@ -465,7 +467,7 @@ export default function BuyersPage() {
                   <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                   <span className="ml-3 text-slate-600">Loading buyers...</span>
                 </div>
-              ) : buyers.length === 0 ? (
+              ) : buyersList.length === 0 ? (
                 <div className="text-center py-12 text-slate-600">
                   {searchTerm
                     ? "No buyers found matching your search."
@@ -473,7 +475,7 @@ export default function BuyersPage() {
                 </div>
               ) : (
                 <div className="space-y-0 relative max-h-[70vh] overflow-y-auto">
-                  {buyers.map((buyer, index) => (
+                  {buyersList.map((buyer, index) => (
                     <div key={buyer.id}>
                       <div className="p-3 sm:p-4 hover:bg-slate-50 transition-colors">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">

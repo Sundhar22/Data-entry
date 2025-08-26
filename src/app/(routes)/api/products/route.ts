@@ -37,4 +37,10 @@ async function getProducts(req: AuthenticatedRequest) {
   return createSuccessResponse(products);
 }
 
-export const GET = withAuth(withErrorHandling(getProducts, "Get Products"));
+export const GET = withAuth(
+  withErrorHandling(async (req) => {
+    const res = await getProducts(req);
+    res.headers.set('Cache-Control', 'private, max-age=60');
+    return res;
+  }, "Get Products"),
+);

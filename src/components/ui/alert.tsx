@@ -56,3 +56,31 @@ const AlertDescription = React.forwardRef<
 AlertDescription.displayName = "AlertDescription";
 
 export { Alert, AlertTitle, AlertDescription };
+
+// Simple toast utilities
+let _toastListeners: ((msg: string) => void)[] = [];
+export function showToast(message: string) {
+  _toastListeners.forEach((l) => l(message));
+}
+
+export function ToastContainer() {
+  const [message, setMessage] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    const handler = (msg: string) => {
+      setMessage(msg);
+      setTimeout(() => setMessage(null), 2500);
+    };
+    _toastListeners.push(handler);
+    return () => {
+      _toastListeners = _toastListeners.filter((l) => l !== handler);
+    };
+  }, []);
+  if (!message) return null;
+  return (
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+      <div className="px-4 py-2 rounded-md bg-slate-900 text-white shadow">
+        {message}
+      </div>
+    </div>
+  );
+}

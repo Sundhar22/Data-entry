@@ -51,7 +51,8 @@ async function fetchJson<T>(
     throw error;
   }
 
-  return (data?.data ?? data) as T;
+  // Return full payload to allow access to data and meta consistently
+  return data as T;
 }
 
 export function useApiQuery<TData = unknown>(

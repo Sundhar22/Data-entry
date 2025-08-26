@@ -214,7 +214,7 @@ export default function AuctionItemsPage() {
       const [farmersRes, productsRes, buyersRes] = await Promise.all([
         fetch("/api/farmers?limit=100&active=true"),
         fetch("/api/products?limit=100"),
-        fetch("/api/buyer?limit=100&active=true"),
+        fetch("/api/buyers?limit=100&active=true"),
       ]);
 
       if (farmersRes.ok) {
@@ -697,10 +697,10 @@ export default function AuctionItemsPage() {
                               .toLowerCase()
                               .includes(farmerSearch.toLowerCase()),
                         ).length === 0 && (
-                          <div className="px-3 py-2 text-gray-500">
-                            No farmers found
-                          </div>
-                        )}
+                            <div className="px-3 py-2 text-gray-500">
+                              No farmers found
+                            </div>
+                          )}
                       </div>
                     )}
                   </div>
@@ -802,10 +802,10 @@ export default function AuctionItemsPage() {
                                 .toLowerCase()
                                 .includes(productSearch.toLowerCase()),
                           ).length === 0 && (
-                            <div className="px-3 py-2 text-gray-500">
-                              No products found
-                            </div>
-                          )}
+                              <div className="px-3 py-2 text-gray-500">
+                                No products found
+                              </div>
+                            )}
                         </div>
                       )}
                   </div>
@@ -929,10 +929,10 @@ export default function AuctionItemsPage() {
                             .toLowerCase()
                             .includes(buyerSearch.toLowerCase()),
                         ).length === 0 && (
-                          <div className="px-3 py-2 text-gray-500">
-                            No buyers found
-                          </div>
-                        )}
+                            <div className="px-3 py-2 text-gray-500">
+                              No buyers found
+                            </div>
+                          )}
                       </div>
                     )}
                   </div>
@@ -1060,18 +1060,17 @@ export default function AuctionItemsPage() {
               <div className="text-lg sm:text-2xl font-bold">{totalItems}</div>
               <p className="text-xs text-muted-foreground truncate">
                 {statusFilter !== "ALL"
-                  ? `${
-                      items.filter((i) => {
-                        const status = getItemStatus(i).status;
-                        return statusFilter === "PENDING"
-                          ? status === "pending"
-                          : statusFilter === "SOLD"
-                            ? status === "sold"
-                            : statusFilter === "PAID"
-                              ? status === "paid"
-                              : true;
-                      }).length
-                    } ${statusFilter.toLowerCase()}`
+                  ? `${items.filter((i) => {
+                    const status = getItemStatus(i).status;
+                    return statusFilter === "PENDING"
+                      ? status === "pending"
+                      : statusFilter === "SOLD"
+                        ? status === "sold"
+                        : statusFilter === "PAID"
+                          ? status === "paid"
+                          : true;
+                  }).length
+                  } ${statusFilter.toLowerCase()}`
                   : "in this session"}
               </p>
             </CardContent>
@@ -1132,11 +1131,11 @@ export default function AuctionItemsPage() {
                 Avg:{" "}
                 {items.length > 0
                   ? formatCurrency(
-                      items.reduce(
-                        (sum, i) => sum + (i.rate || 0) * i.quantity,
-                        0,
-                      ) / items.length,
-                    )
+                    items.reduce(
+                      (sum, i) => sum + (i.rate || 0) * i.quantity,
+                      0,
+                    ) / items.length,
+                  )
                   : "₹0"}
               </p>
             </CardContent>
@@ -1534,10 +1533,10 @@ export default function AuctionItemsPage() {
                             .toLowerCase()
                             .includes(farmerSearch.toLowerCase()),
                       ).length === 0 && (
-                        <div className="px-3 py-2 text-gray-500">
-                          No farmers found
-                        </div>
-                      )}
+                          <div className="px-3 py-2 text-gray-500">
+                            No farmers found
+                          </div>
+                        )}
                     </div>
                   )}
                 </div>
@@ -1621,10 +1620,10 @@ export default function AuctionItemsPage() {
                             .toLowerCase()
                             .includes(productSearch.toLowerCase()),
                       ).length === 0 && (
-                        <div className="px-3 py-2 text-gray-500">
-                          No products found
-                        </div>
-                      )}
+                          <div className="px-3 py-2 text-gray-500">
+                            No products found
+                          </div>
+                        )}
                     </div>
                   )}
                 </div>
@@ -1748,10 +1747,10 @@ export default function AuctionItemsPage() {
                           .toLowerCase()
                           .includes(buyerSearch.toLowerCase()),
                       ).length === 0 && (
-                        <div className="px-3 py-2 text-gray-500">
-                          No buyers found
-                        </div>
-                      )}
+                          <div className="px-3 py-2 text-gray-500">
+                            No buyers found
+                          </div>
+                        )}
                     </div>
                   )}
                 </div>
