@@ -45,6 +45,7 @@ export class ApiClient {
     const url = `${this.baseUrl}${endpoint}`;
 
     const config: RequestInit = {
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         ...options.headers,

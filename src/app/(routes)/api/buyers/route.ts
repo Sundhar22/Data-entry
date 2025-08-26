@@ -81,7 +81,7 @@ async function createBuyerHandler(
 export const GET = withAuth(
   withErrorHandling(async (req) => {
     const res = await listBuyersHandler(req as any);
-    res.headers.set('Cache-Control', 'private, max-age=30');
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   }),
 );

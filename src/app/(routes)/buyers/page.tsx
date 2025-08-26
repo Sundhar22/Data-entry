@@ -94,7 +94,7 @@ export default function BuyersPage() {
     ["buyers", { page: currentPage, limit: 10, search: searchTerm }],
     `/api/buyers?page=${currentPage}&limit=10${searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : ""}`,
     {
-      staleTime: 60_000,
+      staleTime: 0,
       refetchOnWindowFocus: false,
       onSuccess: (data) => {
         setBuyers(data.data);

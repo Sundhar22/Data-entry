@@ -273,7 +273,7 @@ async function createSessionHandler(
 export const GET = withAuth(
   withErrorHandling(async (req) => {
     const res = await getSessionsHandler(req);
-    res.headers.set('Cache-Control', 'private, max-age=30');
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   }, "Get Sessions"),
 );

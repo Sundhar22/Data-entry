@@ -215,7 +215,7 @@ async function getBillStatisticsHandler(
       payment_methods: processedPaymentMethodStats,
     });
 
-    response.headers.set("Cache-Control", "public, max-age=60");
+    response.headers.set("Cache-Control", "no-store");
     return response;
   } catch (error) {
     console.error("Error fetching bill statistics:", error);

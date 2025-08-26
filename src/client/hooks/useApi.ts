@@ -29,6 +29,7 @@ async function fetchJson<T>(
 ): Promise<T> {
   const response = await fetch(input, {
     credentials: "include",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers || {}),

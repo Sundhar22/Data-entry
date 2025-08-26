@@ -88,7 +88,7 @@ async function createFarmerHandler(
 export const GET = withAuth(
   withErrorHandling(async (req) => {
     const res = await getFarmersHandler(req);
-    res.headers.set('Cache-Control', 'private, max-age=30');
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   }, "Get Farmers"),
 );

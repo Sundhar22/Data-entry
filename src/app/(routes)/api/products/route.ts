@@ -40,7 +40,7 @@ async function getProducts(req: AuthenticatedRequest) {
 export const GET = withAuth(
   withErrorHandling(async (req) => {
     const res = await getProducts(req);
-    res.headers.set('Cache-Control', 'private, max-age=60');
+    res.headers.set('Cache-Control', 'no-store');
     return res;
   }, "Get Products"),
 );
