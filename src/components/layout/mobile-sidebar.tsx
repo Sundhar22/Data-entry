@@ -43,7 +43,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 md:hidden">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 lg:hidden">
       <div className="w-64 bg-white h-full shadow-lg">
         <div className="flex justify-end p-4">
           <button
@@ -57,7 +57,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
         <div className="flex flex-col h-full">
           <div className="flex-1 space-y-4 py-4">
             <nav className="space-y-2">
-              <Link href="/farmers">
+              <Link href="/farmers" onClick={onClose}>
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-12 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
@@ -66,7 +66,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
                   Farmers
                 </Button>
               </Link>
-              <Link href="/products">
+              <Link href="/products" onClick={onClose}>
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-12 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
@@ -75,7 +75,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
                   Products
                 </Button>
               </Link>
-              <Link href="/buyers">
+              <Link href="/buyers" onClick={onClose}>
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-12 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
@@ -84,7 +84,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
                   Buyers
                 </Button>
               </Link>
-              <Link href="/auctions">
+              <Link href="/auctions" onClick={onClose}>
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-12 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
@@ -93,7 +93,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
                   Auctions
                 </Button>
               </Link>
-              <Link href="/bills">
+              <Link href="/bills" onClick={onClose}>
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-12 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
@@ -102,7 +102,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
                   Bills
                 </Button>
               </Link>
-              <Link href="/analytics">
+              <Link href="/analytics" onClick={onClose}>
                 <Button
                   variant="ghost"
                   className="w-full justify-start h-12 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
@@ -117,7 +117,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
           <Separator className="my-2" />
 
           <div className="space-y-2 py-4">
-            <Link href="/profile">
+            <Link href="/profile" onClick={onClose}>
               <Button
                 variant="ghost"
                 className="w-full justify-start text-slate-600"

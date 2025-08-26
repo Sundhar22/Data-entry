@@ -43,7 +43,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 md:hidden">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 lg:hidden">
       <div className="w-64 bg-white h-full shadow-lg">
         <div className="flex justify-end p-4">
           <button

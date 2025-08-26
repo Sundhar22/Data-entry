@@ -53,7 +53,7 @@ export default function ProductsPage() {
       if (query) {
         searchParams.set("q", query);
       }
-      searchParams.set("limit", "50");
+      searchParams.set("limit", "1000"); // Show all products
 
       const response = await fetch(`/api/products?${searchParams}`, {
         credentials: "include",

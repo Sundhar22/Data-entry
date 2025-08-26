@@ -5,6 +5,7 @@ import Sidebar from "./sidebar";
 import MobileSidebar from "./mobile-sidebar";
 import Footer from "./footer";
 import { ToastContainer } from "@/components/ui/alert";
+import { Menu } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -23,9 +24,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="lg:hidden p-3 border-b bg-white flex items-center justify-between">
           <button
             onClick={() => setMobileOpen(true)}
-            className="px-3 py-2 border rounded text-slate-700"
+            className="p-2 border rounded text-slate-700 hover:bg-slate-50"
           >
-            Menu
+            <Menu className="h-5 w-5" />
           </button>
           <div className="font-semibold">AgriTrade</div>
         </div>
