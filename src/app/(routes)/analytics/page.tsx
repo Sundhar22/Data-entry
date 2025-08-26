@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
