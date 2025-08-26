@@ -46,6 +46,7 @@ export class ApiClient {
 
     const config: RequestInit = {
       cache: "no-store",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         ...options.headers,
