@@ -9,18 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Search,
-  CreditCard,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Filter,
-  DollarSign,
-  Users,
-  AlertTriangle,
-  Loader2,
-} from "lucide-react";
+import { Search, CreditCard, XCircle, Clock, Filter, DollarSign, Users, AlertTriangle, Loader2 } from "lucide-react";
 
 interface Bill {
   id: string;
@@ -111,7 +100,7 @@ export default function BillPaymentsPage() {
 
   // Apply filters
   useEffect(() => {
-    let filtered = bills.filter((bill) => {
+    const filtered = bills.filter((bill) => {
       // Status filter
       if (statusFilter !== "all" && bill.payment_status !== statusFilter) {
         return false;
@@ -206,8 +195,9 @@ export default function BillPaymentsPage() {
           showToast("Some payments could not be processed. Please check for errors.");
         }
       } else {
-        const errorData = await response.json();
-        showToast(`Failed to process payments: ${errorData.message}`);
+        const errorData = await response.json().catch(() => null);
+        const message = (errorData && (errorData.error?.message || errorData.message)) || `HTTP ${response.status}`;
+        showToast(`Failed to process payments: ${message}`);
       }
     } catch (error) {
       console.error("Failed to process payments:", error);

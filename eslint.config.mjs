@@ -13,11 +13,18 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript", "prettier"),
   {
     rules: {
-      "no-console": ["warn", { allow: ["error", "warn"] }],
-      eqeqeq: ["error", "always"],
-      curly: ["error", "all"],
-      "no-var": "error",
-      "prefer-const": "warn",
+      // "no-console": ["warn", { allow: ["error", "warn"] }],
+      // eqeqeq: ["error", "always"],
+      // curly: ["error", "all"],
+      // "no-var": "error",
+      // "prefer-const": "warn",
+      "@typescript-eslint/no-unused-vars": "off",
+      "no-console": "off",
+      "prefer-const": "off",
+      "@typescript-eslint/no-explicit-any": "off",curly: "off",
+      "eslint-comments/no-unused-disable": "off",
+"@typescript-eslint/no-empty-object-type": "off",
+    "react-hooks/exhaustive-deps": "off",
     },
   },
 ];

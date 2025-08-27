@@ -144,7 +144,9 @@ export default function BillAnalyticsPage() {
   };
 
   const exportData = () => {
-    if (!analytics) return;
+    if (!analytics) {
+      return;
+    }
 
     const data = {
       overview: analytics.overview,
@@ -384,15 +386,14 @@ export default function BillAnalyticsPage() {
                           >
                             <div className="flex items-center space-x-3">
                               <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                                  index === 0
+                                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0
                                     ? "bg-yellow-100 text-yellow-800"
                                     : index === 1
                                       ? "bg-gray-100 text-gray-800"
                                       : index === 2
                                         ? "bg-orange-100 text-orange-800"
                                         : "bg-blue-100 text-blue-800"
-                                }`}
+                                  }`}
                               >
                                 {index + 1}
                               </div>
@@ -448,15 +449,14 @@ export default function BillAnalyticsPage() {
                           >
                             <div className="flex items-center space-x-3">
                               <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                                  index === 0
+                                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${index === 0
                                     ? "bg-yellow-100 text-yellow-800"
                                     : index === 1
                                       ? "bg-gray-100 text-gray-800"
                                       : index === 2
                                         ? "bg-orange-100 text-orange-800"
                                         : "bg-blue-100 text-blue-800"
-                                }`}
+                                  }`}
                               >
                                 {index + 1}
                               </div>
@@ -581,15 +581,14 @@ export default function BillAnalyticsPage() {
                         </div>
                         <div className="text-right">
                           <p
-                            className={`font-semibold ${
-                              color === "green"
+                            className={`font-semibold ${color === "green"
                                 ? "text-green-600"
                                 : color === "yellow"
                                   ? "text-yellow-600"
                                   : color === "orange"
                                     ? "text-orange-600"
                                     : "text-red-600"
-                            }`}
+                              }`}
                           >
                             {formatCurrency(data.amount)}
                           </p>

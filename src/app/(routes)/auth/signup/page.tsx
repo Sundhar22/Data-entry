@@ -57,7 +57,8 @@ export default function SignupPage() {
     }
 
     try {
-      const { confirmPassword, ...signupData } = formData;
+      const { name, email, password, location, phone } = formData;
+      const signupData = { name, email, password, location, phone };
 
       const response = await fetch("/api/auth/signup", {
         method: "POST",
@@ -85,7 +86,7 @@ export default function SignupPage() {
           } else {
             setError(
               data.error.message ||
-                "Validation failed. Please check your input.",
+              "Validation failed. Please check your input.",
             );
           }
         } else {
@@ -106,7 +107,9 @@ export default function SignupPage() {
       [e.target.name]: e.target.value,
     }));
     // Clear error when user starts typing
-    if (error) setError("");
+    if (error) {
+      setError("");
+    }
   };
 
   if (success) {

@@ -94,10 +94,6 @@ export default function BillDetailsPage() {
         const data = await response.json();
         if (data.success && data.data) {
           setBill(data.data.bill); // The actual bill is nested under data.bill
-          console.log(
-            "Bill refreshed, payment status:",
-            data.data.bill.payment_status,
-          );
         } else {
           console.error("Invalid response structure:", data);
           router.push("/bills");
@@ -129,12 +125,7 @@ export default function BillDetailsPage() {
 
     setMarkingPaid(true);
     try {
-      console.log(
-        "Marking bill as paid:",
-        bill.id,
-        "Method:",
-        paymentMethodToUse,
-      );
+      // no-console (info): keep only error/warn logs
 
       const response = await fetch("/api/bills/pay-multiple", {
         method: "POST",
@@ -148,14 +139,14 @@ export default function BillDetailsPage() {
         }),
       });
 
-      console.log("Payment response status:", response.status);
+      // no-console
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Payment response data:", data);
+        // no-console
 
         if (data.success) {
-          console.log("Payment successful, refreshing bill data...");
+          // no-console
           await fetchBillDetails(); // Refresh the bill data
           showToast("Bill marked as paid successfully!");
         } else {
@@ -163,11 +154,12 @@ export default function BillDetailsPage() {
           showToast(`Failed to mark bill as paid: ${data.message || "Unknown error"}`);
         }
       } else {
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: "Unknown error" }));
-        console.error("Payment request failed:", response.status, errorData);
-        showToast(`Failed to mark bill as paid: ${errorData.message}`);
+        const errorData = await response.json().catch(() => null);
+        const message =
+          (errorData && (errorData.error?.message || errorData.message)) ||
+          `HTTP ${response.status}`;
+        console.error("Payment request failed:", response.status, errorData || {});
+        showToast(`Failed to mark bill as paid: ${message}`);
       }
     } catch (error) {
       console.error("Failed to mark bill as paid:", error);
@@ -431,8 +423,8 @@ export default function BillDetailsPage() {
               <div className="flex items-center gap-4">
                 <div
                   className={`w-12 h-12 rounded-lg flex items-center justify-center ${bill.payment_status === "PAID"
-                      ? "bg-green-100"
-                      : "bg-red-100"
+                    ? "bg-green-100"
+                    : "bg-red-100"
                     }`}
                 >
                   {bill.payment_status === "PAID" ? (
