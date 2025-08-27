@@ -104,7 +104,7 @@ export function handleApiError(error: unknown, context?: string): NextResponse {
   if (error instanceof Error) {
     // Don't expose internal error messages in production
     const message =
-      process.env.NODE_ENV === "production"
+      NODE_ENV === "production"
         ? "Internal server error"
         : error.message;
 
@@ -152,7 +152,7 @@ function handlePrismaError(error: any): NextResponse {
 
     default:
       return CommonErrors.DatabaseError(
-        process.env.NODE_ENV === "production"
+        NODE_ENV === "production"
           ? "Database error"
           : `Database error: ${error.message}`,
       );

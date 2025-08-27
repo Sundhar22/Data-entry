@@ -85,7 +85,7 @@ export async function verifyAuth(req: NextRequest): Promise<{
 
         response.cookies.set("access_token", newAccessToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
+          secure: NODE_ENV === "production",
           sameSite: "lax",
           path: "/",
           maxAge: 15 * 60, // 15 minutes
@@ -143,7 +143,7 @@ export function withAuth(
       if (accessTokenCookie) {
         response.cookies.set("access_token", accessTokenCookie.value, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
+          secure: NODE_ENV === "production",
           sameSite: "lax",
           path: "/",
           maxAge: 15 * 60, // 15 minutes
