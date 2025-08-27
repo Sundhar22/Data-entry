@@ -70,7 +70,7 @@ export async function middleware(request: NextRequest) {
       if (refreshedCookie) {
         passthrough.cookies.set("access_token", refreshedCookie.value, {
           httpOnly: true,
-          secure: NODE_ENV === "production",
+          secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
           path: "/",
           maxAge: 15 * 60,

@@ -45,7 +45,7 @@ async function loginHandler(req: NextRequest) {
 
   res.cookies.set("access_token", accessToken, {
     httpOnly: true,
-    secure: NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: 15 * 60, // 15 minutes
@@ -53,7 +53,7 @@ async function loginHandler(req: NextRequest) {
 
   res.cookies.set("refresh_token", refreshToken, {
     httpOnly: true,
-    secure: NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: 7 * 24 * 60 * 60, // 7 days

@@ -8,6 +8,6 @@ const globalForPrisma = global as unknown as {
 const prisma =
   globalForPrisma.prisma || new PrismaClient().$extends(withAccelerate());
 
-if (NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export default prisma;

@@ -27,7 +27,7 @@ async function refreshHandler(req: NextRequest) {
 
   res.cookies.set("access_token", newAccessToken, {
     httpOnly: true,
-    secure: NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 15 * 60, // 15 minutes
   });
