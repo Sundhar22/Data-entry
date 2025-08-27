@@ -5,6 +5,7 @@ This document describes the global error handling system and standardized API re
 ## Overview
 
 The system provides:
+
 1. **Standardized API Response Format** - Consistent response structure across all API endpoints
 2. **Global Error Handler** - Centralized error handling with proper error categorization
 3. **Custom Error Classes** - Typed error classes for different error scenarios
@@ -34,6 +35,7 @@ interface ApiResponse<T = any> {
 ```
 
 ### Success Response Example
+
 ```json
 {
   "success": true,
@@ -49,6 +51,7 @@ interface ApiResponse<T = any> {
 ```
 
 ### Error Response Example
+
 ```json
 {
   "success": false,
@@ -69,12 +72,13 @@ interface ApiResponse<T = any> {
 ```
 
 ### Paginated Response Example
+
 ```json
 {
   "success": true,
   "data": [
-    {"id": "1", "name": "Farmer 1"},
-    {"id": "2", "name": "Farmer 2"}
+    { "id": "1", "name": "Farmer 1" },
+    { "id": "2", "name": "Farmer 2" }
   ],
   "meta": {
     "page": 1,
@@ -108,20 +112,20 @@ class ConflictError extends AppError       // 409 - Conflict
 
 ### Error Codes
 
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `BAD_REQUEST` | 400 | General bad request |
-| `VALIDATION_ERROR` | 400 | Request validation failed |
-| `UNAUTHORIZED` | 401 | Authentication required |
-| `INVALID_CREDENTIALS` | 401 | Login credentials invalid |
-| `TOKEN_EXPIRED` | 401 | Authentication token expired |
-| `FORBIDDEN` | 403 | Access denied |
-| `NOT_FOUND` | 404 | Resource not found |
-| `CONFLICT` | 409 | Resource conflict |
-| `ALREADY_EXISTS` | 409 | Resource already exists |
-| `UNPROCESSABLE_ENTITY` | 422 | Invalid request data |
-| `INTERNAL_SERVER_ERROR` | 500 | Server error |
-| `DATABASE_ERROR` | 500 | Database operation failed |
+| Code                    | HTTP Status | Description                  |
+| ----------------------- | ----------- | ---------------------------- |
+| `BAD_REQUEST`           | 400         | General bad request          |
+| `VALIDATION_ERROR`      | 400         | Request validation failed    |
+| `UNAUTHORIZED`          | 401         | Authentication required      |
+| `INVALID_CREDENTIALS`   | 401         | Login credentials invalid    |
+| `TOKEN_EXPIRED`         | 401         | Authentication token expired |
+| `FORBIDDEN`             | 403         | Access denied                |
+| `NOT_FOUND`             | 404         | Resource not found           |
+| `CONFLICT`              | 409         | Resource conflict            |
+| `ALREADY_EXISTS`        | 409         | Resource already exists      |
+| `UNPROCESSABLE_ENTITY`  | 422         | Invalid request data         |
+| `INTERNAL_SERVER_ERROR` | 500         | Server error                 |
+| `DATABASE_ERROR`        | 500         | Database operation failed    |
 
 ### Common Error Responses
 
@@ -129,27 +133,27 @@ Pre-built error response functions:
 
 ```typescript
 // 400 Errors
-CommonErrors.BadRequest(message, details)
-CommonErrors.ValidationError(message, details)
+CommonErrors.BadRequest(message, details);
+CommonErrors.ValidationError(message, details);
 
 // 401 Errors
-CommonErrors.Unauthorized(message)
-CommonErrors.InvalidCredentials(message)
-CommonErrors.TokenExpired(message)
+CommonErrors.Unauthorized(message);
+CommonErrors.InvalidCredentials(message);
+CommonErrors.TokenExpired(message);
 
 // 403 Errors
-CommonErrors.Forbidden(message)
+CommonErrors.Forbidden(message);
 
 // 404 Errors
-CommonErrors.NotFound(message)
+CommonErrors.NotFound(message);
 
 // 409 Errors
-CommonErrors.Conflict(message)
-CommonErrors.AlreadyExists(message)
+CommonErrors.Conflict(message);
+CommonErrors.AlreadyExists(message);
 
 // 500 Errors
-CommonErrors.InternalServerError(message)
-CommonErrors.DatabaseError(message)
+CommonErrors.InternalServerError(message);
+CommonErrors.DatabaseError(message);
 ```
 
 ## Usage Examples
@@ -157,25 +161,25 @@ CommonErrors.DatabaseError(message)
 ### API Route Implementation
 
 ```typescript
-import { withErrorHandling, NotFoundError } from '@/lib/error-handler';
-import { createSuccessResponse, CommonErrors } from '@/lib/api-response';
+import { withErrorHandling, NotFoundError } from "@/lib/error-handler";
+import { createSuccessResponse, CommonErrors } from "@/lib/api-response";
 
 async function getFarmerHandler(req: NextRequest) {
   const { id } = params;
-  
+
   const farmer = await prisma.farmer.findUnique({
-    where: { id }
+    where: { id },
   });
-  
+
   if (!farmer) {
-    throw new NotFoundError('Farmer not found');
+    throw new NotFoundError("Farmer not found");
   }
-  
+
   return createSuccessResponse(farmer);
 }
 
 // Export with error handling wrapper
-export const GET = withErrorHandling(getFarmerHandler, 'Get Farmer');
+export const GET = withErrorHandling(getFarmerHandler, "Get Farmer");
 ```
 
 ### Response Helpers
@@ -185,7 +189,7 @@ export const GET = withErrorHandling(getFarmerHandler, 'Get Farmer');
 return createSuccessResponse(data, 200, { customMeta });
 
 // Error response
-return CommonErrors.ValidationError('Invalid data', validationErrors);
+return CommonErrors.ValidationError("Invalid data", validationErrors);
 
 // Paginated response
 return createPaginatedResponse(farmers, page, limit, total);
@@ -194,28 +198,28 @@ return createPaginatedResponse(farmers, page, limit, total);
 ### Client-Side Error Handling
 
 ```typescript
-import { apiClient, ApiError } from '@/lib/api-client';
+import { apiClient, ApiError } from "@/lib/api-client";
 
 try {
-  const response = await apiClient.get<Farmer[]>('/farmers');
+  const response = await apiClient.get<Farmer[]>("/farmers");
   console.log(response.data);
 } catch (error) {
   if (error instanceof ApiError) {
     switch (error.code) {
-      case 'VALIDATION_ERROR':
+      case "VALIDATION_ERROR":
         // Handle validation errors
-        console.error('Validation failed:', error.details);
+        console.error("Validation failed:", error.details);
         break;
-      case 'UNAUTHORIZED':
+      case "UNAUTHORIZED":
         // Redirect to login
-        window.location.href = '/login';
+        window.location.href = "/login";
         break;
-      case 'NOT_FOUND':
+      case "NOT_FOUND":
         // Show not found message
-        console.error('Resource not found');
+        console.error("Resource not found");
         break;
       default:
-        console.error('API error:', error.message);
+        console.error("API error:", error.message);
     }
   }
 }
@@ -236,25 +240,30 @@ The system automatically handles:
 ## Migration Guide
 
 ### Before (Old Format)
+
 ```typescript
 export async function GET(req: NextRequest) {
   try {
     const data = await getData();
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 ```
 
 ### After (New Format)
+
 ```typescript
 async function getHandler(req: NextRequest) {
   const data = await getData();
   return createSuccessResponse(data);
 }
 
-export const GET = withErrorHandling(getHandler, 'Get Data');
+export const GET = withErrorHandling(getHandler, "Get Data");
 ```
 
 ## Best Practices
@@ -281,16 +290,16 @@ To add new error types:
 // Add to error-handler.ts
 export class CustomError extends AppError {
   constructor(message: string) {
-    super(message, 422, 'CUSTOM_ERROR');
-    this.name = 'CustomError';
+    super(message, 422, "CUSTOM_ERROR");
+    this.name = "CustomError";
   }
 }
 
 // Add to api-response.ts
 export const CommonErrors = {
   // ... existing errors
-  CustomError: (message: string) => 
-    createErrorResponse(message, 422, 'CUSTOM_ERROR'),
+  CustomError: (message: string) =>
+    createErrorResponse(message, 422, "CUSTOM_ERROR"),
 };
 ```
 
@@ -304,15 +313,15 @@ Error handling can be tested by:
 
 ```typescript
 // Test error handling
-describe('Error Handling', () => {
-  it('should handle validation errors', async () => {
-    const response = await request(app)
-      .post('/api/farmers')
-      .send({ /* invalid data */ });
-    
+describe("Error Handling", () => {
+  it("should handle validation errors", async () => {
+    const response = await request(app).post("/api/farmers").send({
+      /* invalid data */
+    });
+
     expect(response.status).toBe(400);
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
 });
 ```

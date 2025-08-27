@@ -1,29 +1,6 @@
-import CommissionerProfile from '@/components/CommissionerProfile';
-import Footer from '@/components/layout/footer';
-import Header from '@/components/layout/header';
-import React from 'react';
-
-
+import { redirect } from "next/navigation";
 
 export default function HomePage() {
-  return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      background: '#fafbfc'
-    }}>
-      <Header />
-      <main style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <h2 style={{ color: '#333', fontWeight: 400 }}>Welcome to the Data Entry App</h2>
-        <CommissionerProfile />
-      </main>
-      <Footer />
-    </div>
-  );
+  // Redirect home page to auctions (main functionality)
+  redirect("/auctions");
 }

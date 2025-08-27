@@ -1,5 +1,4 @@
 export type AuctionItem = {
-
   id: string;
   session_id: string;
   farmer_id: string;
@@ -10,8 +9,7 @@ export type AuctionItem = {
   buyer_id: string;
   created_at: Date;
   updated_at: Date;
-
-}
+};
 
 export enum UnitType {
   KG = "KG",

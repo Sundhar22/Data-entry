@@ -15,19 +15,19 @@ This project now includes a comprehensive validation system using Zod for type-s
 ### 1. Using the Form Component - Farmer Example
 
 ```tsx
-import FarmerForm from '@/components/FarmerForm';
+import FarmerForm from "@/components/FarmerForm";
 
 export default function FarmersPage() {
   const handleSubmit = async (data: z.infer<typeof CreateFarmerSchema>) => {
-    const response = await fetch('/api/farmers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // Include authentication cookies
+    const response = await fetch("/api/farmers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // Include authentication cookies
       body: JSON.stringify(data),
     });
-    
+
     if (!response.ok) {
-      throw new Error('Failed to create farmer');
+      throw new Error("Failed to create farmer");
     }
   };
 
@@ -38,55 +38,56 @@ export default function FarmersPage() {
 ### 2. Using the Custom Hook - Farmer Example
 
 ```tsx
-import { useFormValidation } from '@/hooks/useFormValidation';
-import { CreateFarmerSchema } from '@/schemas/farmer';
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { CreateFarmerSchema } from "@/schemas/farmer";
 
 export default function FarmerForm() {
-  const {
-    values,
-    errors,
-    handleSubmit,
-    setValue,
-    getFieldError,
-  } = useFormValidation({
-    schema: CreateFarmerSchema,
-    onSubmit: async (data) => {
-      const response = await fetch('/api/farmers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Include auth cookies
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to create farmer');
-      }
-    },
-  });
+  const { values, errors, handleSubmit, setValue, getFieldError } =
+    useFormValidation({
+      schema: CreateFarmerSchema,
+      onSubmit: async (data) => {
+        const response = await fetch("/api/farmers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // Include auth cookies
+          body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create farmer");
+        }
+      },
+    });
 
   return (
     <form onSubmit={handleSubmit}>
       <input
         placeholder="Farmer Name"
-        value={values.name || ''}
-        onChange={(e) => setValue('name', e.target.value)}
+        value={values.name || ""}
+        onChange={(e) => setValue("name", e.target.value)}
       />
-      {getFieldError('name') && <span className="error">{getFieldError('name')}</span>}
-      
+      {getFieldError("name") && (
+        <span className="error">{getFieldError("name")}</span>
+      )}
+
       <input
         placeholder="Phone Number"
-        value={values.phone || ''}
-        onChange={(e) => setValue('phone', e.target.value)}
+        value={values.phone || ""}
+        onChange={(e) => setValue("phone", e.target.value)}
       />
-      {getFieldError('phone') && <span className="error">{getFieldError('phone')}</span>}
-      
+      {getFieldError("phone") && (
+        <span className="error">{getFieldError("phone")}</span>
+      )}
+
       <input
         placeholder="Village"
-        value={values.village || ''}
-        onChange={(e) => setValue('village', e.target.value)}
+        value={values.village || ""}
+        onChange={(e) => setValue("village", e.target.value)}
       />
-      {getFieldError('village') && <span className="error">{getFieldError('village')}</span>}
-      
+      {getFieldError("village") && (
+        <span className="error">{getFieldError("village")}</span>
+      )}
+
       <button type="submit">Create Farmer</button>
     </form>
   );
@@ -96,13 +97,13 @@ export default function FarmerForm() {
 ### 3. API Validation - Farmers Example
 
 ```typescript
-import { validateRequest } from '@/lib/validation';
-import { CreateFarmerSchema } from '@/schemas/farmer';
+import { validateRequest } from "@/lib/validation";
+import { CreateFarmerSchema } from "@/schemas/farmer";
 
 export async function POST(request: Request) {
   const validator = validateRequest(CreateFarmerSchema);
   const validation = await validator(request);
-  
+
   if (!validation.success) {
     return validation.response; // Returns NextResponse with validation errors
   }
@@ -111,8 +112,8 @@ export async function POST(request: Request) {
   const farmer = await prisma.farmer.create({
     data: {
       ...validation.data,
-      commissioner_id: userId // Added by authentication
-    }
+      commissioner_id: userId, // Added by authentication
+    },
   });
 
   return NextResponse.json(farmer, { status: 201 });
@@ -122,16 +123,19 @@ export async function POST(request: Request) {
 ## Available Schemas
 
 ### Commissioner Schemas
+
 - **CommissionerSchema**: Full commissioner with all fields
 - **CreateCommissionerSchema**: For creating new commissioners
-- **UpdateCommissionerApiSchema**: For updating existing commissioners  
+- **UpdateCommissionerApiSchema**: For updating existing commissioners
 
 ### Farmer Schemas
+
 - **FarmerSchema**: Full farmer data validation
 - **CreateFarmerSchema**: For creating new farmers
 - **UpdateFarmerSchema**: For updating existing farmers
 
 ### Other Schemas
+
 - **ProductSchema**: Product validation
 - **CategorySchema**: Category validation
 
@@ -190,13 +194,14 @@ src/
 
 1. **Login**: Visit `/api/auth/login` to authenticate first
 2. **Visit UI**: Go to `/farmers` to see the farmer management interface
-3. **Test API**: Use farmer endpoints at `/api/farmers` 
+3. **Test API**: Use farmer endpoints at `/api/farmers`
 4. **Test Validation**: Try submitting invalid data to see validation errors
 5. **Test Forms**: Use the form components to test real-time validation
 
 ## Authentication Integration
 
 All validation now works with the authentication system:
+
 - API endpoints require authentication cookies
 - Form submissions include authentication headers
 - Validation errors are returned with proper HTTP status codes
@@ -213,6 +218,7 @@ All validation now works with the authentication system:
 ## Error Handling
 
 The validation system provides detailed error messages:
+
 - Field-specific errors for individual inputs
 - Form-level errors for submission issues
 - API errors with structured error responses

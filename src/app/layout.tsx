@@ -1,20 +1,21 @@
-import type { Metadata } from "next";
 import "@/styles/globals.css";
+import AuthProvider from "@/components/auth/auth-provider";
 
-export const metadata: Metadata = {
-  title: "Data Entry System",
-  description: "Commissioner and Farmer Management System",
+export const metadata = {
+  title: "DataEntry - Agricultural Market Management",
+  description:
+    "Professional agricultural market management system for commissioners",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased">
-        {children}
+      <body suppressHydrationWarning={true}>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

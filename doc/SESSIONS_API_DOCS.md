@@ -24,7 +24,7 @@ All session endpoints require authentication. Include the access token as an HTT
   status: 'ACTIVE' | 'COMPLETED';
   created_at: Date;
   updated_at: Date;
-  
+
   // Relations (when included)
   auction_items?: AuctionItem[];
   bills?: Bill[];
@@ -45,15 +45,15 @@ Retrieves a paginated list of auction sessions for the authenticated commissione
 
 #### Query Parameters
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `status` | string | - | Filter by session status ('ACTIVE' or 'COMPLETED') |
-| `startDate` | string (ISO date) | - | Filter sessions from this date |
-| `endDate` | string (ISO date) | - | Filter sessions up to this date |
-| `page` | number | 1 | Page number for pagination |
-| `limit` | number | 10 | Number of items per page (max 100) |
-| `sortBy` | string | 'date' | Sort field ('date', 'created_at', 'updated_at') |
-| `sortOrder` | string | 'desc' | Sort order ('asc' or 'desc') |
+| Parameter   | Type              | Default | Description                                        |
+| ----------- | ----------------- | ------- | -------------------------------------------------- |
+| `status`    | string            | -       | Filter by session status ('ACTIVE' or 'COMPLETED') |
+| `startDate` | string (ISO date) | -       | Filter sessions from this date                     |
+| `endDate`   | string (ISO date) | -       | Filter sessions up to this date                    |
+| `page`      | number            | 1       | Page number for pagination                         |
+| `limit`     | number            | 10      | Number of items per page (max 100)                 |
+| `sortBy`    | string            | 'date'  | Sort field ('date', 'created_at', 'updated_at')    |
+| `sortOrder` | string            | 'desc'  | Sort order ('asc' or 'desc')                       |
 
 #### Response
 
@@ -161,9 +161,9 @@ Retrieves detailed information about a specific auction session.
 
 #### Path Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | string | The session ID |
+| Parameter | Type   | Description    |
+| --------- | ------ | -------------- |
+| `id`      | string | The session ID |
 
 #### Response
 
@@ -249,9 +249,9 @@ Updates a session's status or date.
 
 #### Path Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | string | The session ID |
+| Parameter | Type   | Description    |
+| --------- | ------ | -------------- |
+| `id`      | string | The session ID |
 
 #### Request Body
 
@@ -321,9 +321,9 @@ Deletes an auction session. Only empty sessions (no auction items or bills) can 
 
 #### Path Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | string | The session ID |
+| Parameter | Type   | Description    |
+| --------- | ------ | -------------- |
+| `id`      | string | The session ID |
 
 #### Response
 
@@ -415,7 +415,7 @@ POST /api/sessions
 }
 
 # 2. Add auction items to the session (via auction items API)
-# ... 
+# ...
 
 # 3. Complete the session
 PUT /api/sessions/{session_id}
@@ -459,16 +459,16 @@ Retrieves all auction items for a specific session with filtering and pagination
 
 #### Query Parameters
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `farmer_id` | string | - | Filter by farmer ID |
-| `product_id` | string | - | Filter by product ID |
-| `buyer_id` | string | - | Filter by buyer ID |
-| `paid` | string | - | Filter by payment status ('true' for paid items, 'false' for unpaid) |
-| `page` | number | 1 | Page number for pagination |
-| `limit` | number | 10 | Number of items per page (max 100) |
-| `sortBy` | string | 'created_at' | Sort field ('created_at', 'final_price', 'quantity') |
-| `sortOrder` | string | 'desc' | Sort order ('asc' or 'desc') |
+| Parameter    | Type   | Default      | Description                                                          |
+| ------------ | ------ | ------------ | -------------------------------------------------------------------- |
+| `farmer_id`  | string | -            | Filter by farmer ID                                                  |
+| `product_id` | string | -            | Filter by product ID                                                 |
+| `buyer_id`   | string | -            | Filter by buyer ID                                                   |
+| `paid`       | string | -            | Filter by payment status ('true' for paid items, 'false' for unpaid) |
+| `page`       | number | 1            | Page number for pagination                                           |
+| `limit`      | number | 10           | Number of items per page (max 100)                                   |
+| `sortBy`     | string | 'created_at' | Sort field ('created_at', 'final_price', 'quantity')                 |
+| `sortOrder`  | string | 'desc'       | Sort order ('asc' or 'desc')                                         |
 
 #### Response
 
@@ -484,7 +484,7 @@ Retrieves all auction items for a specific session with filtering and pagination
       "buyer_id": "buyer_id",
       "unit": "KG",
       "quantity": 50.5,
-      "final_price": 2525.00,
+      "final_price": 2525.0,
       "bill_id": null,
       "created_at": "2025-08-03T10:15:00.000Z",
       "updated_at": "2025-08-03T10:15:00.000Z",
@@ -535,7 +535,7 @@ Adds a new auction item to an active session.
   "buyer_id": "buyer_id",
   "unit": "KG",
   "quantity": 50.5,
-  "final_price": 2525.00
+  "final_price": 2525.0
 }
 ```
 
@@ -552,13 +552,19 @@ Adds a new auction item to an active session.
     "buyer_id": "buyer_id",
     "unit": "KG",
     "quantity": 50.5,
-    "final_price": 2525.00,
+    "final_price": 2525.0,
     "bill_id": null,
     "created_at": "2025-08-03T10:15:00.000Z",
     "updated_at": "2025-08-03T10:15:00.000Z",
-    "farmer": { /* farmer details */ },
-    "product": { /* product details */ },
-    "buyer": { /* buyer details */ }
+    "farmer": {
+      /* farmer details */
+    },
+    "product": {
+      /* product details */
+    },
+    "buyer": {
+      /* buyer details */
+    }
   }
 }
 ```
@@ -582,13 +588,19 @@ Retrieves a specific auction item by ID.
     "buyer_id": "buyer_id",
     "unit": "KG",
     "quantity": 50.5,
-    "final_price": 2525.00,
+    "final_price": 2525.0,
     "bill_id": null,
     "created_at": "2025-08-03T10:15:00.000Z",
     "updated_at": "2025-08-03T10:15:00.000Z",
-    "farmer": { /* farmer details */ },
-    "product": { /* product details */ },
-    "buyer": { /* buyer details */ },
+    "farmer": {
+      /* farmer details */
+    },
+    "product": {
+      /* product details */
+    },
+    "buyer": {
+      /* buyer details */
+    },
     "bill": null
   }
 }
@@ -609,7 +621,7 @@ Updates an existing auction item. Only unpaid items in active sessions can be up
   "buyer_id": "new_buyer_id",
   "unit": "QUINTAL",
   "quantity": 75.0,
-  "final_price": 3750.00
+  "final_price": 3750.0
 }
 ```
 
@@ -646,6 +658,7 @@ Deletes an auction item. Only unpaid items in active sessions can be deleted.
 ## API Endpoint Summary
 
 ### Session Management
+
 - `GET /api/sessions` - List sessions with summary data
 - `POST /api/sessions` - Create new session
 - `GET /api/sessions/[id]` - **Get session details INCLUDING all auction items**
@@ -653,6 +666,7 @@ Deletes an auction item. Only unpaid items in active sessions can be deleted.
 - `DELETE /api/sessions/[id]` - Delete session
 
 ### Auction Items Management
+
 - `GET /api/sessions/[id]/items` - List items with filtering (alternative to session detail)
 - `POST /api/sessions/[id]/items` - Add new auction item
 - `GET /api/sessions/[id]/items/[itemId]` - Get specific auction item
@@ -671,3 +685,4 @@ Both endpoints return the same auction item data structure, but the session deta
 
 ````
 ```
+````

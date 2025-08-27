@@ -1,16 +1,20 @@
 # Farmers API Documentation
 
 ## Base URL
+
 All endpoints are relative to your application base URL: `http://localhost:3000`
 
 ## Authentication
+
 **🔐 Authentication Required**: All endpoints require JWT authentication via cookies. See the [Authentication Guide](./AUTHENTICATION_GUIDE.md) for details.
 
 **Headers Required:**
+
 - Requests must include valid `access_token` and `refresh_token` cookies
 - The system automatically handles token refresh when needed
 
 **Authentication Flow:**
+
 1. Login via `/api/auth/login` to get authentication cookies
 2. Include cookies in all subsequent requests
 3. System will automatically refresh tokens when needed
@@ -24,15 +28,18 @@ All endpoints are relative to your application base URL: `http://localhost:3000`
 **Authentication:** Required (Commissioner only sees their own farmers)
 
 **Query Parameters:**
+
 - `page` (optional): Page number (default: 1)
 - `limit` (optional): Items per page (default: 10)
 
 **Example Request:**
+
 ```bash
 GET /api/farmers?page=1&limit=10
 ```
 
 **Example Response:**
+
 ```json
 {
   "farmers": [
@@ -64,6 +71,7 @@ GET /api/farmers?page=1&limit=10
 **Authentication:** Required (Farmer will be associated with authenticated commissioner)
 
 **Request Body:**
+
 ```json
 {
   "name": "John Doe",
@@ -74,12 +82,14 @@ GET /api/farmers?page=1&limit=10
 ```
 
 **Validation Rules (Zod Schema):**
+
 - `name`: Required, minimum 1 character
 - `phone`: Required, minimum 1 character
 - `village`: Required, minimum 1 character
 - `is_active`: Optional, boolean (default: true)
 
 **Example Response (Success):**
+
 ```json
 {
   "id": "cm123abc",
@@ -94,6 +104,7 @@ GET /api/farmers?page=1&limit=10
 ```
 
 **Example Response (Error):**
+
 ```json
 {
   "error": "Validation failed",
@@ -111,14 +122,17 @@ GET /api/farmers?page=1&limit=10
 **Authentication:** Required (Commissioner can only access their own farmers)
 
 **URL Parameters:**
+
 - `id`: Farmer ID
 
 **Example Request:**
+
 ```bash
 GET /api/farmers/cm123abc
 ```
 
 **Example Response:**
+
 ```json
 {
   "id": "cm123abc",
@@ -132,12 +146,14 @@ GET /api/farmers/cm123abc
 ```
 
 **Error Response (404):**
+
 ```json
 {
   "error": "Farmer not found"
 }
 ```
-```
+
+````
 
 ---
 
@@ -154,16 +170,18 @@ GET /api/farmers/cm123abc
   "village": "Updated Village",
   "is_active": false
 }
-```
+````
 
 **Validation Rules (UpdateFarmerSchema):**
+
 - `id`: Required, valid CUID
 - `name`: Optional, minimum 1 character if provided
-- `phone`: Optional, minimum 1 character if provided  
+- `phone`: Optional, minimum 1 character if provided
 - `village`: Optional, minimum 1 character if provided
 - `is_active`: Optional, boolean
 
 **Example Response:**
+
 ```json
 {
   "id": "cm123abc",
@@ -178,12 +196,14 @@ GET /api/farmers/cm123abc
 ```
 
 **Error Response (404):**
+
 ```json
 {
   "error": "Farmer not found"
 }
 ```
-```
+
+````
 
 ---
 
@@ -196,9 +216,10 @@ GET /api/farmers/cm123abc
 {
   "id": "cm123abc"
 }
-```
+````
 
 **Example Response (Success):**
+
 ```json
 {
   "message": "Farmer deleted successfully"
@@ -206,12 +227,14 @@ GET /api/farmers/cm123abc
 ```
 
 **Error Response (404):**
+
 ```json
 {
   "error": "Farmer not found"
 }
 ```
-```
+
+````
 
 ---
 
@@ -247,12 +270,12 @@ const createFarmer = async (farmerData) => {
     method: 'POST',
     body: JSON.stringify(farmerData),
   });
-  
+
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to create farmer');
   }
-  
+
   return await response.json();
 };
 
@@ -271,12 +294,12 @@ const updateFarmer = async (farmerData) => {
     method: 'PUT',
     body: JSON.stringify(farmerData),
   });
-  
+
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to update farmer');
   }
-  
+
   return await response.json();
 };
 
@@ -286,15 +309,15 @@ const deleteFarmer = async (id) => {
     method: 'DELETE',
     body: JSON.stringify({ id }),
   });
-  
+
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to delete farmer');
   }
-  
+
   return await response.json();
 };
-```
+````
 
 ### cURL Examples
 
@@ -359,6 +382,7 @@ All endpoints return consistent error responses:
 ```
 
 **For validation errors:**
+
 ```json
 {
   "error": "Validation failed",
@@ -369,6 +393,7 @@ All endpoints return consistent error responses:
 ```
 
 **Common HTTP Status Codes:**
+
 - `200`: Success
 - `201`: Created successfully
 - `400`: Bad request / Validation error
@@ -377,6 +402,7 @@ All endpoints return consistent error responses:
 - `500`: Internal server error
 
 **Authentication Errors:**
+
 - `401 Unauthorized`: No tokens, invalid tokens, or user not found
 - Auto-refresh: System automatically tries refresh token if access token is expired
 
@@ -385,10 +411,12 @@ All endpoints return consistent error responses:
 ## 🎯 **Testing the API**
 
 ### Prerequisites
+
 1. **Authentication**: Login via `/api/auth/login` first to get authentication cookies
 2. **Database**: Make sure your database is running and migrated
 
 ### Testing Steps
+
 1. **Login**: Use `/api/auth/login` to authenticate
 2. **Create Farmer**: Use POST `/api/farmers` with valid data
 3. **List Farmers**: Use GET `/api/farmers` to see all farmers
@@ -397,6 +425,7 @@ All endpoints return consistent error responses:
 6. **Delete Farmer**: Use DELETE `/api/farmers` with farmer ID
 
 ### Test Data Examples
+
 ```json
 // Valid farmer data
 {
@@ -415,6 +444,7 @@ All endpoints return consistent error responses:
 ```
 
 ### Related Documentation
+
 - [Authentication Guide](./AUTHENTICATION_GUIDE.md) - Learn about authentication system
 - [Validation Guide](./VALIDATION_GUIDE.md) - Learn about Zod validation schemas
 

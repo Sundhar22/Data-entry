@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyAccessToken, verifyRefreshToken, signAccessToken } from './jwt';
-import { AuthenticatedRequest, JWTPayload } from '@/types/auth';
-import { CommonErrors } from './api-response';
-import { handleApiError } from './error-handler';
-import prisma from './prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { verifyAccessToken, verifyRefreshToken, signAccessToken } from "./jwt";
+import { AuthenticatedRequest, JWTPayload } from "@/types/auth";
+import { CommonErrors } from "./api-response";
+import { handleApiError } from "./error-handler";
+import prisma from "./prisma";
 
 export async function verifyAuth(req: NextRequest): Promise<{
   success: boolean;
@@ -11,13 +11,13 @@ export async function verifyAuth(req: NextRequest): Promise<{
   response?: NextResponse;
 }> {
   try {
-    const accessToken = req.cookies.get('access_token')?.value;
-    const refreshToken = req.cookies.get('refresh_token')?.value;
+    const accessToken = req.cookies.get("access_token")?.value;
+    const refreshToken = req.cookies.get("refresh_token")?.value;
 
     if (!accessToken && !refreshToken) {
       return {
         success: false,
-        response: CommonErrors.Unauthorized('No authentication tokens found')
+        response: CommonErrors.Unauthorized("No authentication tokens found"),
       };
     }
 
@@ -29,23 +29,26 @@ export async function verifyAuth(req: NextRequest): Promise<{
         // Verify user still exists in database
         const user = await prisma.commissioner.findUnique({
           where: { id: decoded.id },
-          select: { id: true, name: true, email: true }
+          select: { id: true, name: true, email: true },
         });
 
         if (!user) {
           return {
             success: false,
-            response: CommonErrors.Unauthorized('User not found')
+            response: CommonErrors.Unauthorized("User not found"),
           };
         }
 
         return {
           success: true,
-          user: decoded
+          user: decoded,
         };
       } catch (accessTokenError) {
         // Access token is invalid, try refresh token
-        console.log('Access token invalid, trying refresh token: ', accessTokenError);
+        console.log(
+          "Access token invalid, trying refresh token: ",
+          accessTokenError,
+        );
       }
     }
 
@@ -57,13 +60,13 @@ export async function verifyAuth(req: NextRequest): Promise<{
         // Verify user still exists in database
         const user = await prisma.commissioner.findUnique({
           where: { id: decoded.id },
-          select: { id: true, name: true, email: true }
+          select: { id: true, name: true, email: true },
         });
 
         if (!user) {
           return {
             success: false,
-            response: CommonErrors.Unauthorized('User not found')
+            response: CommonErrors.Unauthorized("User not found"),
           };
         }
 
@@ -71,51 +74,54 @@ export async function verifyAuth(req: NextRequest): Promise<{
         const newAccessToken = signAccessToken({
           id: user.id,
           email: user.email,
-          name: user.name
+          name: user.name,
         });
 
         // Create response with new access token
         const response = NextResponse.json({
-          message: 'Token refreshed successfully',
-          user: { id: user.id, email: user.email, name: user.name }
+          message: "Token refreshed successfully",
+          user: { id: user.id, email: user.email, name: user.name },
         });
 
-        response.cookies.set('access_token', newAccessToken, {
+        response.cookies.set("access_token", newAccessToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 15 * 60 // 15 minutes
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 15 * 60, // 15 minutes
         });
 
         return {
           success: true,
           user: decoded,
-          response
+          response,
         };
       } catch (refreshTokenError) {
-        console.log('Refresh token invalid: ', refreshTokenError);
+        console.log("Refresh token invalid: ", refreshTokenError);
         // Both tokens are invalid
         return {
           success: false,
-          response: CommonErrors.Unauthorized('Invalid or expired tokens')
+          response: CommonErrors.Unauthorized("Invalid or expired tokens"),
         };
       }
     }
 
     return {
       success: false,
-      response: CommonErrors.Unauthorized('Authentication required')
+      response: CommonErrors.Unauthorized("Authentication required"),
     };
   } catch (error) {
-    console.error('Authentication error:', error);
+    console.error("Authentication error:", error);
     return {
       success: false,
-      response: handleApiError(error, 'Authentication')
+      response: handleApiError(error, "Authentication"),
     };
   }
 }
 
-export function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextResponse>) {
+export function withAuth(
+  handler: (req: AuthenticatedRequest) => Promise<NextResponse>,
+) {
   return async (req: NextRequest): Promise<NextResponse> => {
     const authResult = await verifyAuth(req);
 
@@ -132,14 +138,15 @@ export function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextRes
     // If token was refreshed, add the new access token cookie to the response
     if (authResult.response) {
       const refreshResponse = authResult.response;
-      const accessTokenCookie = refreshResponse.cookies.get('access_token');
-      
+      const accessTokenCookie = refreshResponse.cookies.get("access_token");
+
       if (accessTokenCookie) {
-        response.cookies.set('access_token', accessTokenCookie.value, {
+        response.cookies.set("access_token", accessTokenCookie.value, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 15 * 60 // 15 minutes
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 15 * 60, // 15 minutes
         });
       }
     }
@@ -148,7 +155,9 @@ export function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextRes
   };
 }
 
-export async function requireAuth(req: NextRequest): Promise<{ success: boolean; user?: JWTPayload; error?: NextResponse }> {
+export async function requireAuth(
+  req: NextRequest,
+): Promise<{ success: boolean; user?: JWTPayload; error?: NextResponse }> {
   const authResult = await verifyAuth(req);
 
   if (!authResult.success) {
@@ -167,9 +176,9 @@ export async function requireAuth(req: NextRequest): Promise<{ success: boolean;
 
 // Helper function to get user from request headers (when using middleware)
 export function getUserFromHeaders(req: NextRequest): JWTPayload | null {
-  const userId = req.headers.get('x-user-id');
-  const userEmail = req.headers.get('x-user-email');
-  const userName = req.headers.get('x-user-name');
+  const userId = req.headers.get("x-user-id");
+  const userEmail = req.headers.get("x-user-email");
+  const userName = req.headers.get("x-user-name");
 
   if (!userId || !userEmail || !userName) {
     return null;
@@ -178,6 +187,6 @@ export function getUserFromHeaders(req: NextRequest): JWTPayload | null {
   return {
     id: userId,
     email: userEmail,
-    name: userName
+    name: userName,
   };
 }

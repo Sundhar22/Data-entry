@@ -1,6 +1,7 @@
 # Frontend Components Documentation
 
 ## Overview
+
 This document provides comprehensive documentation for all React components used in the Data Entry application, including their props, usage examples, and best practices.
 
 ---
@@ -8,45 +9,48 @@ This document provides comprehensive documentation for all React components used
 ## 🧩 **Core Components**
 
 ### FarmerForm Component
+
 A form component for creating and updating farmer information.
 
 #### Props Interface
+
 ```typescript
 interface FarmerFormProps {
-  initialData?: Partial<CreateFarmerData>;  // Optional initial form data
+  initialData?: Partial<CreateFarmerData>; // Optional initial form data
   onSubmit: (data: CreateFarmerData) => Promise<void>; // Form submission handler
 }
 
 interface CreateFarmerData {
-  name: string;           // Farmer's name
-  phone: string;          // Farmer's phone number
-  village: string;        // Farmer's village
+  name: string; // Farmer's name
+  phone: string; // Farmer's phone number
+  village: string; // Farmer's village
   commissioner_id: string; // Commissioner ID
-  is_active?: boolean;    // Active status (default: true)
+  is_active?: boolean; // Active status (default: true)
 }
 ```
 
 #### Usage Example
+
 ```tsx
-import FarmerForm from '@/components/FarmerForm';
+import FarmerForm from "@/components/FarmerForm";
 
 const CreateFarmerPage = () => {
   const handleSubmit = async (data: CreateFarmerData) => {
     try {
-      const response = await fetch('/api/farmers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data)
+      const response = await fetch("/api/farmers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to create farmer');
+        throw new Error("Failed to create farmer");
       }
-      
-      alert('Farmer created successfully!');
+
+      alert("Farmer created successfully!");
     } catch (error) {
-      alert('Error: ' + error.message);
+      alert("Error: " + error.message);
     }
   };
 
@@ -60,6 +64,7 @@ const CreateFarmerPage = () => {
 ```
 
 #### Features
+
 - **Validation**: Real-time Zod validation with error display
 - **Commissioner Selection**: Automatic loading of commissioners
 - **Loading States**: Shows loading indicators during API calls
@@ -67,6 +72,7 @@ const CreateFarmerPage = () => {
 - **Accessibility**: Proper ARIA labels and keyboard navigation
 
 #### Internal Structure
+
 ```tsx
 const FarmerForm = ({ initialData, onSubmit }) => {
   const [formData, setFormData] = useState(/* initial state */);
@@ -80,71 +86,74 @@ const FarmerForm = ({ initialData, onSubmit }) => {
   }, []);
 
   // Form handlers
-  const handleInputChange = (field, value) => { /* ... */ };
-  const handleSubmit = async (e) => { /* ... */ };
+  const handleInputChange = (field, value) => {
+    /* ... */
+  };
+  const handleSubmit = async (e) => {
+    /* ... */
+  };
 
-  return (
-    <form onSubmit={handleSubmit}>
-      {/* Form fields */}
-    </form>
-  );
+  return <form onSubmit={handleSubmit}>{/* Form fields */}</form>;
 };
 ```
 
 ---
 
 ### CommissionerForm Component
+
 A form component for creating and updating commissioner profiles.
 
 #### Props Interface
+
 ```typescript
 interface CommissionerFormProps {
   initialData?: Partial<CommissionerData>; // Optional initial form data
   onSubmit: (data: CommissionerData) => Promise<void>; // Form submission handler
-  mode: 'create' | 'update'; // Form mode
+  mode: "create" | "update"; // Form mode
 }
 
 interface CommissionerData {
-  name: string;           // Commissioner's name
-  email: string;          // Commissioner's email
-  phone: string;          // Commissioner's phone
-  location: string;       // Commissioner's location
+  name: string; // Commissioner's name
+  email: string; // Commissioner's email
+  phone: string; // Commissioner's phone
+  location: string; // Commissioner's location
   commission_rate?: number; // Commission rate (0-100)
 }
 ```
 
 #### Usage Example
+
 ```tsx
-import CommissionerForm from '@/components/CommissionerForm';
+import CommissionerForm from "@/components/CommissionerForm";
 
 const CommissionerProfilePage = () => {
   const [commissioner, setCommissioner] = useState(null);
 
   const handleUpdate = async (data: CommissionerData) => {
     try {
-      const response = await fetch('/api/commissioner/me', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data)
+      const response = await fetch("/api/commissioner/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        throw new Error("Failed to update profile");
       }
-      
+
       const updated = await response.json();
       setCommissioner(updated);
-      alert('Profile updated successfully!');
+      alert("Profile updated successfully!");
     } catch (error) {
-      alert('Error: ' + error.message);
+      alert("Error: " + error.message);
     }
   };
 
   return (
     <div>
       <h1>Update Profile</h1>
-      <CommissionerForm 
+      <CommissionerForm
         initialData={commissioner}
         onSubmit={handleUpdate}
         mode="update"
@@ -157,14 +166,16 @@ const CommissionerProfilePage = () => {
 ---
 
 ### CommissionerProfile Component
+
 A display component for showing commissioner profile information.
 
 #### Props Interface
+
 ```typescript
 interface CommissionerProfileProps {
   commissioner: Commissioner | null; // Commissioner data
-  loading: boolean;                  // Loading state
-  onEdit?: () => void;              // Optional edit handler
+  loading: boolean; // Loading state
+  onEdit?: () => void; // Optional edit handler
 }
 
 interface Commissioner {
@@ -180,9 +191,10 @@ interface Commissioner {
 ```
 
 #### Usage Example
+
 ```tsx
-import CommissionerProfile from '@/components/CommissionerProfile';
-import { useCommissioner } from '@/hooks/useCommissioner';
+import CommissionerProfile from "@/components/CommissionerProfile";
+import { useCommissioner } from "@/hooks/useCommissioner";
 
 const ProfilePage = () => {
   const { commissioner, loading, error } = useCommissioner();
@@ -193,12 +205,12 @@ const ProfilePage = () => {
 
   return (
     <div>
-      <CommissionerProfile 
+      <CommissionerProfile
         commissioner={commissioner}
         loading={loading}
         onEdit={() => setIsEditing(true)}
       />
-      
+
       {isEditing && (
         <CommissionerForm
           initialData={commissioner}
@@ -216,25 +228,28 @@ const ProfilePage = () => {
 ## 🎨 **UI Components**
 
 ### Button Component
+
 A reusable button component with various styles and states.
 
 #### Props Interface
+
 ```typescript
 interface ButtonProps {
-  children: React.ReactNode;       // Button content
-  variant?: 'primary' | 'secondary' | 'danger' | 'outline'; // Button style
-  size?: 'sm' | 'md' | 'lg';      // Button size
-  disabled?: boolean;              // Disabled state
-  loading?: boolean;               // Loading state
-  type?: 'button' | 'submit' | 'reset'; // HTML button type
-  onClick?: () => void;            // Click handler
-  className?: string;              // Additional CSS classes
+  children: React.ReactNode; // Button content
+  variant?: "primary" | "secondary" | "danger" | "outline"; // Button style
+  size?: "sm" | "md" | "lg"; // Button size
+  disabled?: boolean; // Disabled state
+  loading?: boolean; // Loading state
+  type?: "button" | "submit" | "reset"; // HTML button type
+  onClick?: () => void; // Click handler
+  className?: string; // Additional CSS classes
 }
 ```
 
 #### Usage Example
+
 ```tsx
-import Button from '@/components/ui/button';
+import Button from "@/components/ui/button";
 
 const Example = () => {
   const [loading, setLoading] = useState(false);
@@ -253,11 +268,11 @@ const Example = () => {
       <Button variant="primary" onClick={handleClick} loading={loading}>
         Primary Action
       </Button>
-      
+
       <Button variant="outline" size="sm">
         Small Outline
       </Button>
-      
+
       <Button variant="danger" disabled>
         Disabled Danger
       </Button>
@@ -267,6 +282,7 @@ const Example = () => {
 ```
 
 #### Styling Classes
+
 ```css
 /* Base button styles */
 .btn {
@@ -276,15 +292,29 @@ const Example = () => {
 }
 
 /* Size variants */
-.btn-sm { @apply px-3 py-1.5 text-sm h-8; }
-.btn-md { @apply px-4 py-2 text-base h-10; }
-.btn-lg { @apply px-6 py-3 text-lg h-12; }
+.btn-sm {
+  @apply px-3 py-1.5 text-sm h-8;
+}
+.btn-md {
+  @apply px-4 py-2 text-base h-10;
+}
+.btn-lg {
+  @apply px-6 py-3 text-lg h-12;
+}
 
 /* Color variants */
-.btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700; }
-.btn-secondary { @apply bg-gray-600 text-white hover:bg-gray-700; }
-.btn-danger { @apply bg-red-600 text-white hover:bg-red-700; }
-.btn-outline { @apply border-2 border-gray-300 bg-transparent hover:bg-gray-50; }
+.btn-primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+.btn-secondary {
+  @apply bg-gray-600 text-white hover:bg-gray-700;
+}
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+.btn-outline {
+  @apply border-2 border-gray-300 bg-transparent hover:bg-gray-50;
+}
 ```
 
 ---
@@ -292,13 +322,15 @@ const Example = () => {
 ## 🏗️ **Layout Components**
 
 ### Header Component
+
 Navigation header component with authentication state.
 
 #### Props Interface
+
 ```typescript
 interface HeaderProps {
-  user?: User | null;        // Authenticated user data
-  onLogout?: () => void;     // Logout handler
+  user?: User | null; // Authenticated user data
+  onLogout?: () => void; // Logout handler
 }
 
 interface User {
@@ -309,9 +341,10 @@ interface User {
 ```
 
 #### Usage Example
+
 ```tsx
-import Header from '@/components/layout/header';
-import { useAuth } from '@/hooks/useAuth';
+import Header from "@/components/layout/header";
+import { useAuth } from "@/hooks/useAuth";
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -319,15 +352,14 @@ const Layout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header user={user} onLogout={logout} />
-      <main className="container mx-auto px-4 py-8">
-        {children}
-      </main>
+      <main className="container mx-auto px-4 py-8">{children}</main>
     </div>
   );
 };
 ```
 
 #### Features
+
 - **Responsive Design**: Mobile-friendly navigation
 - **User Menu**: Profile and logout options
 - **Navigation Links**: Dynamic based on authentication state
@@ -336,29 +368,30 @@ const Layout = ({ children }) => {
 ---
 
 ### Footer Component
+
 Application footer with links and information.
 
 #### Props Interface
+
 ```typescript
 interface FooterProps {
-  showLinks?: boolean;    // Show footer links
-  compact?: boolean;      // Compact version
+  showLinks?: boolean; // Show footer links
+  compact?: boolean; // Compact version
 }
 ```
 
 #### Usage Example
+
 ```tsx
-import Footer from '@/components/layout/footer';
+import Footer from "@/components/layout/footer";
 
 const Layout = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
-      <main className="flex-1">
-        {children}
-      </main>
-      
+
+      <main className="flex-1">{children}</main>
+
       <Footer showLinks={true} />
     </div>
   );
@@ -370,15 +403,17 @@ const Layout = ({ children }) => {
 ## 🎣 **Custom Hooks**
 
 ### useAuth Hook
+
 Hook for managing authentication state and operations.
 
 #### Return Interface
+
 ```typescript
 interface UseAuthReturn {
-  user: User | null;                    // Current user
-  isAuthenticated: boolean;             // Authentication status
-  loading: boolean;                     // Loading state
-  error: string | null;                 // Error message
+  user: User | null; // Current user
+  isAuthenticated: boolean; // Authentication status
+  loading: boolean; // Loading state
+  error: string | null; // Error message
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
@@ -387,12 +422,13 @@ interface UseAuthReturn {
 ```
 
 #### Usage Example
+
 ```tsx
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from "@/hooks/useAuth";
 
 const LoginForm = () => {
   const { login, loading, error } = useAuth();
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ email: "", password: "" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -409,21 +445,21 @@ const LoginForm = () => {
       <input
         type="email"
         value={formData.email}
-        onChange={(e) => setFormData({...formData, email: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         disabled={loading}
       />
-      
+
       <input
         type="password"
         value={formData.password}
-        onChange={(e) => setFormData({...formData, password: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
         disabled={loading}
       />
-      
+
       <Button type="submit" loading={loading}>
         Login
       </Button>
-      
+
       {error && <div className="text-red-500">{error}</div>}
     </form>
   );
@@ -433,20 +469,23 @@ const LoginForm = () => {
 ---
 
 ### useCommissioner Hook
+
 Hook for managing commissioner data and operations.
 
 #### Return Interface
+
 ```typescript
 interface UseCommissionerReturn {
-  commissioner: Commissioner | null;    // Commissioner data
-  loading: boolean;                     // Loading state
-  error: string | null;                 // Error message
+  commissioner: Commissioner | null; // Commissioner data
+  loading: boolean; // Loading state
+  error: string | null; // Error message
   updateCommissioner: (data: UpdateCommissionerData) => Promise<void>;
   refreshCommissioner: () => Promise<void>;
 }
 ```
 
 #### Implementation
+
 ```typescript
 export function useCommissioner() {
   const [commissioner, setCommissioner] = useState<Commissioner | null>(null);
@@ -456,18 +495,18 @@ export function useCommissioner() {
   const fetchCommissioner = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/commissioner/me', {
-        credentials: 'include'
+      const response = await fetch("/api/commissioner/me", {
+        credentials: "include",
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch commissioner');
+        throw new Error("Failed to fetch commissioner");
       }
-      
+
       const data = await response.json();
       setCommissioner(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -475,17 +514,17 @@ export function useCommissioner() {
 
   const updateCommissioner = async (data: UpdateCommissionerData) => {
     try {
-      const response = await fetch('/api/commissioner/me', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data)
+      const response = await fetch("/api/commissioner/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to update commissioner');
+        throw new Error("Failed to update commissioner");
       }
-      
+
       const updated = await response.json();
       setCommissioner(updated);
     } catch (err) {
@@ -502,7 +541,7 @@ export function useCommissioner() {
     loading,
     error,
     updateCommissioner,
-    refreshCommissioner: fetchCommissioner
+    refreshCommissioner: fetchCommissioner,
   };
 }
 ```
@@ -510,13 +549,15 @@ export function useCommissioner() {
 ---
 
 ### useFormValidation Hook
+
 Hook for form validation using Zod schemas.
 
 #### Parameters & Return
+
 ```typescript
 function useFormValidation<T>(
   schema: ZodSchema<T>,
-  initialValues: T
+  initialValues: T,
 ): {
   values: T;
   errors: Record<string, string[]>;
@@ -526,38 +567,32 @@ function useFormValidation<T>(
   setTouched: (field: keyof T, touched: boolean) => void;
   validate: () => boolean;
   reset: () => void;
-}
+};
 ```
 
 #### Usage Example
+
 ```tsx
-import { useFormValidation } from '@/hooks/useFormValidation';
-import { CreateFarmerSchema } from '@/schemas/farmer';
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { CreateFarmerSchema } from "@/schemas/farmer";
 
 const FarmerForm = ({ onSubmit }) => {
-  const {
-    values,
-    errors,
-    touched,
-    isValid,
-    setValue,
-    setTouched,
-    validate
-  } = useFormValidation(CreateFarmerSchema, {
-    name: '',
-    phone: '',
-    village: '',
-    commissioner_id: '',
-    is_active: true
-  });
+  const { values, errors, touched, isValid, setValue, setTouched, validate } =
+    useFormValidation(CreateFarmerSchema, {
+      name: "",
+      phone: "",
+      village: "",
+      commissioner_id: "",
+      is_active: true,
+    });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validate()) {
       return;
     }
-    
+
     try {
       await onSubmit(values);
     } catch (error) {
@@ -571,16 +606,16 @@ const FarmerForm = ({ onSubmit }) => {
         <label>Name</label>
         <input
           value={values.name}
-          onChange={(e) => setValue('name', e.target.value)}
-          onBlur={() => setTouched('name', true)}
+          onChange={(e) => setValue("name", e.target.value)}
+          onBlur={() => setTouched("name", true)}
         />
         {touched.name && errors.name && (
           <div className="text-red-500">{errors.name[0]}</div>
         )}
       </div>
-      
+
       {/* More fields... */}
-      
+
       <Button type="submit" disabled={!isValid}>
         Submit
       </Button>
@@ -594,6 +629,7 @@ const FarmerForm = ({ onSubmit }) => {
 ## 🎯 **Component Patterns**
 
 ### Loading States
+
 Standard pattern for handling loading states:
 
 ```tsx
@@ -627,21 +663,16 @@ const DataComponent = () => {
 
   if (!data) {
     return (
-      <div className="text-center text-gray-500 py-8">
-        No data available
-      </div>
+      <div className="text-center text-gray-500 py-8">No data available</div>
     );
   }
 
-  return (
-    <div>
-      {/* Render data */}
-    </div>
-  );
+  return <div>{/* Render data */}</div>;
 };
 ```
 
 ### Error Boundaries
+
 Error boundary component for catching React errors:
 
 ```tsx
@@ -656,7 +687,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    console.error("Error caught by boundary:", error, errorInfo);
   }
 
   render() {
@@ -664,8 +695,10 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <h2 className="text-red-800 font-semibold">Something went wrong</h2>
-          <p className="text-red-600">Please refresh the page or try again later.</p>
-          <Button 
+          <p className="text-red-600">
+            Please refresh the page or try again later.
+          </p>
+          <Button
             onClick={() => this.setState({ hasError: false, error: null })}
             variant="outline"
           >
@@ -690,6 +723,7 @@ const App = () => {
 ```
 
 ### Form Validation Pattern
+
 Consistent form validation pattern:
 
 ```tsx
@@ -702,36 +736,36 @@ const ValidatedForm = ({ onSubmit, validationSchema, initialValues }) => {
     try {
       const fieldSchema = validationSchema.pick({ [field]: true });
       fieldSchema.parse({ [field]: value });
-      
-      setErrors(prev => {
+
+      setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[field];
         return newErrors;
       });
     } catch (error) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: error.errors.map(e => e.message)
+        [field]: error.errors.map((e) => e.message),
       }));
     }
   };
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
     if (touched[field]) {
       validateField(field, value);
     }
   };
 
   const handleBlur = (field) => {
-    setTouched(prev => ({ ...prev, [field]: true }));
+    setTouched((prev) => ({ ...prev, [field]: true }));
     validateField(field, formData[field]);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       const validatedData = validationSchema.parse(formData);
       await onSubmit(validatedData);
@@ -741,9 +775,7 @@ const ValidatedForm = ({ onSubmit, validationSchema, initialValues }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      {/* Form fields with validation */}
-    </form>
+    <form onSubmit={handleSubmit}>{/* Form fields with validation */}</form>
   );
 };
 ```
@@ -753,38 +785,74 @@ const ValidatedForm = ({ onSubmit, validationSchema, initialValues }) => {
 ## 💅 **Styling Guidelines**
 
 ### Tailwind CSS Classes
+
 Common utility classes used throughout the application:
 
 ```css
 /* Layout */
-.container { @apply mx-auto px-4 max-w-6xl; }
-.section { @apply py-8 px-4; }
-.card { @apply bg-white rounded-lg shadow-md p-6; }
+.container {
+  @apply mx-auto px-4 max-w-6xl;
+}
+.section {
+  @apply py-8 px-4;
+}
+.card {
+  @apply bg-white rounded-lg shadow-md p-6;
+}
 
 /* Typography */
-.heading-1 { @apply text-3xl font-bold text-gray-900; }
-.heading-2 { @apply text-2xl font-semibold text-gray-800; }
-.heading-3 { @apply text-xl font-medium text-gray-700; }
-.body-text { @apply text-base text-gray-600; }
-.small-text { @apply text-sm text-gray-500; }
+.heading-1 {
+  @apply text-3xl font-bold text-gray-900;
+}
+.heading-2 {
+  @apply text-2xl font-semibold text-gray-800;
+}
+.heading-3 {
+  @apply text-xl font-medium text-gray-700;
+}
+.body-text {
+  @apply text-base text-gray-600;
+}
+.small-text {
+  @apply text-sm text-gray-500;
+}
 
 /* Forms */
-.form-group { @apply mb-4; }
-.form-label { @apply block text-sm font-medium text-gray-700 mb-1; }
-.form-input { @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500; }
-.form-error { @apply text-sm text-red-600 mt-1; }
+.form-group {
+  @apply mb-4;
+}
+.form-label {
+  @apply block text-sm font-medium text-gray-700 mb-1;
+}
+.form-input {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+.form-error {
+  @apply text-sm text-red-600 mt-1;
+}
 
 /* Buttons */
-.btn-base { @apply inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2; }
+.btn-base {
+  @apply inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
 
 /* States */
-.loading { @apply opacity-50 cursor-wait; }
-.disabled { @apply opacity-50 cursor-not-allowed; }
-.error-state { @apply border-red-300 bg-red-50; }
-.success-state { @apply border-green-300 bg-green-50; }
+.loading {
+  @apply opacity-50 cursor-wait;
+}
+.disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+.error-state {
+  @apply border-red-300 bg-red-50;
+}
+.success-state {
+  @apply border-green-300 bg-green-50;
+}
 ```
 
 ### Responsive Design
+
 Mobile-first responsive patterns:
 
 ```css

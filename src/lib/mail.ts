@@ -16,5 +16,4 @@ export async function sendResetEmail(to: string, link: string) {
     subject: "Reset Your Password",
     html: `<p>Click below to reset your password:</p><a href="${link}">${link}</a>`,
   });
-  
 }

@@ -12,28 +12,36 @@ export interface BillPrintData {
  */
 export function generateBillHTML(data: BillPrintData): string {
   const { bill, rate_groups } = data;
-  const sessionDate = new Date(data.session_date).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
+  const sessionDate = new Date(data.session_date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 
-  const rateRows = rate_groups.map(group => `
+  const rateRows = rate_groups
+    .map(
+      (group) => `
     <tr>
       <td>₹${group.rate}/kg</td>
-      <td>(${group.quantities.join('kg, ')}kg)</td>
+      <td>(${group.quantities.join("kg, ")}kg)</td>
       <td>${group.bags}</td>
-      <td>₹${group.amount.toLocaleString('en-IN')}</td>
+      <td>₹${group.amount.toLocaleString("en-IN")}</td>
     </tr>
-  `).join('');
+  `,
+    )
+    .join("");
 
   const otherCharges = Object.entries(bill.other_charges || {});
-  const otherChargesRows = otherCharges.map(([key, value]) => `
+  const otherChargesRows = otherCharges
+    .map(
+      ([key, value]) => `
     <tr>
       <td colspan="3" style="text-align: right; padding-right: 20px;">${key}:</td>
-      <td>₹${typeof value === 'number' ? value.toLocaleString('en-IN') : value}</td>
+      <td>₹${typeof value === "number" ? value.toLocaleString("en-IN") : value}</td>
     </tr>
-  `).join('');
+  `,
+    )
+    .join("");
 
   return `
     <!DOCTYPE html>
@@ -170,30 +178,38 @@ export function generateBillHTML(data: BillPrintData): string {
         <table class="summary-table">
           <tr>
             <td style="text-align: right; padding-right: 20px;">Gross Amount:</td>
-            <td class="amount">₹${bill.gross_amount.toLocaleString('en-IN')}</td>
+            <td class="amount">₹${bill.gross_amount.toLocaleString("en-IN")}</td>
           </tr>
           <tr>
             <td style="text-align: right; padding-right: 20px;">Commission ${bill.commission_rate}%:</td>
-            <td class="amount">₹${bill.commission_amount.toLocaleString('en-IN')}</td>
+            <td class="amount">₹${bill.commission_amount.toLocaleString("en-IN")}</td>
           </tr>
           ${otherChargesRows}
           <tr class="net-payable">
             <td style="text-align: right; padding-right: 20px;">Net Payable:</td>
-            <td class="amount">₹${bill.net_payable.toLocaleString('en-IN')}</td>
+            <td class="amount">₹${bill.net_payable.toLocaleString("en-IN")}</td>
           </tr>
         </table>
         
-        ${bill.payment_status === 'PAID' ? `
+        ${
+          bill.payment_status === "PAID"
+            ? `
           <div style="margin-top: 15px; text-align: center; font-weight: bold; color: green;">
-            PAID - ${bill.payment_method} - ${bill.payment_date ? new Date(bill.payment_date).toLocaleDateString('en-IN') : ''}
+            PAID - ${bill.payment_method} - ${bill.payment_date ? new Date(bill.payment_date).toLocaleDateString("en-IN") : ""}
           </div>
-        ` : ''}
+        `
+            : ""
+        }
         
-        ${bill.notes ? `
+        ${
+          bill.notes
+            ? `
           <div style="margin-top: 10px; font-size: 10px; border-top: 1px dashed #000; padding-top: 5px;">
             <strong>Notes:</strong> ${bill.notes}
           </div>
-        ` : ''}
+        `
+            : ""
+        }
       </div>
     </body>
     </html>
@@ -205,79 +221,90 @@ export function generateBillHTML(data: BillPrintData): string {
  */
 export function generateBillText(data: BillPrintData): string {
   const { bill, rate_groups } = data;
-  const sessionDate = new Date(data.session_date).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
+  const sessionDate = new Date(data.session_date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 
   const centerText = (text: string, width: number = 48): string => {
     const padding = Math.max(0, Math.floor((width - text.length) / 2));
-    return ' '.repeat(padding) + text;
+    return " ".repeat(padding) + text;
   };
 
   const rightAlign = (text: string, width: number = 48): string => {
     const padding = Math.max(0, width - text.length);
-    return ' '.repeat(padding) + text;
+    return " ".repeat(padding) + text;
   };
 
-  let text = '';
-  
+  let text = "";
+
   // Header
-  text += '================================================\n';
-  text += centerText(`FARMER BILL - ${bill.bill_number}`) + '\n';
-  text += '================================================\n';
+  text += "================================================\n";
+  text += centerText(`FARMER BILL - ${bill.bill_number}`) + "\n";
+  text += "================================================\n";
   text += `Farmer: ${bill.farmer.name}\n`;
   text += `Product: ${bill.product.name} | Date: ${sessionDate}\n`;
-  text += '------------------------------------------------\n';
-  
+  text += "------------------------------------------------\n";
+
   // Table header
-  text += 'Rate    | Quantities           | Bags | Amount\n';
-  text += '--------|----------------------|------|--------\n';
-  
+  text += "Rate    | Quantities           | Bags | Amount\n";
+  text += "--------|----------------------|------|--------\n";
+
   // Rate rows
-  rate_groups.forEach(group => {
-    const quantities = `(${group.quantities.join('kg, ')}kg)`;
+  rate_groups.forEach((group) => {
+    const quantities = `(${group.quantities.join("kg, ")}kg)`;
     const rate = `₹${group.rate}/kg`;
     const bags = group.bags.toString();
-    const amount = `₹${group.amount.toLocaleString('en-IN')}`;
-    
+    const amount = `₹${group.amount.toLocaleString("en-IN")}`;
+
     text += `${rate.padEnd(7)} | ${quantities.padEnd(20)} | ${bags.padStart(4)} | ${amount.padStart(7)}\n`;
   });
-  
+
   // Total row
   const totalQty = `Total: ${bill.total_quantity}kg`;
   const totalBags = rate_groups.reduce((sum, group) => sum + group.bags, 0);
   text += `        | ${totalQty.padEnd(20)} | ${totalBags.toString().padStart(4)} |\n`;
-  text += '--------|----------------------|------|--------\n';
-  
+  text += "--------|----------------------|------|--------\n";
+
   // Summary
-  text += rightAlign(`Gross Amount: ₹${bill.gross_amount.toLocaleString('en-IN')}`) + '\n';
-  text += rightAlign(`Commission ${bill.commission_rate}%: ₹${bill.commission_amount.toLocaleString('en-IN')}`) + '\n';
-  
+  text +=
+    rightAlign(`Gross Amount: ₹${bill.gross_amount.toLocaleString("en-IN")}`) +
+    "\n";
+  text +=
+    rightAlign(
+      `Commission ${bill.commission_rate}%: ₹${bill.commission_amount.toLocaleString("en-IN")}`,
+    ) + "\n";
+
   // Other charges
   Object.entries(bill.other_charges || {}).forEach(([key, value]) => {
-    const amount = typeof value === 'number' ? value.toLocaleString('en-IN') : String(value);
-    text += rightAlign(`${key}: ₹${amount}`) + '\n';
+    const amount =
+      typeof value === "number" ? value.toLocaleString("en-IN") : String(value);
+    text += rightAlign(`${key}: ₹${amount}`) + "\n";
   });
-  
-  text += '================================================\n';
-  text += rightAlign(`Net Payable: ₹${bill.net_payable.toLocaleString('en-IN')}`) + '\n';
-  text += '================================================\n';
-  
+
+  text += "================================================\n";
+  text +=
+    rightAlign(`Net Payable: ₹${bill.net_payable.toLocaleString("en-IN")}`) +
+    "\n";
+  text += "================================================\n";
+
   // Payment status
-  if (bill.payment_status === 'PAID') {
-    text += centerText('*** PAID ***') + '\n';
-    text += centerText(`${bill.payment_method} - ${bill.payment_date ? new Date(bill.payment_date).toLocaleDateString('en-IN') : ''}`) + '\n';
+  if (bill.payment_status === "PAID") {
+    text += centerText("*** PAID ***") + "\n";
+    text +=
+      centerText(
+        `${bill.payment_method} - ${bill.payment_date ? new Date(bill.payment_date).toLocaleDateString("en-IN") : ""}`,
+      ) + "\n";
   }
-  
+
   // Notes
   if (bill.notes) {
-    text += '------------------------------------------------\n';
+    text += "------------------------------------------------\n";
     text += `Notes: ${bill.notes}\n`;
   }
-  
-  text += '\n\n';
-  
+
+  text += "\n\n";
+
   return text;
 }

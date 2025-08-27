@@ -5,8 +5,7 @@ export type AuctionSession = {
   status: AuctionSessionStatus;
   created_at: Date;
   updated_at: Date;
-
-}
+};
 
 export enum AuctionSessionStatus {
   ACTIVE = "ACTIVE",

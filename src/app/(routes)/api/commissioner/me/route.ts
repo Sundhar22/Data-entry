@@ -7,14 +7,16 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth";
 import { AuthenticatedRequest } from "@/types/auth";
 
-async function getCommissionerHandler(req: AuthenticatedRequest): Promise<NextResponse> {
+async function getCommissionerHandler(
+  req: AuthenticatedRequest,
+): Promise<NextResponse> {
   const userId = req.user.id;
 
-  console.log('Looking for commissioner with ID:', userId);
+  console.log("Looking for commissioner with ID:", userId);
 
   const commissioner = await prisma.commissioner.findUnique({
     where: {
-      id: userId
+      id: userId,
     },
     select: {
       id: true,
@@ -24,21 +26,23 @@ async function getCommissionerHandler(req: AuthenticatedRequest): Promise<NextRe
       commission_rate: true,
       location: true,
       created_at: true,
-      updated_at: true
-    }
+      updated_at: true,
+    },
   });
 
-  console.log('Commissioner found:', commissioner);
+  console.log("Commissioner found:", commissioner);
 
   if (!commissioner) {
-    console.log('Commissioner not found');
+    console.log("Commissioner not found");
     throw new NotFoundError("Commissioner not found");
   }
 
   return createSuccessResponse(commissioner);
 }
 
-async function updateCommissionerHandler(req: AuthenticatedRequest): Promise<NextResponse> {
+async function updateCommissionerHandler(
+  req: AuthenticatedRequest,
+): Promise<NextResponse> {
   const userId = req.user.id;
 
   // Validate the request body using Zod
@@ -52,11 +56,11 @@ async function updateCommissionerHandler(req: AuthenticatedRequest): Promise<Nex
   const validatedData = validation.data;
 
   const existingCommissioner = await prisma.commissioner.findUnique({
-    where: { id: userId }
+    where: { id: userId },
   });
 
   if (!existingCommissioner) {
-    console.log('Commissioner not found');
+    console.log("Commissioner not found");
     throw new NotFoundError("Commissioner not found");
   }
 
@@ -67,13 +71,20 @@ async function updateCommissionerHandler(req: AuthenticatedRequest): Promise<Nex
       email: validatedData.email || existingCommissioner.email,
       phone: validatedData.phone || existingCommissioner.phone,
       location: validatedData.location || existingCommissioner.location,
-      commission_rate: validatedData.commission_rate !== undefined ? validatedData.commission_rate : existingCommissioner.commission_rate,
-    }
+      commission_rate:
+        validatedData.commission_rate !== undefined
+          ? validatedData.commission_rate
+          : existingCommissioner.commission_rate,
+    },
   });
 
   return createSuccessResponse(updatedCommissioner);
 }
 
 // Export the protected routes
-export const GET = withAuth(withErrorHandling(getCommissionerHandler, 'Get Commissioner'));
-export const PUT = withAuth(withErrorHandling(updateCommissionerHandler, 'Update Commissioner'));
+export const GET = withAuth(
+  withErrorHandling(getCommissionerHandler, "Get Commissioner"),
+);
+export const PUT = withAuth(
+  withErrorHandling(updateCommissionerHandler, "Update Commissioner"),
+);

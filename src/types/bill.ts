@@ -17,7 +17,7 @@ export type Bill = {
   notes?: string;
   created_at: Date;
   updated_at: Date;
-}
+};
 
 export type BillWithDetails = Bill & {
   farmer: {
@@ -36,7 +36,7 @@ export type BillWithDetails = Bill & {
     rate: number;
     unit: string;
   }>;
-}
+};
 
 export type BillPreview = {
   farmer_id: string;
@@ -59,7 +59,7 @@ export type BillPreview = {
   commission_amount: number;
   suggested_other_charges: Record<string, number>;
   net_payable: number;
-}
+};
 
 export type BillGenerateRequest = {
   farmer_id: string;
@@ -69,17 +69,15 @@ export type BillGenerateRequest = {
     other_charges?: Record<string, number>;
     notes?: string;
   }>;
-}
+};
 
 export type BillPaymentRequest = {
   bill_ids: string[];
   payment_method: string;
   notes?: string;
-}
+};
 
 export enum BillPaymentStatus {
-  UNPAID = 'UNPAID',
-  PAID = 'PAID'
+  UNPAID = "UNPAID",
+  PAID = "PAID",
 }
-
-
