@@ -13,7 +13,7 @@ try {
   console.log("📦 Installing pg dependency...");
   const { execSync } = await import('child_process');
   try {
-    execSync('npm install pg', { stdio: 'inherit' });
+    execSync('pnpm install pg', { stdio: 'inherit' });
     const pkg = await import('pg');
     Client = pkg.default?.Client || pkg.Client;
   } catch (installError) {
