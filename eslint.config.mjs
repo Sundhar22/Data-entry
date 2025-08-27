@@ -22,6 +22,7 @@ const eslintConfig = [
       "no-console": "off",
       "prefer-const": "off",
       "@typescript-eslint/no-explicit-any": "off",curly: "off",
+      "eslint-comments/no-unused-disable": "off",
     },
   },
 ];
