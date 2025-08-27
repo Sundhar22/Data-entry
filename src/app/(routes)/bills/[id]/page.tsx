@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/dashboard-layout";
+import { showToast } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -156,23 +157,21 @@ export default function BillDetailsPage() {
         if (data.success) {
           console.log("Payment successful, refreshing bill data...");
           await fetchBillDetails(); // Refresh the bill data
-          alert("Bill marked as paid successfully!");
+          showToast("Bill marked as paid successfully!");
         } else {
           console.error("Payment failed in API:", data);
-          alert(
-            `Failed to mark bill as paid: ${data.message || "Unknown error"}`,
-          );
+          showToast(`Failed to mark bill as paid: ${data.message || "Unknown error"}`);
         }
       } else {
         const errorData = await response
           .json()
           .catch(() => ({ message: "Unknown error" }));
         console.error("Payment request failed:", response.status, errorData);
-        alert(`Failed to mark bill as paid: ${errorData.message}`);
+        showToast(`Failed to mark bill as paid: ${errorData.message}`);
       }
     } catch (error) {
       console.error("Failed to mark bill as paid:", error);
-      alert("Failed to mark bill as paid. Please try again.");
+      showToast("Failed to mark bill as paid. Please try again.");
     } finally {
       setMarkingPaid(false);
     }
@@ -211,11 +210,11 @@ export default function BillDetailsPage() {
           URL.revokeObjectURL(url);
         }
       } else {
-        alert("Failed to generate print version");
+        showToast("Failed to generate print version");
       }
     } catch (error) {
       console.error("Failed to print bill:", error);
-      alert("Failed to print bill. Please try again.");
+      showToast("Failed to print bill. Please try again.");
     } finally {
       setPrinting(false);
     }
@@ -431,11 +430,10 @@ export default function BillDetailsPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div
-                  className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                    bill.payment_status === "PAID"
+                  className={`w-12 h-12 rounded-lg flex items-center justify-center ${bill.payment_status === "PAID"
                       ? "bg-green-100"
                       : "bg-red-100"
-                  }`}
+                    }`}
                 >
                   {bill.payment_status === "PAID" ? (
                     <CheckCircle2 className="h-6 w-6 text-green-600" />

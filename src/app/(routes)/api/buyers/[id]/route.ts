@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth";
-import { withErrorHandling, NotFoundError } from "@/lib/error-handler";
+import { withErrorHandling, NotFoundError, ConflictError } from "@/lib/error-handler";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/lib/validation";
 import { BuyerApiSchema } from "@/schemas/buyer";
@@ -59,9 +59,19 @@ async function deleteBuyerByIdHandler(
     where: { id, commissioner_id: userId },
   });
   if (!existing) throw new NotFoundError("Buyer not found");
+  // Check dependencies: auction items exist for this buyer under this commissioner
+  const auctionItemsCount = await prisma.auctionItem.count({
+    where: {
+      buyer_id: id,
+      session: { commissioner_id: userId },
+    },
+  });
+  if (auctionItemsCount > 0) {
+    throw new ConflictError("Cannot delete buyer: has participated in auctions");
+  }
 
   await prisma.buyer.delete({ where: { id, commissioner_id: userId } });
-  return new NextResponse(null, { status: 204 });
+  return createSuccessResponse({ message: "Buyer deleted successfully" });
 }
 
 // Handler exports

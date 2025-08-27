@@ -115,6 +115,18 @@ async function generateBillsHandler(
               session_id: preview.session_id,
             },
           },
+          select: {
+            id: true,
+            total_quantity: true,
+            gross_amount: true,
+            commission_amount: true,
+            other_charges: true,
+            payment_status: true,
+            payment_method: true,
+            payment_date: true,
+            notes: true,
+            bill_number: true,
+          },
         });
 
         if (existingBill) {
@@ -122,12 +134,123 @@ async function generateBillsHandler(
             "Bill already exists for:",
             preview.product_id,
             preview.session_id,
+            "— attempting to append unbilled items to existing bill",
           );
-          errors.push({
-            product_id: preview.product_id,
-            session_id: preview.session_id,
-            error: "Bill already exists for this product and session",
+
+          // Find any new unbilled auction items for this combo
+          const newItems = await tx.auctionItem.findMany({
+            where: {
+              farmer_id,
+              product_id: preview.product_id,
+              session_id: preview.session_id,
+              bill_id: null,
+              rate: { not: null },
+              buyer_id: { not: null },
+              session: { commissioner_id: userId },
+            },
           });
+
+          if (newItems.length === 0) {
+            errors.push({
+              product_id: preview.product_id,
+              session_id: preview.session_id,
+              error: "No unbilled auction items found",
+            });
+            continue;
+          }
+
+          // Calculate amounts for just the new items
+          const itemsForCalculationAppend = newItems.map((item) => ({
+            quantity: item.quantity,
+            rate: item.rate!,
+          }));
+
+          const { grossAmount: appendGross, commissionAmount: appendCommission } =
+            calculateBillAmounts(
+              itemsForCalculationAppend,
+              commissioner.commission_rate,
+              {},
+            );
+
+          // Merge other_charges (sum same keys)
+          const currentCharges = (existingBill.other_charges as Record<string, number>) || {};
+          const appendCharges = (preview.other_charges as Record<string, number>) || {};
+          const mergedCharges: Record<string, number> = { ...currentCharges };
+          for (const key of Object.keys(appendCharges)) {
+            mergedCharges[key] = (mergedCharges[key] || 0) + (appendCharges[key] || 0);
+          }
+          const mergedChargesTotal = Object.values(mergedCharges).reduce(
+            (sum, val) => sum + (typeof val === "number" ? val : 0),
+            0,
+          );
+
+          // Compute new totals
+          const newTotalQuantity = existingBill.total_quantity + newItems.reduce((s, it) => s + it.quantity, 0);
+          const newGrossAmount = existingBill.gross_amount + appendGross;
+          const newCommissionAmount = existingBill.commission_amount + appendCommission;
+          const newNetPayable = newGrossAmount - newCommissionAmount + mergedChargesTotal;
+
+          // Payment status rules:
+          // - If existing bill is PAID and caller doesn't mark_as_paid now, do not auto-unpay; return an error instead
+          if (existingBill.payment_status === "PAID" && !mark_as_paid) {
+            errors.push({
+              product_id: preview.product_id,
+              session_id: preview.session_id,
+              error:
+                "Existing bill is already PAID. To append new items, please mark as paid now or create under a different session.",
+            });
+            continue;
+          }
+
+          let nextPaymentStatus = existingBill.payment_status as "PAID" | "UNPAID";
+          let nextPaymentMethod: string | null = existingBill.payment_method;
+          let nextPaymentDate: Date | null = existingBill.payment_date as Date | null;
+          let nextNotes = existingBill.notes || null;
+
+          if (mark_as_paid) {
+            nextPaymentStatus = "PAID";
+            nextPaymentMethod = payment_method || "cash";
+            nextPaymentDate = new Date();
+          }
+
+          // Update bill
+          const updatedBill = await tx.bill.update({
+            where: { id: existingBill.id },
+            data: {
+              total_quantity: newTotalQuantity,
+              gross_amount: newGrossAmount,
+              commission_amount: newCommissionAmount,
+              other_charges: mergedCharges,
+              net_payable: newNetPayable,
+              payment_status: nextPaymentStatus,
+              payment_method: nextPaymentMethod,
+              payment_date: nextPaymentDate,
+              notes: nextNotes,
+            },
+            include: {
+              farmer: { select: { id: true, name: true, phone: true, village: true } },
+              product: { select: { id: true, name: true } },
+            },
+          });
+
+          // Attach new items to existing bill
+          await tx.auctionItem.updateMany({
+            where: { id: { in: newItems.map((i) => i.id) } },
+            data: { bill_id: existingBill.id },
+          });
+
+          createdBills.push({
+            bill: updatedBill,
+            auction_items_count: newItems.length,
+            auction_item_ids: newItems.map((i) => i.id),
+          });
+
+          console.log(
+            "Appended",
+            newItems.length,
+            "auction items to existing bill",
+            existingBill.bill_number,
+          );
           continue;
         }
 
@@ -143,6 +266,7 @@ async function generateBillsHandler(
             // Ensure session belongs to this commissioner
             session: {
               commissioner_id: userId,
+              status: "COMPLETED",
             },
           },
         });
@@ -296,8 +420,14 @@ async function generateBillsHandler(
   }
 
   if (createdBills.length === 0 && errors.length > 0) {
-    console.log("No bills were created, throwing error");
-    throw new ConflictError("Failed to generate any bills");
+    console.log("No bills were created, returning success with errors");
+    return createSuccessResponse({
+      generated_bills: [],
+      total_generated: 0,
+      errors,
+      total_errors: errors.length,
+      message: "No new bills were generated. Some selections already have bills or no unbilled items.",
+    }, 200);
   }
 
   console.log("Returning success response");

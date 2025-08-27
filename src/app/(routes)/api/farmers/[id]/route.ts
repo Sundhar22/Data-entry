@@ -1,7 +1,7 @@
 import { withAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse } from "@/lib/api-response";
-import { withErrorHandling, NotFoundError } from "@/lib/error-handler";
+import { withErrorHandling, NotFoundError, ConflictError } from "@/lib/error-handler";
 import { AuthenticatedRequest } from "@/types/auth";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/lib/validation";
@@ -93,12 +93,32 @@ async function deleteFarmerByIdHandler(
   if (!existingFarmer) {
     throw new NotFoundError("Farmer not found");
   }
+  // Check dependencies: auction items or bills exist for this farmer under this commissioner
+  const [auctionItemsCount, billsCount] = await Promise.all([
+    prisma.auctionItem.count({
+      where: {
+        farmer_id: farmerId,
+        session: { commissioner_id: userId },
+      },
+    }),
+    prisma.bill.count({ where: { farmer_id: farmerId, commissioner_id: userId } }),
+  ]);
+
+  if (auctionItemsCount > 0 || billsCount > 0) {
+    throw new ConflictError(
+      auctionItemsCount > 0 && billsCount > 0
+        ? "Cannot delete farmer: participated in auctions and has associated bills"
+        : auctionItemsCount > 0
+          ? "Cannot delete farmer: participated in auctions"
+          : "Cannot delete farmer: has associated bills",
+    );
+  }
 
   await prisma.farmer.delete({
     where: { id: farmerId, commissioner_id: userId },
   });
 
-  return new NextResponse(null, { status: 204 });
+  return createSuccessResponse({ message: "Farmer deleted successfully" });
 }
 
 export async function GET(

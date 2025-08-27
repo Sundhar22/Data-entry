@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/layout/dashboard-layout";
+import { showToast } from "@/components/ui/alert";
 import { useDeviceType } from "@/hooks/useDeviceType";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -193,26 +194,22 @@ export default function BillPaymentsPage() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          alert(
-            `Successfully processed payment for ${data.data.updated_bills.length} bills!`,
-          );
+          showToast(`Successfully processed payment for ${data.data.updated_bills.length} bills!`);
           // Refresh bills data
           fetchBills();
           // Clear selection
           setSelectedBills(new Set());
           setNotes("");
         } else {
-          alert(
-            "Some payments could not be processed. Please check for errors.",
-          );
+          showToast("Some payments could not be processed. Please check for errors.");
         }
       } else {
         const errorData = await response.json();
-        alert(`Failed to process payments: ${errorData.message}`);
+        showToast(`Failed to process payments: ${errorData.message}`);
       }
     } catch (error) {
       console.error("Failed to process payments:", error);
-      alert("Failed to process payments. Please try again.");
+      showToast("Failed to process payments. Please try again.");
     } finally {
       setProcessing(false);
     }
@@ -632,7 +629,7 @@ export default function BillPaymentsPage() {
                         </td>
                         <td className="p-3">
                           {bill.payment_status === "PAID" &&
-                          bill.payment_date ? (
+                            bill.payment_date ? (
                             <div>
                               <div className="text-sm font-medium">
                                 {bill.payment_method}

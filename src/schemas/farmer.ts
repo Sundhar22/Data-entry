@@ -4,7 +4,11 @@ import { z } from "zod";
 export const FarmerSchema = z.object({
   id: z.cuid(),
   name: z.string().min(1, "Name is required"),
-  phone: z.string().min(1, "Phone number is required"),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .regex(/^(\+\d{1,3}[- ]?)?\d{10}$/,
+      "Phone must be 10 digits, optionally prefixed by country code"),
   village: z.string().min(1, "Village is required"),
   commissioner_id: z.cuid(),
   is_active: z.boolean().default(true),
@@ -15,7 +19,11 @@ export const FarmerSchema = z.object({
 // Schema for creating a new farmer (excludes auto-generated fields)
 export const CreateFarmerSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  phone: z.string().min(1, "Phone number is required"),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .regex(/^(\+\d{1,3}[- ]?)?\d{10}$/,
+      "Phone must be 10 digits, optionally prefixed by country code"),
   village: z.string().min(1, "Village is required"),
   is_active: z.boolean().default(true).optional(),
 });
@@ -23,7 +31,12 @@ export const CreateFarmerSchema = z.object({
 // Schema for updating a farmer (all fields optional, id comes from route params)
 export const UpdateFarmerSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
-  phone: z.string().min(1, "Phone number is required").optional(),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .regex(/^(\+\d{1,3}[- ]?)?\d{10}$/,
+      "Phone must be 10 digits, optionally prefixed by country code")
+    .optional(),
   village: z.string().min(1, "Village is required").optional(),
   is_active: z.boolean().optional(),
 });

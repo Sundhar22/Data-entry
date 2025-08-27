@@ -94,6 +94,21 @@ async function payMultipleBillsHandler(
     );
   }
 
+  // Restrict payment until the related auction session is COMPLETED
+  const notCompleted = await prisma.auctionSession.findMany({
+    where: {
+      id: { in: bills.map((b) => b.session_id) },
+      status: { not: "COMPLETED" },
+      commissioner_id: userId,
+    },
+    select: { id: true },
+  });
+  if (notCompleted.length > 0) {
+    throw new ConflictError(
+      "Bills can only be paid after their auction session is COMPLETED",
+    );
+  }
+
   const paymentDate = new Date();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updatedBills: any[] = [];

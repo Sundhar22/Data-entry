@@ -239,9 +239,12 @@ export default function BuyersPage() {
       } else {
         setFormError("Failed to delete buyer");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to delete buyer:", error);
-      setFormError("An unexpected error occurred");
+      const message =
+        (error && typeof error.message === "string" && error.message) ||
+        "An unexpected error occurred";
+      setFormError(message);
     } finally {
       setFormLoading(false);
     }

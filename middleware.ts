@@ -63,19 +63,29 @@ export async function middleware(request: NextRequest) {
       return authResult.response!;
     }
 
-    // If token was refreshed, return the response with new token
+    // Prepare a passthrough response and attach refreshed access token if present
+    const passthrough = NextResponse.next();
     if (authResult.response) {
-      return authResult.response;
+      const refreshedCookie = authResult.response.cookies.get("access_token");
+      if (refreshedCookie) {
+        passthrough.cookies.set("access_token", refreshedCookie.value, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 15 * 60,
+        });
+      }
     }
 
     // Attach user to request headers for API routes
     if (isProtectedApiRoute) {
-      const response = NextResponse.next();
-      response.headers.set("x-user-id", authResult.user!.id);
-      response.headers.set("x-user-email", authResult.user!.email);
-      response.headers.set("x-user-name", authResult.user!.name);
-      return response;
+      passthrough.headers.set("x-user-id", authResult.user!.id);
+      passthrough.headers.set("x-user-email", authResult.user!.email);
+      passthrough.headers.set("x-user-name", authResult.user!.name);
     }
+
+    return passthrough;
   }
 
   return NextResponse.next();

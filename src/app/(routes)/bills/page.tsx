@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/dashboard-layout";
+import { showToast } from "@/components/ui/alert";
 import DesktopOnly from "@/components/ui/desktop-only";
 import { useDeviceType } from "@/hooks/useDeviceType";
 import { Button } from "@/components/ui/button";
@@ -226,23 +227,22 @@ export default function BillsPage() {
             searchTerm,
             statusFilter === "ALL" ? undefined : statusFilter,
           );
-          alert("Bill marked as paid successfully!");
+          showToast("Bill marked as paid successfully!");
         } else {
           console.error("Payment failed in API:", data);
-          alert(
-            `Failed to mark bill as paid: ${data.message || "Unknown error"}`,
-          );
+          showToast(`Failed to mark bill as paid: ${data.message || "Unknown error"}`);
         }
       } else {
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: "Unknown error" }));
-        console.error("Payment request failed:", response.status, errorData);
-        alert(`Failed to mark bill as paid: ${errorData.message}`);
+        const errorData = await response.json().catch(() => null);
+        const message =
+          (errorData && (errorData.error?.message || errorData.message)) ||
+          `HTTP ${response.status}`;
+        console.error("Payment request failed:", response.status, errorData || {});
+        showToast(`Failed to mark bill as paid: ${message}`);
       }
     } catch (error) {
       console.error("Failed to mark bill as paid:", error);
-      alert("Failed to mark bill as paid. Please try again.");
+      showToast("Failed to mark bill as paid. Please try again.");
     } finally {
       setMarkingPaid(null);
     }
@@ -274,7 +274,7 @@ export default function BillsPage() {
 
   const handleMarkMultiplePaid = async () => {
     if (selectedBills.size === 0) {
-      alert("Please select bills to mark as paid");
+      showToast("Please select bills to mark as paid");
       return;
     }
 
@@ -307,12 +307,10 @@ export default function BillsPage() {
             searchTerm,
             statusFilter === "ALL" ? undefined : statusFilter,
           );
-          alert(`${selectedBills.size} bills marked as paid successfully!`);
+          showToast(`${selectedBills.size} bills marked as paid successfully!`);
         } else {
           console.error("Multiple payment failed in API:", data);
-          alert(
-            `Failed to mark bills as paid: ${data.message || "Unknown error"}`,
-          );
+          showToast(`Failed to mark bills as paid: ${data.message || "Unknown error"}`);
         }
       } else {
         const errorData = await response
@@ -323,11 +321,11 @@ export default function BillsPage() {
           response.status,
           errorData,
         );
-        alert(`Failed to mark bills as paid: ${errorData.message}`);
+        showToast(`Failed to mark bills as paid: ${errorData.message}`);
       }
     } catch (error) {
       console.error("Failed to mark multiple bills as paid:", error);
-      alert("Failed to mark bills as paid. Please try again.");
+      showToast("Failed to mark bills as paid. Please try again.");
     } finally {
       setMarkingMultiplePaid(false);
     }
@@ -469,7 +467,7 @@ export default function BillsPage() {
               <div className="text-2xl font-bold text-blue-600">
                 {formatCurrency(
                   overview?.overview?.total_commission_earned ||
-                    totalCommission,
+                  totalCommission,
                 )}
               </div>
             </CardContent>
@@ -571,8 +569,8 @@ export default function BillsPage() {
                       checked={
                         selectedBills.size > 0 &&
                         selectedBills.size ===
-                          bills.filter((b) => b.payment_status === "UNPAID")
-                            .length
+                        bills.filter((b) => b.payment_status === "UNPAID")
+                          .length
                       }
                       onChange={handleSelectAll}
                     />
@@ -680,11 +678,10 @@ export default function BillsPage() {
                             </div>
                           )}
                           <div
-                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                              bill.payment_status === "PAID"
-                                ? "bg-green-100"
-                                : "bg-red-100"
-                            }`}
+                            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${bill.payment_status === "PAID"
+                              ? "bg-green-100"
+                              : "bg-red-100"
+                              }`}
                           >
                             {bill.payment_status === "PAID" ? (
                               <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />

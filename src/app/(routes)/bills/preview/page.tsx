@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import DashboardLayout from "@/components/layout/dashboard-layout";
+import { showToast } from "@/components/ui/alert";
 import DesktopOnly from "@/components/ui/desktop-only";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -205,13 +206,11 @@ export default function BillPreviewPage() {
             ),
           );
 
-          // Initialize custom charges with suggested charges
+          // Do not preload any suggested charges; let user add from frontend
           const initialCharges: Record<string, Record<string, number>> = {};
           data.data.previews.forEach((preview) => {
             const key = `${preview.product_id}_${preview.session_id}`;
-            initialCharges[key] = {
-              ...(preview.suggested_other_charges || {}),
-            };
+            initialCharges[key] = {};
           });
           setCustomCharges(initialCharges);
         } else {
@@ -240,7 +239,7 @@ export default function BillPreviewPage() {
       setPreviewData(null);
       setSelectedPreviews(new Set());
       setCustomCharges({});
-      alert("Failed to fetch bill previews. Please try again.");
+      try { showToast("Failed to fetch bill previews. Please try again."); } catch { }
     } finally {
       setLoading(false);
     }
@@ -362,7 +361,7 @@ export default function BillPreviewPage() {
         .filter((item): item is NonNullable<typeof item> => item !== null);
 
       if (requestPreviews.length === 0) {
-        alert("No valid previews selected for bill generation.");
+        try { showToast("No valid previews selected for bill generation."); } catch { }
         setGeneratingBills(false);
         return;
       }

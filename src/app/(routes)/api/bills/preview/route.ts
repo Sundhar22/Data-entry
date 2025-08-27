@@ -87,6 +87,7 @@ async function getBillPreviewHandler(
     // Ensure sessions belong to this commissioner
     session: {
       commissioner_id: userId,
+      status: "COMPLETED",
     },
   };
 
@@ -151,17 +152,14 @@ async function getBillPreviewHandler(
       rate: item.rate!,
     }));
 
-    // Get suggested other charges
-    const suggested_other_charges = getSuggestedOtherCharges(
-      product.name,
-      total_quantity,
-    );
+    // Do not suggest other charges from backend; leave empty for frontend input
+    const suggested_other_charges = {} as Record<string, number>;
 
     // Calculate amounts
     const { grossAmount, commissionAmount, netPayable } = calculateBillAmounts(
       itemsForCalculation,
       commissioner.commission_rate,
-      suggested_other_charges,
+      {},
     );
 
     // Create preview
