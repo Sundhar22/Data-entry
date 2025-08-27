@@ -21,7 +21,7 @@ const eslintConfig = [
       "@typescript-eslint/no-unused-vars": "off",
       "no-console": "off",
       "prefer-const": "off",
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "off",curly: "off",
     },
   },
 ];
