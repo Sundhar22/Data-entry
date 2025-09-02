@@ -317,6 +317,20 @@ async function updateSessionByIdHandler(
       throw new ValidationError("Cannot set past date for active session");
     }
   }
+  // Should not update if auction items are unsold
+  const auction_items = await prisma.auctionItem.findMany({
+    where: {
+      session_id: sessionId,
+      buyer: null
+    }
+  })
+
+
+
+  if (auction_items.length > 0) {
+    throw new ValidationError("Cannot complete session if auction items are unsold")
+  }
+
 
   // Update session
   const updatedSession = await prisma.auctionSession.update({
