@@ -318,18 +318,21 @@ async function updateSessionByIdHandler(
     }
   }
   // Should not update if auction items are unsold
-  const auction_items = await prisma.auctionItem.findMany({
+  const unsoldCount = await prisma.auctionItem.count({
     where: {
       session_id: sessionId,
-      buyer: null
-    }
-  })
+      buyer: null,
+    },
+  });
 
+  if (unsoldCount > 0) {
+    throw new ValidationError(
+      `Cannot complete this session: ${unsoldCount} auction item${unsoldCount > 1 ? "s are" : " is"} still unsold.`
+    );
 
-
-  if (auction_items.length > 0) {
-    throw new ValidationError("Cannot complete session if auction items are unsold")
   }
+
+
 
 
   // Update session
