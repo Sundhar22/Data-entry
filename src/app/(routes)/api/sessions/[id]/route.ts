@@ -321,16 +321,21 @@ async function updateSessionByIdHandler(
   const unsoldCount = await prisma.auctionItem.count({
     where: {
       session_id: sessionId,
-      buyer: null,
+      OR: [
+        { buyer: null },
+        { rate: null },
+        { rate: 0 },
+      ],
     },
   });
 
   if (unsoldCount > 0) {
     throw new ValidationError(
-      `Cannot complete this session: ${unsoldCount} auction item${unsoldCount > 1 ? "s are" : " is"} still unsold.`
+      `Cannot complete this session: ${unsoldCount} auction item${unsoldCount > 1 ? "s are" : " is"
+      } still unsold.`
     );
-
   }
+
 
 
 
