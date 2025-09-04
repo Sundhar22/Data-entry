@@ -634,9 +634,9 @@ export default function AuctionItemsPage() {
                         setShowFarmerDropdown(true);
                       }}
                       onFocus={() => setShowFarmerDropdown(true)}
-                      onBlur={() =>
-                        setTimeout(() => setShowFarmerDropdown(false), 200)
-                      }
+                      // onBlur={() =>
+                      //   setTimeout(() => setShowFarmerDropdown(false), 200)
+                      // }
                       className="w-full"
                     />
                     {farmerSearch && (
@@ -670,7 +670,9 @@ export default function AuctionItemsPage() {
                             <button
                               key={farmer.id}
                               type="button"
-                              onClick={() => {
+                              onMouseDown={() => {
+                                console.log("test");
+                                
                                 setFormData((prev) => ({
                                   ...prev,
                                   farmer_id: farmer.id,
@@ -734,9 +736,9 @@ export default function AuctionItemsPage() {
                       onFocus={() =>
                         !isPreselectionMode && setShowProductDropdown(true)
                       }
-                      onBlur={() =>
-                        setTimeout(() => setShowProductDropdown(false), 200)
-                      }
+                      // onBlur={() =>
+                      //   setTimeout(() => setShowProductDropdown(false), 200)
+                      // }
                       className="w-full"
                       disabled={isPreselectionMode}
                     />
@@ -879,9 +881,9 @@ export default function AuctionItemsPage() {
                         setShowBuyerDropdown(true);
                       }}
                       onFocus={() => setShowBuyerDropdown(true)}
-                      onBlur={() =>
-                        setTimeout(() => setShowBuyerDropdown(false), 200)
-                      }
+                      // onBlur={() =>
+                      //   setTimeout(() => setShowBuyerDropdown(false), 200)
+                      // }
                       className="w-full"
                     />
                     {buyerSearch && (
@@ -1470,9 +1472,9 @@ export default function AuctionItemsPage() {
                       setShowFarmerDropdown(true);
                     }}
                     onFocus={() => setShowFarmerDropdown(true)}
-                    onBlur={() =>
-                      setTimeout(() => setShowFarmerDropdown(false), 200)
-                    }
+                    // onBlur={() =>
+                    //   setTimeout(() => setShowFarmerDropdown(false), 200)
+                    // }
                     className="w-full"
                   />
                   {farmerSearch && (
@@ -1557,9 +1559,9 @@ export default function AuctionItemsPage() {
                       setShowProductDropdown(true);
                     }}
                     onFocus={() => setShowProductDropdown(true)}
-                    onBlur={() =>
-                      setTimeout(() => setShowProductDropdown(false), 200)
-                    }
+                    // onBlur={() =>
+                    //   setTimeout(() => setShowProductDropdown(false), 200)
+                    // }
                     className="w-full"
                   />
                   {productSearch && (
@@ -1697,9 +1699,9 @@ export default function AuctionItemsPage() {
                       setShowBuyerDropdown(true);
                     }}
                     onFocus={() => setShowBuyerDropdown(true)}
-                    onBlur={() =>
-                      setTimeout(() => setShowBuyerDropdown(false), 200)
-                    }
+                    // onBlur={() =>
+                    //   setTimeout(() => setShowBuyerDropdown(false), 200)
+                    // }
                     className="w-full"
                   />
                   {buyerSearch && (

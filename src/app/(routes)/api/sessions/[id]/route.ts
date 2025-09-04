@@ -317,6 +317,28 @@ async function updateSessionByIdHandler(
       throw new ValidationError("Cannot set past date for active session");
     }
   }
+  // Should not update if auction items are unsold
+  const unsoldCount = await prisma.auctionItem.count({
+    where: {
+      session_id: sessionId,
+      OR: [
+        { buyer: null },
+        { rate: null },
+        { rate: 0 },
+      ],
+    },
+  });
+
+  if (unsoldCount > 0) {
+    throw new ValidationError(
+      `Cannot complete this session: ${unsoldCount} auction item${unsoldCount > 1 ? "s are" : " is"
+      } still unsold.`
+    );
+  }
+
+
+
+
 
   // Update session
   const updatedSession = await prisma.auctionSession.update({
