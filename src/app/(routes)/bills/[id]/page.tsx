@@ -151,14 +151,20 @@ export default function BillDetailsPage() {
           showToast("Bill marked as paid successfully!");
         } else {
           console.error("Payment failed in API:", data);
-          showToast(`Failed to mark bill as paid: ${data.message || "Unknown error"}`);
+          showToast(
+            `Failed to mark bill as paid: ${data.message || "Unknown error"}`,
+          );
         }
       } else {
         const errorData = await response.json().catch(() => null);
         const message =
           (errorData && (errorData.error?.message || errorData.message)) ||
           `HTTP ${response.status}`;
-        console.error("Payment request failed:", response.status, errorData || {});
+        console.error(
+          "Payment request failed:",
+          response.status,
+          errorData || {},
+        );
         showToast(`Failed to mark bill as paid: ${message}`);
       }
     } catch (error) {
@@ -423,8 +429,8 @@ export default function BillDetailsPage() {
               <div className="flex items-center gap-4">
                 <div
                   className={`w-12 h-12 rounded-lg flex items-center justify-center ${bill.payment_status === "PAID"
-                    ? "bg-green-100"
-                    : "bg-red-100"
+                      ? "bg-green-100"
+                      : "bg-red-100"
                     }`}
                 >
                   {bill.payment_status === "PAID" ? (
@@ -545,10 +551,8 @@ export default function BillDetailsPage() {
                   ([charge, amount]) => (
                     <div key={charge} className="flex justify-between">
                       <span className="text-gray-600">{charge}:</span>
-                      <span
-                        className={`font-medium ${amount >= 0 ? "text-green-600" : "text-red-600"}`}
-                      >
-                        {amount >= 0 ? "+" : ""}
+                      <span className={`font-medium ${"text-red-600"}`}>
+                        {amount >= 0 ? "-" : ""}
                         {formatCurrency(amount)}
                       </span>
                     </div>

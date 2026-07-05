@@ -272,8 +272,8 @@ export default function AuctionsPage() {
         const errorData = await response.json();
         throw new Error(
           errorData.error?.message ||
-            errorData.message ||
-            "Failed to complete session",
+          errorData.message ||
+          "Failed to complete session",
         );
       }
 
@@ -306,8 +306,8 @@ export default function AuctionsPage() {
         const errorData = await response.json();
         throw new Error(
           errorData.error?.message ||
-            errorData.message ||
-            "Failed to delete session",
+          errorData.message ||
+          "Failed to delete session",
         );
       }
 
@@ -484,71 +484,71 @@ export default function AuctionsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">
-                Total Sessions
-              </CardTitle>
-              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="text-lg sm:text-2xl font-bold">
-                {totalSessions}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">
-                Active Sessions
-              </CardTitle>
-              <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="text-lg sm:text-2xl font-bold text-green-600">
-                {sessions.filter((s) => s.status === "ACTIVE").length}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">
-                Total Value
-              </CardTitle>
-              <IndianRupee className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" />
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="text-lg sm:text-2xl font-bold text-blue-600">
-                {formatCurrency(
-                  sessions.reduce(
-                    (sum, s) => sum + (s.summary?.total_value || 0),
-                    0,
-                  ),
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">
-                Total Items
-              </CardTitle>
-              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600 flex-shrink-0" />
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="text-lg sm:text-2xl font-bold text-purple-600">
-                {sessions.reduce(
-                  (sum, s) => sum + (s.summary?.total_items || 0),
-                  0,
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"> */}
+        {/* <Card> */}
+        {/*   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"> */}
+        {/*     <CardTitle className="text-xs sm:text-sm font-medium truncate"> */}
+        {/*       Total Sessions */}
+        {/*     </CardTitle> */}
+        {/*     <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" /> */}
+        {/*   </CardHeader> */}
+        {/*   <CardContent className="pt-2"> */}
+        {/*     <div className="text-lg sm:text-2xl font-bold"> */}
+        {/*       {totalSessions} */}
+        {/*     </div> */}
+        {/*   </CardContent> */}
+        {/* </Card> */}
+        {/**/}
+        {/* <Card> */}
+        {/*   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"> */}
+        {/*     <CardTitle className="text-xs sm:text-sm font-medium truncate"> */}
+        {/*       Active Sessions */}
+        {/*     </CardTitle> */}
+        {/*     <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" /> */}
+        {/*   </CardHeader> */}
+        {/*   <CardContent className="pt-2"> */}
+        {/*     <div className="text-lg sm:text-2xl font-bold text-green-600"> */}
+        {/*       {sessions.filter((s) => s.status === "ACTIVE").length} */}
+        {/*     </div> */}
+        {/*   </CardContent> */}
+        {/* </Card> */}
+        {/**/}
+        {/* <Card> */}
+        {/*   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"> */}
+        {/*     <CardTitle className="text-xs sm:text-sm font-medium truncate"> */}
+        {/*       Total Value */}
+        {/*     </CardTitle> */}
+        {/*     <IndianRupee className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" /> */}
+        {/*   </CardHeader> */}
+        {/*   <CardContent className="pt-2"> */}
+        {/*     <div className="text-lg sm:text-2xl font-bold text-blue-600"> */}
+        {/*       {formatCurrency( */}
+        {/*         sessions.reduce( */}
+        {/*           (sum, s) => sum + (s.summary?.total_value || 0), */}
+        {/*           0, */}
+        {/*         ), */}
+        {/*       )} */}
+        {/*     </div> */}
+        {/*   </CardContent> */}
+        {/* </Card> */}
+        {/**/}
+        {/* <Card> */}
+        {/*   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"> */}
+        {/*     <CardTitle className="text-xs sm:text-sm font-medium truncate"> */}
+        {/*       Total Items */}
+        {/*     </CardTitle> */}
+        {/*     <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600 flex-shrink-0" /> */}
+        {/*   </CardHeader> */}
+        {/*   <CardContent className="pt-2"> */}
+        {/*     <div className="text-lg sm:text-2xl font-bold text-purple-600"> */}
+        {/*       {sessions.reduce( */}
+        {/*         (sum, s) => sum + (s.summary?.total_items || 0), */}
+        {/*         0, */}
+        {/*       )} */}
+        {/*     </div> */}
+        {/*   </CardContent> */}
+        {/* </Card> */}
+        {/* </div> */}
 
         {/* Filters and Actions */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -621,11 +621,10 @@ export default function AuctionsPage() {
                       <div className="flex flex-col space-y-3 sm:space-y-4">
                         <div className="flex items-start space-x-3 min-w-0">
                           <div
-                            className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                              session.status === "ACTIVE"
+                            className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${session.status === "ACTIVE"
                                 ? "bg-green-100"
                                 : "bg-gray-100"
-                            }`}
+                              }`}
                           >
                             {session.status === "ACTIVE" ? (
                               <Activity className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-green-600" />

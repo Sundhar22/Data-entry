@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAccessToken, verifyRefreshToken, signAccessToken } from "./jwt";
+import { verifyToken, signAccessToken } from "./jwt";
 import { AuthenticatedRequest, JWTPayload } from "@/types/auth";
 import { CommonErrors } from "./api-response";
 import { handleApiError } from "./error-handler";
@@ -24,15 +24,9 @@ export async function verifyAuth(req: NextRequest): Promise<{
     // Try to verify access token first
     if (accessToken) {
       try {
-        const decoded = verifyAccessToken(accessToken) as JWTPayload;
+        const decoded = verifyToken(accessToken, "ACCESS") as JWTPayload;
 
-        // Verify user still exists in database
-        const user = await prisma.commissioner.findUnique({
-          where: { id: decoded.id },
-          select: { id: true, name: true, email: true },
-        });
-
-        if (!user) {
+        if (!decoded) {
           return {
             success: false,
             response: CommonErrors.Unauthorized("User not found"),
@@ -55,15 +49,9 @@ export async function verifyAuth(req: NextRequest): Promise<{
     // Try to use refresh token to get new access token
     if (refreshToken) {
       try {
-        const decoded = verifyRefreshToken(refreshToken) as JWTPayload;
+        const decoded = verifyToken(refreshToken, "REFRESH") as JWTPayload;
 
-        // Verify user still exists in database
-        const user = await prisma.commissioner.findUnique({
-          where: { id: decoded.id },
-          select: { id: true, name: true, email: true },
-        });
-
-        if (!user) {
+        if (!decoded) {
           return {
             success: false,
             response: CommonErrors.Unauthorized("User not found"),
@@ -72,15 +60,16 @@ export async function verifyAuth(req: NextRequest): Promise<{
 
         // Generate new access token
         const newAccessToken = signAccessToken({
-          id: user.id,
-          email: user.email,
-          name: user.name,
+          id: decoded.id,
+          email: decoded.email,
+          name: decoded.name,
         });
 
         // Create response with new access token
         const response = NextResponse.json({
-          message: "Token refreshed successfully",
-          user: { id: user.id, email: user.email, name: user.name },
+          id: decoded.id,
+          email: decoded.email,
+          name: decoded.name,
         });
 
         response.cookies.set("access_token", newAccessToken, {

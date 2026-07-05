@@ -672,7 +672,7 @@ export default function AuctionItemsPage() {
                               type="button"
                               onMouseDown={() => {
                                 console.log("test");
-                                
+
                                 setFormData((prev) => ({
                                   ...prev,
                                   farmer_id: farmer.id,
@@ -1050,99 +1050,99 @@ export default function AuctionItemsPage() {
         </Card>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">
-                Total Items
-              </CardTitle>
-              <Package className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="text-lg sm:text-2xl font-bold">{totalItems}</div>
-              <p className="text-xs text-muted-foreground truncate">
-                {statusFilter !== "ALL"
-                  ? `${items.filter((i) => {
-                    const status = getItemStatus(i).status;
-                    return statusFilter === "PENDING"
-                      ? status === "pending"
-                      : statusFilter === "SOLD"
-                        ? status === "sold"
-                        : statusFilter === "PAID"
-                          ? status === "paid"
-                          : true;
-                  }).length
-                  } ${statusFilter.toLowerCase()}`
-                  : "in this session"}
-              </p>
-            </CardContent>
-          </Card>
+        {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"> */}
+        {/* <Card> */}
+        {/*   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"> */}
+        {/*     <CardTitle className="text-xs sm:text-sm font-medium truncate"> */}
+        {/*       Total Items */}
+        {/*     </CardTitle> */}
+        {/*     <Package className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" /> */}
+        {/*   </CardHeader> */}
+        {/*   <CardContent className="pt-2"> */}
+        {/*     <div className="text-lg sm:text-2xl font-bold">{totalItems}</div> */}
+        {/*     <p className="text-xs text-muted-foreground truncate"> */}
+        {/*       {statusFilter !== "ALL" */}
+        {/*         ? `${items.filter((i) => { */}
+        {/*           const status = getItemStatus(i).status; */}
+        {/*           return statusFilter === "PENDING" */}
+        {/*             ? status === "pending" */}
+        {/*             : statusFilter === "SOLD" */}
+        {/*               ? status === "sold" */}
+        {/*               : statusFilter === "PAID" */}
+        {/*                 ? status === "paid" */}
+        {/*                 : true; */}
+        {/*         }).length */}
+        {/*         } ${statusFilter.toLowerCase()}` */}
+        {/*         : "in this session"} */}
+        {/*     </p> */}
+        {/*   </CardContent> */}
+        {/* </Card> */}
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">
-                Sold Items
-              </CardTitle>
-              <Gavel className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" />
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="text-lg sm:text-2xl font-bold text-blue-600">
-                {items.filter((i) => i.buyer_id && i.rate).length}
-              </div>
-              <p className="text-xs text-muted-foreground truncate">
-                {totalItems > 0
-                  ? `${Math.round((items.filter((i) => i.buyer_id && i.rate).length / totalItems) * 100)}% completion`
-                  : "0% completion"}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">
-                Paid Items
-              </CardTitle>
-              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="text-lg sm:text-2xl font-bold text-green-600">
-                {items.filter((i) => i.bill_id).length}
-              </div>
-              <p className="text-xs text-muted-foreground truncate">
-                {totalItems > 0
-                  ? `${Math.round((items.filter((i) => i.bill_id).length / totalItems) * 100)}% paid`
-                  : "0% paid"}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium truncate">
-                Total Value
-              </CardTitle>
-              <IndianRupee className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600 flex-shrink-0" />
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="text-lg sm:text-2xl font-bold text-purple-600">
-                {formatCurrency(
-                  items.reduce((sum, i) => sum + (i.rate || 0) * i.quantity, 0),
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground truncate">
-                Avg:{" "}
-                {items.length > 0
-                  ? formatCurrency(
-                    items.reduce(
-                      (sum, i) => sum + (i.rate || 0) * i.quantity,
-                      0,
-                    ) / items.length,
-                  )
-                  : "₹0"}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* <Card> */}
+        {/*   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"> */}
+        {/*     <CardTitle className="text-xs sm:text-sm font-medium truncate"> */}
+        {/*       Sold Items */}
+        {/*     </CardTitle> */}
+        {/*     <Gavel className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 flex-shrink-0" /> */}
+        {/*   </CardHeader> */}
+        {/*   <CardContent className="pt-2"> */}
+        {/*     <div className="text-lg sm:text-2xl font-bold text-blue-600"> */}
+        {/*       {items.filter((i) => i.buyer_id && i.rate).length} */}
+        {/*     </div> */}
+        {/*     <p className="text-xs text-muted-foreground truncate"> */}
+        {/*       {totalItems > 0 */}
+        {/*         ? `${Math.round((items.filter((i) => i.buyer_id && i.rate).length / totalItems) * 100)}% completion` */}
+        {/*         : "0% completion"} */}
+        {/*     </p> */}
+        {/*   </CardContent> */}
+        {/* </Card> */}
+        {/**/}
+        {/* <Card> */}
+        {/*   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"> */}
+        {/*     <CardTitle className="text-xs sm:text-sm font-medium truncate"> */}
+        {/*       Paid Items */}
+        {/*     </CardTitle> */}
+        {/*     <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" /> */}
+        {/*   </CardHeader> */}
+        {/*   <CardContent className="pt-2"> */}
+        {/*     <div className="text-lg sm:text-2xl font-bold text-green-600"> */}
+        {/*       {items.filter((i) => i.bill_id).length} */}
+        {/*     </div> */}
+        {/*     <p className="text-xs text-muted-foreground truncate"> */}
+        {/*       {totalItems > 0 */}
+        {/*         ? `${Math.round((items.filter((i) => i.bill_id).length / totalItems) * 100)}% paid` */}
+        {/*         : "0% paid"} */}
+        {/*     </p> */}
+        {/*   </CardContent> */}
+        {/* </Card> */}
+        {/**/}
+        {/* <Card> */}
+        {/*   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"> */}
+        {/*     <CardTitle className="text-xs sm:text-sm font-medium truncate"> */}
+        {/*       Total Value */}
+        {/*     </CardTitle> */}
+        {/*     <IndianRupee className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600 flex-shrink-0" /> */}
+        {/*   </CardHeader> */}
+        {/*   <CardContent className="pt-2"> */}
+        {/*     <div className="text-lg sm:text-2xl font-bold text-purple-600"> */}
+        {/*       {formatCurrency( */}
+        {/*         items.reduce((sum, i) => sum + (i.rate || 0) * i.quantity, 0), */}
+        {/*       )} */}
+        {/*     </div> */}
+        {/*     <p className="text-xs text-muted-foreground truncate"> */}
+        {/*       Avg:{" "} */}
+        {/*       {items.length > 0 */}
+        {/*         ? formatCurrency( */}
+        {/*           items.reduce( */}
+        {/*             (sum, i) => sum + (i.rate || 0) * i.quantity, */}
+        {/*             0, */}
+        {/*           ) / items.length, */}
+        {/*         ) */}
+        {/*         : "₹0"} */}
+        {/*     </p> */}
+        {/*   </CardContent> */}
+        {/* </Card> */}
+        {/* </div> */}
 
         {/* Filters */}
         <div className="flex flex-wrap gap-2 sm:gap-3">

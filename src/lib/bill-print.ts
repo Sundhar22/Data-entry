@@ -191,25 +191,23 @@ export function generateBillHTML(data: BillPrintData): string {
           </tr>
         </table>
         
-        ${
-          bill.payment_status === "PAID"
-            ? `
+        ${bill.payment_status === "PAID"
+      ? `
           <div style="margin-top: 15px; text-align: center; font-weight: bold; color: green;">
             PAID - ${bill.payment_method} - ${bill.payment_date ? new Date(bill.payment_date).toLocaleDateString("en-IN") : ""}
           </div>
         `
-            : ""
-        }
+      : ""
+    }
         
-        ${
-          bill.notes
-            ? `
+        ${bill.notes
+      ? `
           <div style="margin-top: 10px; font-size: 10px; border-top: 1px dashed #000; padding-top: 5px;">
             <strong>Notes:</strong> ${bill.notes}
           </div>
         `
-            : ""
-        }
+      : ""
+    }
       </div>
     </body>
     </html>
