@@ -6,34 +6,46 @@ import DashboardLayout from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  IconButton,
+  Tooltip,
+  Chip,
+  Dialog as MuiDialog,
+  DialogTitle as MuiDialogTitle,
+  DialogContent as MuiDialogContent,
+  DialogActions as MuiDialogActions,
+  Autocomplete,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Stack,
+  Box,
+  Typography,
+  Divider,
+  Alert as MuiAlert,
+} from "@mui/material";
 import {
   Plus,
   Search,
   Edit,
   Trash2,
   Package,
-  Users,
-  IndianRupee,
   Gavel,
   Loader2,
   RefreshCw,
   AlertCircle,
   Save,
   ArrowLeft,
-  CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -85,11 +97,23 @@ interface ItemFormData {
   farmer_id: string;
   product_id: string;
   buyer_id: string;
+}
+
+interface LineItem {
+  rowId: string;
   unit: string;
   quantity: number;
   rate: number;
 }
 
+interface EditFormData {
+  farmer_id: string;
+  product_id: string;
+  buyer_id: string;
+  unit: string;
+  quantity: number;
+  rate: number;
+}
 interface Farmer {
   id: string;
   name: string;
@@ -129,7 +153,12 @@ const UNITS = [
 export default function AuctionItemsPage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session") || "";
-
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const statusChipColor: Record<string, "warning" | "info" | "success"> = {
+    pending: "warning",
+    sold: "info",
+    paid: "success",
+  };
   const [items, setItems] = useState<AuctionItem[]>([]);
   const [farmers, setFarmers] = useState<Farmer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -140,10 +169,8 @@ export default function AuctionItemsPage() {
     "ALL" | "PENDING" | "SOLD" | "PAID"
   >("ALL");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -154,10 +181,20 @@ export default function AuctionItemsPage() {
     farmer_id: "",
     product_id: "",
     buyer_id: "",
+  });
+  const [lineItems, setLineItems] = useState<LineItem[]>([
+    { rowId: crypto.randomUUID(), unit: "KG", quantity: 0, rate: 0 },
+  ]);
+
+  const [editFormData, setEditFormData] = useState<EditFormData>({
+    farmer_id: "",
+    product_id: "",
+    buyer_id: "",
     unit: "KG",
     quantity: 0,
     rate: 0,
   });
+
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
@@ -177,7 +214,7 @@ export default function AuctionItemsPage() {
 
   // Fetch auction items
   const fetchItems = useCallback(
-    async (page = 1) => {
+    async (page = 1, limit = rowsPerPage) => {
       if (!sessionId) return;
 
       setLoading(page === 1);
@@ -185,8 +222,7 @@ export default function AuctionItemsPage() {
       try {
         const params = new URLSearchParams({
           page: page.toString(),
-          limit: "10",
-          // Note: API doesn't support text search yet, only filtering by specific IDs
+          limit: limit.toString(),
         });
 
         const response = await fetch(
@@ -196,7 +232,7 @@ export default function AuctionItemsPage() {
           const data: ItemResponse = await response.json();
           setItems(data.data);
           setCurrentPage(data.meta.page);
-          setTotalPages(data.meta.totalPages);
+          //setTotalPages(data.meta.totalPages);
           setTotalItems(data.meta.total);
         }
       } catch (error) {
@@ -205,7 +241,7 @@ export default function AuctionItemsPage() {
         setLoading(false);
       }
     },
-    [sessionId],
+    [sessionId, rowsPerPage],
   );
 
   // Fetch farmers, products, and buyers for dropdowns
@@ -248,8 +284,16 @@ export default function AuctionItemsPage() {
     // Client-side filtering will be handled in the render
   };
 
-  const handlePageChange = (page: number) => {
-    fetchItems(page);
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    fetchItems(newPage + 1, rowsPerPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const newLimit = parseInt(event.target.value, 10);
+    setRowsPerPage(newLimit);
+    fetchItems(1, newLimit);
   };
 
   // Export to CSV function
@@ -303,7 +347,6 @@ export default function AuctionItemsPage() {
     if (selectedProduct) {
       setPreselectedProductId(productId);
       setIsPreselectionMode(true);
-      setProductSearch(selectedProduct.name);
       setFormData((prev) => ({ ...prev, product_id: productId }));
     }
   };
@@ -311,7 +354,6 @@ export default function AuctionItemsPage() {
   const disablePreselectionMode = () => {
     setPreselectedProductId("");
     setIsPreselectionMode(false);
-    setProductSearch("");
     setFormData((prev) => ({ ...prev, product_id: "" }));
   };
 
@@ -320,81 +362,127 @@ export default function AuctionItemsPage() {
       farmer_id: "",
       product_id: isPreselectionMode ? preselectedProductId : "",
       buyer_id: "",
-      unit: "KG",
-      quantity: 0,
-      rate: 0,
     });
+    setLineItems([
+      { rowId: crypto.randomUUID(), unit: "KG", quantity: 0, rate: 0 },
+    ]);
     setFormError("");
-    setFarmerSearch("");
-    // Keep product search if in preselection mode
-    if (!isPreselectionMode) {
-      setProductSearch("");
+  };
+
+  const addLineItemRow = () => {
+    setLineItems((prev) => [
+      ...prev,
+      {
+        rowId: crypto.randomUUID(),
+        unit: prev[prev.length - 1]?.unit || "KG",
+        quantity: 0,
+        rate: 0,
+      },
+    ]);
+  };
+
+  const removeLineItemRow = (rowId: string) => {
+    setLineItems((prev) => prev.filter((row) => row.rowId !== rowId));
+  };
+
+  const updateLineItemRow = (
+    rowId: string,
+    updates: Partial<Omit<LineItem, "rowId">>,
+  ) => {
+    setLineItems((prev) =>
+      prev.map((row) => (row.rowId === rowId ? { ...row, ...updates } : row)),
+    );
+  };
+
+  const handleCloseAddDialog = () => {
+    setIsAddDialogOpen(false);
+    if (isPreselectionMode) {
+      const keepPreselection = window.confirm(
+        "Keep Quick Add Mode active for more items?",
+      );
+      if (!keepPreselection) {
+        disablePreselectionMode();
+      }
     }
-    setBuyerSearch("");
   };
 
   const handleAddItem = async () => {
-    if (!formData.farmer_id || !formData.product_id || formData.quantity <= 0) {
-      setFormError("Farmer, product, and positive quantity are required");
+    if (!formData.farmer_id || !formData.product_id) {
+      setFormError("Farmer and product are required");
+      return;
+    }
+
+    const validRows = lineItems.filter((row) => row.quantity > 0);
+    if (validRows.length === 0) {
+      setFormError("At least one row with a positive quantity is required");
       return;
     }
 
     setFormLoading(true);
     setFormError("");
 
-    try {
-      const response = await fetch(`/api/sessions/${sessionId}/items`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          farmer_id: formData.farmer_id,
-          product_id: formData.product_id,
-          unit: formData.unit,
-          quantity: formData.quantity,
-          ...(formData.buyer_id && { buyer_id: formData.buyer_id }),
-          ...(formData.rate > 0 && { rate: formData.rate }),
-        }),
-      });
+    let successCount = 0;
+    const failedRows: string[] = [];
 
-      const data = await response.json();
+    for (const row of validRows) {
+      try {
+        const response = await fetch(`/api/sessions/${sessionId}/items`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            farmer_id: formData.farmer_id,
+            product_id: formData.product_id,
+            unit: row.unit,
+            quantity: row.quantity,
+            ...(formData.buyer_id && { buyer_id: formData.buyer_id }),
+            ...(row.rate > 0 && { rate: row.rate }),
+          }),
+        });
 
-      if (response.ok && data.success) {
-        // In preselection mode, don't close dialog and only reset farmer-specific fields
-        if (isPreselectionMode) {
-          // Reset only farmer-specific fields, keep product preselected
-          setFormData((prev) => ({
-            ...prev,
-            farmer_id: "",
-            buyer_id: "",
-            quantity: 0,
-            rate: 0,
-          }));
-          setFarmerSearch("");
-          setBuyerSearch("");
+        const data = await response.json();
+        if (response.ok && data.success) {
+          successCount++;
         } else {
-          setIsAddDialogOpen(false);
-          resetForm();
+          failedRows.push(
+            `${row.quantity} ${row.unit} (${data.error?.message || "failed"})`,
+          );
         }
-        fetchItems(currentPage);
-      } else {
-        setFormError(data.error?.message || "Failed to create item");
+      } catch (error) {
+        console.error("Failed to create item:", error);
+        failedRows.push(`${row.quantity} ${row.unit} (network error)`);
       }
-    } catch (error) {
-      console.error("Failed to create item:", error);
-      setFormError("An unexpected error occurred");
-    } finally {
-      setFormLoading(false);
     }
+
+    setFormLoading(false);
+
+    if (failedRows.length > 0) {
+      setFormError(
+        `Added ${successCount} of ${validRows.length} item(s). Failed: ${failedRows.join(", ")}`,
+      );
+    } else if (isPreselectionMode) {
+      setFormData((prev) => ({ ...prev, farmer_id: "", buyer_id: "" }));
+      setLineItems([
+        {
+          rowId: crypto.randomUUID(),
+          unit: lineItems[0]?.unit || "KG",
+          quantity: 0,
+          rate: 0,
+        },
+      ]);
+    } else {
+      setIsAddDialogOpen(false);
+      resetForm();
+    }
+
+    fetchItems(currentPage);
   };
 
   const handleEditItem = async () => {
     if (
       !selectedItem ||
-      !formData.farmer_id ||
-      !formData.product_id ||
-      formData.quantity <= 0
+      !editFormData.farmer_id ||
+      !editFormData.product_id ||
+      editFormData.quantity <= 0
     ) {
       setFormError("Farmer, product, and positive quantity are required");
       return;
@@ -408,16 +496,14 @@ export default function AuctionItemsPage() {
         `/api/sessions/${sessionId}/items/${selectedItem.id}`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            farmer_id: formData.farmer_id,
-            product_id: formData.product_id,
-            unit: formData.unit,
-            quantity: formData.quantity,
-            ...(formData.buyer_id && { buyer_id: formData.buyer_id }),
-            ...(formData.rate > 0 && { rate: formData.rate }),
+            farmer_id: editFormData.farmer_id,
+            product_id: editFormData.product_id,
+            unit: editFormData.unit,
+            quantity: editFormData.quantity,
+            ...(editFormData.buyer_id && { buyer_id: editFormData.buyer_id }),
+            ...(editFormData.rate > 0 && { rate: editFormData.rate }),
           }),
         },
       );
@@ -427,7 +513,6 @@ export default function AuctionItemsPage() {
       if (response.ok && data.success) {
         setIsEditDialogOpen(false);
         setSelectedItem(null);
-        resetForm();
         fetchItems(currentPage);
       } else {
         setFormError(data.error?.message || "Failed to update item");
@@ -438,6 +523,20 @@ export default function AuctionItemsPage() {
     } finally {
       setFormLoading(false);
     }
+  };
+
+  const openEditDialog = (item: AuctionItem) => {
+    setSelectedItem(item);
+    setEditFormData({
+      farmer_id: item.farmer_id,
+      product_id: item.product_id,
+      buyer_id: item.buyer_id || "",
+      unit: item.unit,
+      quantity: item.quantity,
+      rate: item.rate || 0,
+    });
+    setFormError("");
+    setIsEditDialogOpen(true);
   };
 
   const handleDeleteItem = async () => {
@@ -467,23 +566,6 @@ export default function AuctionItemsPage() {
     } finally {
       setFormLoading(false);
     }
-  };
-
-  const openEditDialog = (item: AuctionItem) => {
-    setSelectedItem(item);
-    setFormData({
-      farmer_id: item.farmer_id,
-      product_id: item.product_id,
-      buyer_id: item.buyer_id || "",
-      unit: item.unit,
-      quantity: item.quantity,
-      rate: item.rate || 0,
-    });
-    // Set search fields with current values
-    setFarmerSearch(item.farmer?.name || "");
-    setProductSearch(item.product?.name || "");
-    setBuyerSearch(item.buyer?.name || "");
-    setIsEditDialogOpen(true);
   };
 
   const openDeleteDialog = (item: AuctionItem) => {
@@ -537,7 +619,18 @@ export default function AuctionItemsPage() {
       </DashboardLayout>
     );
   }
+  const selectedFarmer =
+    farmers.find((f) => f.id === formData.farmer_id) || null;
+  const selectedProduct =
+    products.find((p) => p.id === formData.product_id) || null;
+  const selectedBuyer = buyers.find((b) => b.id === formData.buyer_id) || null;
 
+  const editSelectedFarmer =
+    farmers.find((f) => f.id === editFormData.farmer_id) || null;
+  const editSelectedProduct =
+    products.find((p) => p.id === editFormData.product_id) || null;
+  const editSelectedBuyer =
+    buyers.find((b) => b.id === editFormData.buyer_id) || null;
   return (
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
@@ -560,441 +653,262 @@ export default function AuctionItemsPage() {
               </p>
             </div>
           </div>
-          <Dialog
-            open={isAddDialogOpen}
-            onOpenChange={(open) => {
-              setIsAddDialogOpen(open);
-              if (!open && isPreselectionMode) {
-                // When closing dialog in preselection mode, ask user if they want to keep it active
-                const keepPreselection = window.confirm(
-                  "Keep Quick Add Mode active for more items?",
-                );
-                if (!keepPreselection) {
-                  disablePreselectionMode();
-                }
-              }
+          <Button
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-slate-50 shadow hover:bg-blue-700 h-9 px-4 py-2 w-full sm:w-auto"
+            onClick={() => {
+              resetForm();
+              setIsAddDialogOpen(true);
             }}
           >
-            <DialogTrigger
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-slate-50 shadow hover:bg-blue-700 h-9 px-4 py-2 w-full sm:w-auto"
-              onClick={() => {
-                resetForm();
-                setIsAddDialogOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Item
-            </DialogTrigger>
-            <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-hidden">
-              <DialogHeader>
-                <DialogTitle>
-                  {isPreselectionMode
-                    ? "Quick Add Mode - Add Item"
-                    : "Add Auction Item"}
-                </DialogTitle>
-                <DialogDescription>
-                  {isPreselectionMode
-                    ? `Adding items for: ${products.find((p) => p.id === preselectedProductId)?.name || "Selected Product"} - Only farmer and quantity details needed.`
-                    : "Add a new item to this auction session."}
-                </DialogDescription>
-              </DialogHeader>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Item
+          </Button>
+          <MuiDialog
+            open={isAddDialogOpen}
+            onClose={handleCloseAddDialog}
+            fullWidth
+            maxWidth="sm"
+          >
+            <MuiDialogTitle>
+              {isPreselectionMode
+                ? "Quick Add Mode — Add Item"
+                : "Add Auction Item"}
+            </MuiDialogTitle>
+            <MuiDialogContent dividers>
+              <Stack spacing={2.5} sx={{ mt: 0.5 }}>
+                {isPreselectionMode && (
+                  <MuiAlert severity="info">
+                    Product is preselected — add rows below for each quantity,
+                    unit, and rate you need to record for this farmer.
+                  </MuiAlert>
+                )}
+                {formError && <MuiAlert severity="error">{formError}</MuiAlert>}
 
-              {isPreselectionMode && (
-                <Alert className="border-blue-200 bg-blue-50">
-                  <AlertCircle className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-blue-800">
-                    Quick Add Mode is active. The product is preselected. Focus
-                    on adding farmer details and quantities quickly.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {formError && (
-                <Alert className="border-red-200 bg-red-50">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                  <AlertDescription className="text-red-800">
-                    {formError}
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <div className="space-y-4 sm:space-y-6 max-h-[50vh] sm:max-h-96 overflow-y-auto px-1">
-                <div className="space-y-2">
-                  <Label htmlFor="farmer" className="text-sm font-medium">
-                    Farmer *
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="farmer-search"
-                      type="text"
-                      placeholder="Type to search farmers..."
-                      value={farmerSearch}
-                      onChange={(e) => {
-                        setFarmerSearch(e.target.value);
-                        setShowFarmerDropdown(true);
-                      }}
-                      onFocus={() => setShowFarmerDropdown(true)}
-                      // onBlur={() =>
-                      //   setTimeout(() => setShowFarmerDropdown(false), 200)
-                      // }
-                      className="w-full"
+                <Autocomplete
+                  options={farmers}
+                  getOptionLabel={(f) => `${f.name} - ${f.village}`}
+                  isOptionEqualToValue={(o, v) => o.id === v.id}
+                  value={selectedFarmer}
+                  onChange={(_e, value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      farmer_id: value?.id || "",
+                    }))
+                  }
+                  noOptionsText="No farmers found"
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Farmer *"
+                      placeholder="Search farmers..."
                     />
-                    {farmerSearch && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFarmerSearch("");
-                          setFormData((prev) => ({ ...prev, farmer_id: "" }));
-                          setShowFarmerDropdown(false);
-                        }}
-                        className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
-                      >
-                        ×
-                      </button>
-                    )}
+                  )}
+                />
 
-                    {/* Autocomplete dropdown */}
-                    {showFarmerDropdown && farmerSearch && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                        {farmers
-                          .filter(
-                            (farmer) =>
-                              farmer.name
-                                .toLowerCase()
-                                .includes(farmerSearch.toLowerCase()) ||
-                              farmer.village
-                                .toLowerCase()
-                                .includes(farmerSearch.toLowerCase()),
-                          )
-                          .map((farmer) => (
-                            <button
-                              key={farmer.id}
-                              type="button"
-                              onMouseDown={() => {
-                                console.log("test");
-
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  farmer_id: farmer.id,
-                                }));
-                                setFarmerSearch(
-                                  `${farmer.name} - ${farmer.village}`,
-                                );
-                                setShowFarmerDropdown(false);
-                              }}
-                              className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0"
-                            >
-                              <div className="font-medium">{farmer.name}</div>
-                              <div className="text-sm text-gray-600">
-                                {farmer.village}
-                              </div>
-                            </button>
-                          ))}
-                        {farmers.filter(
-                          (farmer) =>
-                            farmer.name
-                              .toLowerCase()
-                              .includes(farmerSearch.toLowerCase()) ||
-                            farmer.village
-                              .toLowerCase()
-                              .includes(farmerSearch.toLowerCase()),
-                        ).length === 0 && (
-                            <div className="px-3 py-2 text-gray-500">
-                              No farmers found
-                            </div>
-                          )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="product" className="text-sm font-medium">
-                    Product *
-                    {isPreselectionMode && (
-                      <Badge className="ml-2 bg-blue-100 text-blue-800 text-xs">
-                        Preselected
-                      </Badge>
-                    )}
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="product-search"
-                      type="text"
+                <Autocomplete
+                  options={products}
+                  getOptionLabel={(p) => `${p.name} (${p.category.name})`}
+                  isOptionEqualToValue={(o, v) => o.id === v.id}
+                  value={selectedProduct}
+                  disabled={isPreselectionMode}
+                  onChange={(_e, value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      product_id: value?.id || "",
+                    }))
+                  }
+                  noOptionsText="No products found"
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Product *"
                       placeholder={
                         isPreselectionMode
                           ? "Product preselected"
-                          : "Type to search products..."
+                          : "Search products..."
                       }
-                      value={productSearch}
-                      onChange={(e) => {
-                        if (!isPreselectionMode) {
-                          setProductSearch(e.target.value);
-                          setShowProductDropdown(true);
-                        }
-                      }}
-                      onFocus={() =>
-                        !isPreselectionMode && setShowProductDropdown(true)
-                      }
-                      // onBlur={() =>
-                      //   setTimeout(() => setShowProductDropdown(false), 200)
-                      // }
-                      className="w-full"
-                      disabled={isPreselectionMode}
                     />
-                    {productSearch && !isPreselectionMode && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setProductSearch("");
-                          setFormData((prev) => ({ ...prev, product_id: "" }));
-                          setShowProductDropdown(false);
-                        }}
-                        className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
-                      >
-                        ×
-                      </button>
-                    )}
+                  )}
+                />
 
-                    {/* Autocomplete dropdown */}
-                    {showProductDropdown &&
-                      productSearch &&
-                      !isPreselectionMode && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                          {products
-                            .filter(
-                              (product) =>
-                                product.name
-                                  .toLowerCase()
-                                  .includes(productSearch.toLowerCase()) ||
-                                product.category.name
-                                  .toLowerCase()
-                                  .includes(productSearch.toLowerCase()),
-                            )
-                            .map((product) => (
-                              <button
-                                key={product.id}
-                                type="button"
-                                onClick={() => {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    product_id: product.id,
-                                  }));
-                                  setProductSearch(
-                                    `${product.name} (${product.category.name})`,
-                                  );
-                                  setShowProductDropdown(false);
-                                }}
-                                className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0"
-                              >
-                                <div className="font-medium">
-                                  {product.name}
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                  {product.category.name}
-                                </div>
-                              </button>
+                <Autocomplete
+                  options={buyers}
+                  getOptionLabel={(b) => b.name}
+                  isOptionEqualToValue={(o, v) => o.id === v.id}
+                  value={selectedBuyer}
+                  onChange={(_e, value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      buyer_id: value?.id || "",
+                    }))
+                  }
+                  noOptionsText="No buyers found"
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Buyer (Optional)"
+                      placeholder="Search buyers..."
+                    />
+                  )}
+                />
+
+                <Divider />
+
+                <Box>
+                  <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
+                    Quantity, Unit & Rate
+                  </Typography>
+                  <Stack spacing={1.5}>
+                    {lineItems.map((row) => (
+                      <Stack
+                        key={row.rowId}
+                        direction="row"
+                        spacing={1}
+                      //alignItems="flex-start"
+                      >
+                        <TextField
+                          label="Quantity *"
+                          type="number"
+                          size="small"
+                          value={row.quantity === 0 ? "" : row.quantity}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "") {
+                              updateLineItemRow(row.rowId, { quantity: 0 });
+                            } else {
+                              const numValue = parseFloat(value);
+                              if (!isNaN(numValue) && numValue >= 0) {
+                                updateLineItemRow(row.rowId, {
+                                  quantity: numValue,
+                                });
+                              }
+                            }
+                          }}
+                          //inputProps={{ min: 0, step: 0.01 }}
+                          sx={{ flex: 1 }}
+                        />
+                        <FormControl size="small" sx={{ minWidth: 110 }}>
+                          <InputLabel>Unit</InputLabel>
+                          <Select
+                            label="Unit"
+                            value={row.unit}
+                            onChange={(e) =>
+                              updateLineItemRow(row.rowId, {
+                                unit: e.target.value,
+                              })
+                            }
+                          >
+                            {UNITS.map((unit) => (
+                              <MenuItem key={unit} value={unit}>
+                                {unit}
+                              </MenuItem>
                             ))}
-                          {products.filter(
-                            (product) =>
-                              product.name
-                                .toLowerCase()
-                                .includes(productSearch.toLowerCase()) ||
-                              product.category.name
-                                .toLowerCase()
-                                .includes(productSearch.toLowerCase()),
-                          ).length === 0 && (
-                              <div className="px-3 py-2 text-gray-500">
-                                No products found
-                              </div>
-                            )}
-                        </div>
-                      )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity" className="text-sm font-medium">
-                      Quantity *
-                    </Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      value={formData.quantity === 0 ? "" : formData.quantity}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value === "") {
-                          setFormData((prev) => ({ ...prev, quantity: 0 }));
-                        } else {
-                          const numValue = parseFloat(value);
-                          if (!isNaN(numValue) && numValue >= 0) {
-                            setFormData((prev) => ({
-                              ...prev,
-                              quantity: numValue,
-                            }));
+                          </Select>
+                        </FormControl>
+                        <TextField
+                          label="Rate (Optional)"
+                          type="number"
+                          size="small"
+                          value={row.rate === 0 ? "" : row.rate}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "") {
+                              updateLineItemRow(row.rowId, { rate: 0 });
+                            } else {
+                              const numValue = parseFloat(value);
+                              if (!isNaN(numValue) && numValue >= 0) {
+                                updateLineItemRow(row.rowId, {
+                                  rate: numValue,
+                                });
+                              }
+                            }
+                          }}
+                          //inputProps={{ min: 0, step: 0.01 }}
+                          sx={{ flex: 1 }}
+                        />
+                        <Tooltip
+                          title={
+                            lineItems.length === 1
+                              ? "At least one row required"
+                              : "Remove row"
                           }
-                        }
-                      }}
-                      placeholder="Enter quantity"
-                      min="0"
-                      step="0.01"
-                      className="w-full"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="unit" className="text-sm font-medium">
-                      Unit
-                    </Label>
-                    <select
-                      id="unit"
-                      value={formData.unit}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          unit: e.target.value,
-                        }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      {UNITS.map((unit) => (
-                        <option key={unit} value={unit}>
-                          {unit}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="buyer" className="text-sm font-medium">
-                    Buyer (Optional)
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="buyer-search"
-                      type="text"
-                      placeholder="Type to search buyers..."
-                      value={buyerSearch}
-                      onChange={(e) => {
-                        setBuyerSearch(e.target.value);
-                        setShowBuyerDropdown(true);
-                      }}
-                      onFocus={() => setShowBuyerDropdown(true)}
-                      // onBlur={() =>
-                      //   setTimeout(() => setShowBuyerDropdown(false), 200)
-                      // }
-                      className="w-full"
-                    />
-                    {buyerSearch && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setBuyerSearch("");
-                          setFormData((prev) => ({ ...prev, buyer_id: "" }));
-                          setShowBuyerDropdown(false);
-                        }}
-                        className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
-                      >
-                        ×
-                      </button>
-                    )}
-
-                    {/* Autocomplete dropdown */}
-                    {showBuyerDropdown && buyerSearch && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                        {buyers
-                          .filter((buyer) =>
-                            buyer.name
-                              .toLowerCase()
-                              .includes(buyerSearch.toLowerCase()),
-                          )
-                          .map((buyer) => (
-                            <button
-                              key={buyer.id}
-                              type="button"
-                              onClick={() => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  buyer_id: buyer.id,
-                                }));
-                                setBuyerSearch(buyer.name);
-                                setShowBuyerDropdown(false);
-                              }}
-                              className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0"
+                        >
+                          <span>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => removeLineItemRow(row.rowId)}
+                              disabled={lineItems.length === 1}
                             >
-                              <div className="font-medium">{buyer.name}</div>
-                            </button>
-                          ))}
-                        {buyers.filter((buyer) =>
-                          buyer.name
-                            .toLowerCase()
-                            .includes(buyerSearch.toLowerCase()),
-                        ).length === 0 && (
-                            <div className="px-3 py-2 text-gray-500">
-                              No buyers found
-                            </div>
+                              <Trash2 className="h-4 w-4" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </Stack>
+                    ))}
+                  </Stack>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addLineItemRow}
+                    className="mt-3"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Another Row
+                  </Button>
+
+                  {lineItems.some((r) => r.rate > 0 && r.quantity > 0) && (
+                    <Box
+                      sx={{
+                        mt: 2,
+                        p: 1.5,
+                        bgcolor: "grey.50",
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        Estimated total:{" "}
+                        <strong>
+                          {formatCurrency(
+                            lineItems.reduce(
+                              (sum, r) =>
+                                sum + (r.rate > 0 ? r.rate * r.quantity : 0),
+                              0,
+                            ),
                           )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="rate" className="text-sm font-medium">
-                    Rate per {formData.unit} (Optional)
-                  </Label>
-                  <Input
-                    id="rate"
-                    type="number"
-                    value={formData.rate === 0 ? "" : formData.rate}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === "") {
-                        setFormData((prev) => ({ ...prev, rate: 0 }));
-                      } else {
-                        const numValue = parseFloat(value);
-                        if (!isNaN(numValue) && numValue >= 0) {
-                          setFormData((prev) => ({ ...prev, rate: numValue }));
-                        }
-                      }
-                    }}
-                    placeholder="Enter rate"
-                    min="0"
-                    step="0.01"
-                    className="w-full"
-                  />
-                  {formData.rate > 0 && formData.quantity > 0 && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      Total: {formatCurrency(formData.rate * formData.quantity)}
-                    </p>
+                        </strong>{" "}
+                        across {lineItems.filter((r) => r.quantity > 0).length}{" "}
+                        item(s)
+                      </Typography>
+                    </Box>
                   )}
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsAddDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleAddItem} disabled={formLoading}>
-                  {formLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      {isPreselectionMode ? "Add & Continue" : "Add Item"}
-                    </>
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                </Box>
+              </Stack>
+            </MuiDialogContent>
+            <MuiDialogActions sx={{ px: 3, py: 2 }}>
+              <Button variant="outline" onClick={handleCloseAddDialog}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddItem} disabled={formLoading}>
+                {formLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    {isPreselectionMode
+                      ? "Add & Continue"
+                      : lineItems.filter((r) => r.quantity > 0).length > 1
+                        ? `Add ${lineItems.filter((r) => r.quantity > 0).length} Items`
+                        : "Add Item"}
+                  </>
+                )}
+              </Button>
+            </MuiDialogActions>
+          </MuiDialog>
         </div>
 
         {/* Product Preselection Controls */}
@@ -1229,9 +1143,7 @@ export default function AuctionItemsPage() {
               </div>
             ) : (
               (() => {
-                // Client-side filtering
                 const filteredItems = items.filter((item) => {
-                  // Text search filter
                   if (searchTerm) {
                     const searchLower = searchTerm.toLowerCase();
                     const matchesSearch =
@@ -1242,7 +1154,6 @@ export default function AuctionItemsPage() {
                     if (!matchesSearch) return false;
                   }
 
-                  // Status filter
                   if (statusFilter !== "ALL") {
                     const status = getItemStatus(item).status;
                     if (
@@ -1268,599 +1179,348 @@ export default function AuctionItemsPage() {
                 }
 
                 return (
-                  <div className="space-y-0 max-h-[70vh] overflow-y-auto">
-                    {filteredItems.map((item, index) => {
-                      const status = getItemStatus(item);
-                      return (
-                        <div key={item.id}>
-                          <div className="p-3 sm:p-4 lg:p-6 hover:bg-slate-50 transition-colors">
-                            <div className="flex flex-col space-y-3 sm:space-y-4">
-                              <div className="flex items-start space-x-3 min-w-0">
-                                <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-                                  <Package className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-orange-600" />
-                                </div>
-                                <div className="space-y-1 sm:space-y-2 min-w-0 flex-1">
-                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                    <h3 className="font-semibold text-sm sm:text-base lg:text-lg text-slate-900 truncate">
+                  <>
+                    {/* Mobile: table unsupported */}
+                    <div className="md:hidden text-center py-12 px-4 text-slate-600">
+                      <AlertCircle className="h-8 w-8 mx-auto mb-3 text-slate-400" />
+                      <p className="font-medium">
+                        Table view isn&apos;t supported on small screens.
+                      </p>
+                      <p className="text-sm mt-1">
+                        Please use a tablet or larger device to view auction
+                        items.
+                      </p>
+                    </div>
+
+                    {/* Tablet & up: MUI table */}
+                    <div className="hidden md:block">
+                      <TableContainer>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Product</TableCell>
+                              <TableCell>Farmer</TableCell>
+                              <TableCell align="right">Quantity</TableCell>
+                              <TableCell align="right">Rate</TableCell>
+                              <TableCell>Buyer</TableCell>
+                              <TableCell align="right">Total</TableCell>
+                              <TableCell>Status</TableCell>
+                              <TableCell align="center">Actions</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {filteredItems.map((item) => {
+                              const status = getItemStatus(item);
+                              const total =
+                                item.rate && item.quantity
+                                  ? item.rate * item.quantity
+                                  : 0;
+                              return (
+                                <TableRow key={item.id} hover>
+                                  <TableCell>
+                                    <div className="font-medium text-slate-900">
                                       {item.product?.name || "Unknown Product"}
-                                    </h3>
-                                    <Badge
-                                      className={`${status.color} flex-shrink-0 self-start sm:self-center text-xs`}
-                                    >
-                                      {status.label}
-                                    </Badge>
-                                  </div>
-                                  <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-3 text-xs sm:text-sm text-slate-600">
-                                    <div className="flex items-center space-x-1 min-w-0">
-                                      <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                                      <span className="truncate">
-                                        {item.farmer?.name || "Unknown Farmer"}
-                                      </span>
                                     </div>
-                                    <span className="hidden sm:inline">•</span>
-                                    <span className="flex-shrink-0">
-                                      {item.quantity} {item.unit}
-                                    </span>
-                                    {item.rate && (
-                                      <>
-                                        <span className="hidden sm:inline">
-                                          •
-                                        </span>
-                                        <span className="flex-shrink-0">
-                                          {formatCurrency(item.rate)} per{" "}
-                                          {item.unit}
-                                        </span>
-                                      </>
-                                    )}
-                                  </div>
-                                  <div className="text-xs text-slate-500 space-y-1">
-                                    {item.buyer?.name && (
-                                      <div className="truncate">
-                                        Buyer: {item.buyer.name}
+                                    {item.product?.category?.name && (
+                                      <div className="text-xs text-slate-500">
+                                        {item.product.category.name}
                                       </div>
                                     )}
-                                    {item.rate && item.quantity && (
-                                      <div className="font-medium text-slate-700">
-                                        Total:{" "}
-                                        {formatCurrency(
-                                          item.rate * item.quantity,
-                                        )}
+                                  </TableCell>
+                                  <TableCell>
+                                    <div>
+                                      {item.farmer?.name || "Unknown Farmer"}
+                                    </div>
+                                    {item.farmer?.village && (
+                                      <div className="text-xs text-slate-500">
+                                        {item.farmer.village}
                                       </div>
                                     )}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:space-x-2 sm:space-y-0">
-                                {!item.buyer_id && !item.rate && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 text-xs sm:text-sm w-full sm:w-auto"
-                                    onClick={() => openEditDialog(item)}
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    {item.quantity} {item.unit}
+                                  </TableCell>
+                                  <TableCell align="right">
+                                    {item.rate
+                                      ? formatCurrency(item.rate)
+                                      : "—"}
+                                  </TableCell>
+                                  <TableCell>
+                                    {item.buyer?.name || "No Buyer"}
+                                  </TableCell>
+                                  <TableCell
+                                    align="right"
+                                    className="font-medium"
                                   >
-                                    <Gavel className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                    <span className="truncate">
-                                      Complete Sale
-                                    </span>
-                                  </Button>
-                                )}
-                                <div className="flex gap-1 sm:gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1 sm:flex-none text-xs sm:text-sm"
-                                    onClick={() => openEditDialog(item)}
-                                  >
-                                    <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                    <span className="hidden sm:inline">
-                                      Edit
-                                    </span>
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1 sm:flex-none text-xs sm:text-sm"
-                                    onClick={() => openDeleteDialog(item)}
-                                  >
-                                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                    <span className="hidden sm:inline">
-                                      Delete
-                                    </span>
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          {index < filteredItems.length - 1 && <Separator />}
-                        </div>
-                      );
-                    })}
-                  </div>
+                                    {total > 0 ? formatCurrency(total) : "—"}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Chip
+                                      label={status.label}
+                                      size="small"
+                                      color={statusChipColor[status.status]}
+                                    />
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <div className="flex items-center justify-center gap-1">
+                                      {!item.buyer_id && !item.rate && (
+                                        <Tooltip title="Complete Sale">
+                                          <IconButton
+                                            size="small"
+                                            color="success"
+                                            onClick={() => openEditDialog(item)}
+                                          >
+                                            <Gavel className="h-4 w-4" />
+                                          </IconButton>
+                                        </Tooltip>
+                                      )}
+                                      <Tooltip title="Edit">
+                                        <IconButton
+                                          size="small"
+                                          onClick={() => openEditDialog(item)}
+                                        >
+                                          <Edit className="h-4 w-4" />
+                                        </IconButton>
+                                      </Tooltip>
+                                      <Tooltip title="Delete">
+                                        <IconButton
+                                          size="small"
+                                          color="error"
+                                          onClick={() => openDeleteDialog(item)}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </IconButton>
+                                      </Tooltip>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </div>
+                  </>
                 );
               })()
             )}
           </CardContent>
+
+          {/* Pagination - tablet & up only */}
+          <div className="hidden md:block border-t">
+            <TablePagination
+              component="div"
+              count={totalItems}
+              page={currentPage - 1}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={[10, 25, 50]}
+            />
+          </div>
         </Card>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 bg-white p-4 rounded-lg border">
-            <div className="text-xs sm:text-sm text-slate-600 order-2 sm:order-1">
-              Showing {(currentPage - 1) * 10 + 1} to{" "}
-              {Math.min(currentPage * 10, totalItems)} of {totalItems} items
-            </div>
-            <div className="flex items-center space-x-1 sm:space-x-2 order-1 sm:order-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="text-xs px-2 py-1 sm:px-3 sm:py-2"
-              >
-                <span className="sm:hidden">‹</span>
-                <span className="hidden sm:inline">Previous</span>
-              </Button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                let page;
-                if (totalPages <= 5) {
-                  page = i + 1;
-                } else if (currentPage <= 3) {
-                  page = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  page = totalPages - 4 + i;
-                } else {
-                  page = currentPage - 2 + i;
-                }
-                return (
-                  <Button
-                    key={page}
-                    variant={page === currentPage ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handlePageChange(page)}
-                    className="w-7 h-7 sm:w-8 sm:h-8 text-xs p-0"
-                  >
-                    {page}
-                  </Button>
-                );
-              })}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="text-xs px-2 py-1 sm:px-3 sm:py-2"
-              >
-                <span className="sm:hidden">›</span>
-                <span className="hidden sm:inline">Next</span>
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* Edit Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-hidden">
-            <DialogHeader>
-              <DialogTitle>Edit Auction Item</DialogTitle>
-              <DialogDescription>
-                Update item details and settings.
-              </DialogDescription>
-            </DialogHeader>
+        <MuiDialog
+          open={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          fullWidth
+          maxWidth="sm"
+        >
+          <MuiDialogTitle>Edit Auction Item</MuiDialogTitle>
+          <MuiDialogContent dividers>
+            <Stack spacing={2.5} sx={{ mt: 0.5 }}>
+              {formError && <MuiAlert severity="error">{formError}</MuiAlert>}
 
-            {formError && (
-              <Alert className="border-red-200 bg-red-50">
-                <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">
-                  {formError}
-                </AlertDescription>
-              </Alert>
-            )}
+              <Autocomplete
+                options={farmers}
+                getOptionLabel={(f) => `${f.name} - ${f.village}`}
+                isOptionEqualToValue={(o, v) => o.id === v.id}
+                value={editSelectedFarmer}
+                onChange={(_e, value) =>
+                  setEditFormData((prev) => ({
+                    ...prev,
+                    farmer_id: value?.id || "",
+                  }))
+                }
+                noOptionsText="No farmers found"
+                renderInput={(params) => (
+                  <TextField {...params} label="Farmer *" />
+                )}
+              />
 
-            <div className="space-y-4 sm:space-y-6 max-h-[50vh] sm:max-h-96 overflow-y-auto px-1">
-              <div className="space-y-2">
-                <Label htmlFor="edit-farmer" className="text-sm font-medium">
-                  Farmer *
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="edit-farmer-search"
-                    type="text"
-                    placeholder="Type to search farmers..."
-                    value={farmerSearch}
-                    onChange={(e) => {
-                      setFarmerSearch(e.target.value);
-                      setShowFarmerDropdown(true);
-                    }}
-                    onFocus={() => setShowFarmerDropdown(true)}
-                    // onBlur={() =>
-                    //   setTimeout(() => setShowFarmerDropdown(false), 200)
-                    // }
-                    className="w-full"
-                  />
-                  {farmerSearch && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFarmerSearch("");
-                        setFormData((prev) => ({ ...prev, farmer_id: "" }));
-                        setShowFarmerDropdown(false);
-                      }}
-                      className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
-                    >
-                      ×
-                    </button>
-                  )}
+              <Autocomplete
+                options={products}
+                getOptionLabel={(p) => `${p.name} (${p.category.name})`}
+                isOptionEqualToValue={(o, v) => o.id === v.id}
+                value={editSelectedProduct}
+                onChange={(_e, value) =>
+                  setEditFormData((prev) => ({
+                    ...prev,
+                    product_id: value?.id || "",
+                  }))
+                }
+                noOptionsText="No products found"
+                renderInput={(params) => (
+                  <TextField {...params} label="Product *" />
+                )}
+              />
 
-                  {/* Autocomplete dropdown */}
-                  {showFarmerDropdown && farmerSearch && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                      {farmers
-                        .filter(
-                          (farmer) =>
-                            farmer.name
-                              .toLowerCase()
-                              .includes(farmerSearch.toLowerCase()) ||
-                            farmer.village
-                              .toLowerCase()
-                              .includes(farmerSearch.toLowerCase()),
-                        )
-                        .map((farmer) => (
-                          <button
-                            key={farmer.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                farmer_id: farmer.id,
-                              }));
-                              setFarmerSearch(
-                                `${farmer.name} - ${farmer.village}`,
-                              );
-                              setShowFarmerDropdown(false);
-                            }}
-                            className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0"
-                          >
-                            <div className="font-medium">{farmer.name}</div>
-                            <div className="text-sm text-gray-600">
-                              {farmer.village}
-                            </div>
-                          </button>
-                        ))}
-                      {farmers.filter(
-                        (farmer) =>
-                          farmer.name
-                            .toLowerCase()
-                            .includes(farmerSearch.toLowerCase()) ||
-                          farmer.village
-                            .toLowerCase()
-                            .includes(farmerSearch.toLowerCase()),
-                      ).length === 0 && (
-                          <div className="px-3 py-2 text-gray-500">
-                            No farmers found
-                          </div>
-                        )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-product" className="text-sm font-medium">
-                  Product *
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="edit-product-search"
-                    type="text"
-                    placeholder="Type to search products..."
-                    value={productSearch}
-                    onChange={(e) => {
-                      setProductSearch(e.target.value);
-                      setShowProductDropdown(true);
-                    }}
-                    onFocus={() => setShowProductDropdown(true)}
-                    // onBlur={() =>
-                    //   setTimeout(() => setShowProductDropdown(false), 200)
-                    // }
-                    className="w-full"
-                  />
-                  {productSearch && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setProductSearch("");
-                        setFormData((prev) => ({ ...prev, product_id: "" }));
-                        setShowProductDropdown(false);
-                      }}
-                      className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
-                    >
-                      ×
-                    </button>
-                  )}
-
-                  {/* Autocomplete dropdown */}
-                  {showProductDropdown && productSearch && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                      {products
-                        .filter(
-                          (product) =>
-                            product.name
-                              .toLowerCase()
-                              .includes(productSearch.toLowerCase()) ||
-                            product.category.name
-                              .toLowerCase()
-                              .includes(productSearch.toLowerCase()),
-                        )
-                        .map((product) => (
-                          <button
-                            key={product.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                product_id: product.id,
-                              }));
-                              setProductSearch(
-                                `${product.name} (${product.category.name})`,
-                              );
-                              setShowProductDropdown(false);
-                            }}
-                            className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0"
-                          >
-                            <div className="font-medium">{product.name}</div>
-                            <div className="text-sm text-gray-600">
-                              {product.category.name}
-                            </div>
-                          </button>
-                        ))}
-                      {products.filter(
-                        (product) =>
-                          product.name
-                            .toLowerCase()
-                            .includes(productSearch.toLowerCase()) ||
-                          product.category.name
-                            .toLowerCase()
-                            .includes(productSearch.toLowerCase()),
-                      ).length === 0 && (
-                          <div className="px-3 py-2 text-gray-500">
-                            No products found
-                          </div>
-                        )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="edit-quantity"
-                    className="text-sm font-medium"
-                  >
-                    Quantity *
-                  </Label>
-                  <Input
-                    id="edit-quantity"
-                    type="number"
-                    value={formData.quantity === 0 ? "" : formData.quantity}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === "") {
-                        setFormData((prev) => ({ ...prev, quantity: 0 }));
-                      } else {
-                        const numValue = parseFloat(value);
-                        if (!isNaN(numValue) && numValue >= 0) {
-                          setFormData((prev) => ({
-                            ...prev,
-                            quantity: numValue,
-                          }));
-                        }
-                      }
-                    }}
-                    placeholder="Enter quantity"
-                    min="0"
-                    step="0.01"
-                    className="w-full"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-unit" className="text-sm font-medium">
-                    Unit
-                  </Label>
-                  <select
-                    id="edit-unit"
-                    value={formData.unit}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, unit: e.target.value }))
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {UNITS.map((unit) => (
-                      <option key={unit} value={unit}>
-                        {unit}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-buyer" className="text-sm font-medium">
-                  Buyer (Optional)
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="edit-buyer-search"
-                    type="text"
-                    placeholder="Type to search buyers..."
-                    value={buyerSearch}
-                    onChange={(e) => {
-                      setBuyerSearch(e.target.value);
-                      setShowBuyerDropdown(true);
-                    }}
-                    onFocus={() => setShowBuyerDropdown(true)}
-                    // onBlur={() =>
-                    //   setTimeout(() => setShowBuyerDropdown(false), 200)
-                    // }
-                    className="w-full"
-                  />
-                  {buyerSearch && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBuyerSearch("");
-                        setFormData((prev) => ({ ...prev, buyer_id: "" }));
-                        setShowBuyerDropdown(false);
-                      }}
-                      className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
-                    >
-                      ×
-                    </button>
-                  )}
-
-                  {/* Autocomplete dropdown */}
-                  {showBuyerDropdown && buyerSearch && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                      {buyers
-                        .filter((buyer) =>
-                          buyer.name
-                            .toLowerCase()
-                            .includes(buyerSearch.toLowerCase()),
-                        )
-                        .map((buyer) => (
-                          <button
-                            key={buyer.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                buyer_id: buyer.id,
-                              }));
-                              setBuyerSearch(buyer.name);
-                              setShowBuyerDropdown(false);
-                            }}
-                            className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0"
-                          >
-                            <div className="font-medium">{buyer.name}</div>
-                          </button>
-                        ))}
-                      {buyers.filter((buyer) =>
-                        buyer.name
-                          .toLowerCase()
-                          .includes(buyerSearch.toLowerCase()),
-                      ).length === 0 && (
-                          <div className="px-3 py-2 text-gray-500">
-                            No buyers found
-                          </div>
-                        )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-rate" className="text-sm font-medium">
-                  Rate per {formData.unit} (Optional)
-                </Label>
-                <Input
-                  id="edit-rate"
+              <Stack direction="row" spacing={2}>
+                <TextField
+                  label="Quantity *"
                   type="number"
-                  value={formData.rate === 0 ? "" : formData.rate}
+                  fullWidth
+                  value={
+                    editFormData.quantity === 0 ? "" : editFormData.quantity
+                  }
                   onChange={(e) => {
                     const value = e.target.value;
                     if (value === "") {
-                      setFormData((prev) => ({ ...prev, rate: 0 }));
+                      setEditFormData((prev) => ({ ...prev, quantity: 0 }));
                     } else {
                       const numValue = parseFloat(value);
                       if (!isNaN(numValue) && numValue >= 0) {
-                        setFormData((prev) => ({ ...prev, rate: numValue }));
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          quantity: numValue,
+                        }));
                       }
                     }
                   }}
-                  placeholder="Enter rate"
-                  min="0"
-                  step="0.01"
-                  className="w-full"
+                //inputProps={{ min: 0, step: 0.01 }}
                 />
-                {formData.rate > 0 && formData.quantity > 0 && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    Total: {formatCurrency(formData.rate * formData.quantity)}
-                  </p>
-                )}
-              </div>
-            </div>
+                <FormControl fullWidth>
+                  <InputLabel>Unit</InputLabel>
+                  <Select
+                    label="Unit"
+                    value={editFormData.unit}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        unit: e.target.value,
+                      }))
+                    }
+                  >
+                    {UNITS.map((unit) => (
+                      <MenuItem key={unit} value={unit}>
+                        {unit}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
 
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleEditItem} disabled={formLoading}>
-                {formLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Update Item
-                  </>
+              <Autocomplete
+                options={buyers}
+                getOptionLabel={(b) => b.name}
+                isOptionEqualToValue={(o, v) => o.id === v.id}
+                value={editSelectedBuyer}
+                onChange={(_e, value) =>
+                  setEditFormData((prev) => ({
+                    ...prev,
+                    buyer_id: value?.id || "",
+                  }))
+                }
+                noOptionsText="No buyers found"
+                renderInput={(params) => (
+                  <TextField {...params} label="Buyer (Optional)" />
                 )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              />
+
+              <TextField
+                label={`Rate per ${editFormData.unit} (Optional)`}
+                type="number"
+                fullWidth
+                value={editFormData.rate === 0 ? "" : editFormData.rate}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "") {
+                    setEditFormData((prev) => ({ ...prev, rate: 0 }));
+                  } else {
+                    const numValue = parseFloat(value);
+                    if (!isNaN(numValue) && numValue >= 0) {
+                      setEditFormData((prev) => ({ ...prev, rate: numValue }));
+                    }
+                  }
+                }}
+                //inputProps={{ min: 0, step: 0.01 }}
+                helperText={
+                  editFormData.rate > 0 && editFormData.quantity > 0
+                    ? `Total: ${formatCurrency(editFormData.rate * editFormData.quantity)}`
+                    : " "
+                }
+              />
+            </Stack>
+          </MuiDialogContent>
+          <MuiDialogActions sx={{ px: 3, py: 2 }}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleEditItem} disabled={formLoading}>
+              {formLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Update Item
+                </>
+              )}
+            </Button>
+          </MuiDialogActions>
+        </MuiDialog>
 
         {/* Delete Confirmation Dialog */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Auction Item</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete this auction item? This action
-                cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-
+        <MuiDialog
+          open={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+        >
+          <MuiDialogTitle>Delete Auction Item</MuiDialogTitle>
+          <MuiDialogContent>
+            <Typography variant="body2" color="text.secondary">
+              Are you sure you want to delete this auction item? This action
+              cannot be undone.
+            </Typography>
             {formError && (
-              <Alert className="border-red-200 bg-red-50">
-                <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">
-                  {formError}
-                </AlertDescription>
-              </Alert>
+              <MuiAlert severity="error" sx={{ mt: 2 }}>
+                {formError}
+              </MuiAlert>
             )}
-
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsDeleteDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleDeleteItem}
-                disabled={formLoading}
-              >
-                {formLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Item
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </MuiDialogContent>
+          <MuiDialogActions sx={{ px: 3, pb: 2 }}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteItem}
+              disabled={formLoading}
+            >
+              {formLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Item
+                </>
+              )}
+            </Button>
+          </MuiDialogActions>
+        </MuiDialog>
       </div>
     </DashboardLayout>
   );

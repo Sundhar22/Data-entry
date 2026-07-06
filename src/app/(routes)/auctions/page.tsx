@@ -35,6 +35,19 @@ import {
   CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  IconButton,
+  Tooltip,
+  Chip,
+  LinearProgress,
+} from "@mui/material";
 
 interface AuctionSession {
   id: string;
@@ -76,7 +89,6 @@ export default function AuctionsPage() {
   const [sessions, setSessions] = useState<AuctionSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalSessions, setTotalSessions] = useState(0);
   const [statusFilter, setStatusFilter] = useState<
     "ALL" | "ACTIVE" | "COMPLETED"
@@ -90,23 +102,39 @@ export default function AuctionsPage() {
   const [selectedSession, setSelectedSession] = useState<AuctionSession | null>(
     null,
   );
-
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   // Form states
+  const today = new Date();
+  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+
+  const localDate = today.toISOString().slice(0, 10);
   const [formData, setFormData] = useState<SessionFormData>({
-    date: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
+    date: localDate,
     status: "ACTIVE",
   });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
+  const statusChipColor: Record<string, "success" | "default"> = {
+    ACTIVE: "success",
+    COMPLETED: "default",
+  };
 
+  const paymentChipColor: Record<string, "warning" | "success"> = {
+    PENDING: "warning",
+    COMPLETED: "success",
+  };
   // Fetch sessions data
-  const fetchSessions = async (page = 1, status?: string) => {
+  const fetchSessions = async (
+    page = 1,
+    status?: string,
+    limit = rowsPerPage,
+  ) => {
     setLoading(page === 1);
 
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: "10",
+        limit: limit.toString(),
         sortBy: "date",
         sortOrder: "desc",
         ...(status && status !== "ALL" && { status }),
@@ -117,7 +145,7 @@ export default function AuctionsPage() {
         const data: SessionResponse = await response.json();
         setSessions(data.data);
         setCurrentPage(data.meta.page);
-        setTotalPages(data.meta.totalPages);
+        //setTotalPages(data.meta.totalPages);
         setTotalSessions(data.meta.total);
       }
     } catch (error) {
@@ -131,13 +159,29 @@ export default function AuctionsPage() {
     fetchSessions();
   }, []);
 
-  const handlePageChange = (page: number) => {
-    fetchSessions(page, statusFilter === "ALL" ? undefined : statusFilter);
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    fetchSessions(
+      newPage + 1,
+      statusFilter === "ALL" ? undefined : statusFilter,
+      rowsPerPage,
+    );
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const newLimit = parseInt(event.target.value, 10);
+    setRowsPerPage(newLimit);
+    fetchSessions(
+      1,
+      statusFilter === "ALL" ? undefined : statusFilter,
+      newLimit,
+    );
   };
 
   const handleStatusFilter = (status: "ALL" | "ACTIVE" | "COMPLETED") => {
     setStatusFilter(status);
-    fetchSessions(1, status === "ALL" ? undefined : status);
+    fetchSessions(1, status === "ALL" ? undefined : status, rowsPerPage);
   };
 
   const resetForm = () => {
@@ -429,8 +473,8 @@ export default function AuctionsPage() {
                           date: e.target.value,
                         }))
                       }
-                      min={new Date().toISOString().split("T")[0]}
-                      max={new Date().toISOString().split("T")[0]}
+                      min={localDate}
+                      max={localDate}
                       readOnly
                       className="bg-gray-50 cursor-not-allowed"
                     />
@@ -593,7 +637,6 @@ export default function AuctionsPage() {
             Refresh
           </Button>
         </div>
-
         {/* Sessions List */}
         <Card>
           <CardHeader>
@@ -614,170 +657,185 @@ export default function AuctionsPage() {
                 started.
               </div>
             ) : (
-              <div className="space-y-0 max-h-[70vh] overflow-y-auto">
-                {sessions.map((session, index) => (
-                  <div key={session.id}>
-                    <div className="p-3 sm:p-4 lg:p-6 hover:bg-slate-50 transition-colors">
-                      <div className="flex flex-col space-y-3 sm:space-y-4">
-                        <div className="flex items-start space-x-3 min-w-0">
-                          <div
-                            className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${session.status === "ACTIVE"
-                                ? "bg-green-100"
-                                : "bg-gray-100"
-                              }`}
-                          >
-                            {session.status === "ACTIVE" ? (
-                              <Activity className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-green-600" />
-                            ) : (
-                              <Clock className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-gray-600" />
-                            )}
-                          </div>
-                          <div className="space-y-1 sm:space-y-2 min-w-0 flex-1">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                              <h3 className="font-semibold text-sm sm:text-base lg:text-lg text-slate-900 truncate">
-                                Session #{session.id.slice(-8).toUpperCase()}
-                              </h3>
-                              <div className="flex flex-wrap gap-1 sm:gap-2">
-                                {getStatusBadge(session.status)}
-                                {getPaymentStatusBadge(session.payment_status)}
+              <>
+                {/* Mobile: table unsupported */}
+                <div className="md:hidden text-center py-12 px-4 text-slate-600">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-3 text-slate-400" />
+                  <p className="font-medium">
+                    Table view isn&apos;t supported on small screens.
+                  </p>
+                  <p className="text-sm mt-1">
+                    Please use a tablet or larger device to view auction
+                    sessions.
+                  </p>
+                </div>
+
+                {/* Tablet & up: MUI table */}
+                <div className="hidden md:block">
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Session</TableCell>
+                          <TableCell>Date</TableCell>
+                          <TableCell>Status</TableCell>
+                          <TableCell>Payment</TableCell>
+                          <TableCell align="right">Items</TableCell>
+                          <TableCell align="right">Value</TableCell>
+                          <TableCell>Progress</TableCell>
+                          <TableCell align="center">Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {sessions.map((session) => (
+                          <TableRow key={session.id} hover>
+                            <TableCell>
+                              <div className="font-medium text-slate-900">
+                                #{session.id.slice(-8).toUpperCase()}
                               </div>
-                            </div>
-                            <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-3 text-xs sm:text-sm text-slate-600">
-                              <div className="flex items-center space-x-1">
-                                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                                <span className="truncate">
-                                  {formatDate(session.date)}
-                                </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {formatDate(session.date)}
                               </div>
-                              {session.summary && (
-                                <>
-                                  <span className="hidden sm:inline">•</span>
-                                  <span className="truncate">
-                                    {session.summary.total_items} items
-                                  </span>
-                                  <span className="hidden sm:inline">•</span>
-                                  <span className="font-medium truncate">
-                                    {formatCurrency(
-                                      session.summary.total_value,
-                                    )}
-                                  </span>
-                                </>
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={
+                                  session.status === "ACTIVE"
+                                    ? "Active"
+                                    : "Completed"
+                                }
+                                size="small"
+                                color={statusChipColor[session.status]}
+                                variant={
+                                  session.status === "ACTIVE"
+                                    ? "filled"
+                                    : "outlined"
+                                }
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={
+                                  session.payment_status === "PENDING"
+                                    ? "Pending"
+                                    : "Completed"
+                                }
+                                size="small"
+                                color={paymentChipColor[session.payment_status]}
+                                variant="outlined"
+                              />
+                            </TableCell>
+                            <TableCell align="right">
+                              {session.summary ? (
+                                <div>
+                                  <div>{session.summary.total_items}</div>
+                                  <div className="text-xs text-slate-500">
+                                    {session.summary.paid_items} paid ·{" "}
+                                    {session.summary.pending_items} pending
+                                  </div>
+                                </div>
+                              ) : (
+                                "—"
                               )}
-                            </div>
-                            {session.summary && (
-                              <div className="flex flex-wrap gap-2 sm:gap-3 text-xs text-slate-500">
-                                <span>Paid: {session.summary.paid_items}</span>
-                                <span>
-                                  Pending: {session.summary.pending_items}
-                                </span>
-                                <span>
-                                  Progress:{" "}
-                                  {session.summary.completion_percentage}%
-                                </span>
+                            </TableCell>
+                            <TableCell align="right" className="font-medium">
+                              {session.summary
+                                ? formatCurrency(session.summary.total_value)
+                                : "—"}
+                            </TableCell>
+                            <TableCell>
+                              {session.summary ? (
+                                <div className="flex items-center gap-2 min-w-[100px]">
+                                  <LinearProgress
+                                    variant="determinate"
+                                    value={
+                                      session.summary.completion_percentage
+                                    }
+                                    sx={{
+                                      width: 60,
+                                      height: 6,
+                                      borderRadius: 3,
+                                    }}
+                                  />
+                                  <span className="text-xs text-slate-600 whitespace-nowrap">
+                                    {session.summary.completion_percentage}%
+                                  </span>
+                                </div>
+                              ) : (
+                                "—"
+                              )}
+                            </TableCell>
+                            <TableCell align="center">
+                              <div className="flex items-center justify-center gap-1">
+                                {session.status === "ACTIVE" && (
+                                  <>
+                                    <Tooltip title="Go Live">
+                                      <Link
+                                        href={`/auctions/live?session=${session.id}`}
+                                      >
+                                        <IconButton size="small" color="error">
+                                          <Play className="h-4 w-4" />
+                                        </IconButton>
+                                      </Link>
+                                    </Tooltip>
+                                    <Tooltip title="Complete Session">
+                                      <IconButton
+                                        size="small"
+                                        color="success"
+                                        onClick={() =>
+                                          openCompleteDialog(session)
+                                        }
+                                      >
+                                        <CheckCircle className="h-4 w-4" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </>
+                                )}
+                                <Tooltip title="Manage Items">
+                                  <Link
+                                    href={`/auctions/items?session=${session.id}`}
+                                  >
+                                    <IconButton size="small" color="primary">
+                                      <Package className="h-4 w-4" />
+                                    </IconButton>
+                                  </Link>
+                                </Tooltip>
+                                <Tooltip title="Delete">
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() => openDeleteDialog(session)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </IconButton>
+                                </Tooltip>
                               </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:space-x-2 sm:space-y-0">
-                          {session.status === "ACTIVE" && (
-                            <>
-                              <Link
-                                href={`/auctions/live?session=${session.id}`}
-                                className="w-full sm:w-auto"
-                              >
-                                <Button
-                                  size="sm"
-                                  className="bg-red-600 hover:bg-red-700 w-full sm:w-auto text-xs sm:text-sm"
-                                >
-                                  <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                  <span className="truncate">Go Live</span>
-                                </Button>
-                              </Link>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openCompleteDialog(session)}
-                                className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 w-full sm:w-auto text-xs sm:text-sm"
-                              >
-                                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                <span className="truncate">Complete</span>
-                              </Button>
-                            </>
-                          )}
-                          <Link
-                            href={`/auctions/items?session=${session.id}`}
-                            className="w-full sm:w-auto"
-                          >
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 w-full sm:w-auto text-xs sm:text-sm"
-                            >
-                              <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                              <span className="truncate">Manage Items</span>
-                            </Button>
-                          </Link>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openDeleteDialog(session)}
-                            className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 w-full sm:w-auto text-xs sm:text-sm"
-                          >
-                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                            <span className="truncate">Delete</span>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    {index < sessions.length - 1 && <Separator />}
-                  </div>
-                ))}
-              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </div>
+              </>
             )}
           </CardContent>
-        </Card>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-slate-600">
-              Showing {(currentPage - 1) * 10 + 1} to{" "}
-              {Math.min(currentPage * 10, totalSessions)} of {totalSessions}{" "}
-              sessions
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <Button
-                    key={page}
-                    variant={page === currentPage ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handlePageChange(page)}
-                    className="w-8"
-                  >
-                    {page}
-                  </Button>
-                ),
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </div>
+          {/* Pagination - tablet & up only */}
+          <div className="hidden md:block border-t">
+            <TablePagination
+              component="div"
+              count={totalSessions}
+              page={currentPage - 1}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={[10, 25, 50]}
+            />
           </div>
-        )}
+        </Card>
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

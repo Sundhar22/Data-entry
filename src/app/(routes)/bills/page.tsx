@@ -230,14 +230,20 @@ export default function BillsPage() {
           showToast("Bill marked as paid successfully!");
         } else {
           console.error("Payment failed in API:", data);
-          showToast(`Failed to mark bill as paid: ${data.message || "Unknown error"}`);
+          showToast(
+            `Failed to mark bill as paid: ${data.message || "Unknown error"}`,
+          );
         }
       } else {
         const errorData = await response.json().catch(() => null);
         const message =
           (errorData && (errorData.error?.message || errorData.message)) ||
           `HTTP ${response.status}`;
-        console.error("Payment request failed:", response.status, errorData || {});
+        console.error(
+          "Payment request failed:",
+          response.status,
+          errorData || {},
+        );
         showToast(`Failed to mark bill as paid: ${message}`);
       }
     } catch (error) {
@@ -310,7 +316,9 @@ export default function BillsPage() {
           showToast(`${selectedBills.size} bills marked as paid successfully!`);
         } else {
           console.error("Multiple payment failed in API:", data);
-          showToast(`Failed to mark bills as paid: ${data.message || "Unknown error"}`);
+          showToast(
+            `Failed to mark bills as paid: ${data.message || "Unknown error"}`,
+          );
         }
       } else {
         const errorData = await response
@@ -679,8 +687,8 @@ export default function BillsPage() {
                           )}
                           <div
                             className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${bill.payment_status === "PAID"
-                              ? "bg-green-100"
-                              : "bg-red-100"
+                                ? "bg-green-100"
+                                : "bg-red-100"
                               }`}
                           >
                             {bill.payment_status === "PAID" ? (
@@ -792,15 +800,15 @@ export default function BillsPage() {
                             <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                             View
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full sm:w-auto text-xs sm:text-sm"
-                          >
-                            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                            <span className="hidden sm:inline">Print</span>
-                            <span className="sm:hidden">PDF</span>
-                          </Button>
+                          {/* <Button */}
+                          {/*   variant="outline" */}
+                          {/*   size="sm" */}
+                          {/*   className="w-full sm:w-auto text-xs sm:text-sm" */}
+                          {/* > */}
+                          {/*   <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> */}
+                          {/*   <span className="hidden sm:inline">Print</span> */}
+                          {/*   <span className="sm:hidden">PDF</span> */}
+                          {/* </Button> */}
                         </div>
                       </div>
                     </div>
