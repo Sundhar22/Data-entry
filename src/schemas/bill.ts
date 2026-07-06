@@ -7,12 +7,12 @@ export const BillPreviewQuerySchema = z.object({
 });
 
 export const BillGenerateRequestSchema = z.object({
-  farmer_id: z.string().cuid("Invalid farmer ID format"),
+  farmer_id: z.cuid("Invalid farmer ID format"),
   previews: z
     .array(
       z.object({
-        product_id: z.string().cuid("Invalid product ID format"),
-        session_id: z.string().cuid("Invalid session ID format"),
+        product_id: z.cuid("Invalid product ID format"),
+        session_id: z.cuid("Invalid session ID format"),
         other_charges: z.record(z.string(), z.number()).optional().default({}),
         notes: z.string().optional(),
       }),

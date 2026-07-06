@@ -1,7 +1,5 @@
-import { PrismaClient } from "../generated/prisma";
+import prisma from "@/lib/prisma";
 import { execSync } from "child_process";
-
-const prisma = new PrismaClient();
 
 const categories = [
   { name: "Vegetables" },

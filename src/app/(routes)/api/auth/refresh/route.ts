@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { verifyRefreshToken, signAccessToken } from "@/lib/jwt";
+import { verifyToken, signAccessToken } from "@/lib/jwt";
 import { createSuccessResponse, CommonErrors } from "@/lib/api-response";
 import { withErrorHandling } from "@/lib/error-handler";
 import { JWTPayload } from "@/types/auth";
@@ -11,7 +11,7 @@ async function refreshHandler(req: NextRequest) {
     return CommonErrors.Unauthorized("No refresh token provided");
   }
 
-  const decoded = verifyRefreshToken(refreshToken) as JWTPayload;
+  const decoded = verifyToken(refreshToken, "REFRESH") as JWTPayload;
 
   const payload = {
     id: decoded.id,

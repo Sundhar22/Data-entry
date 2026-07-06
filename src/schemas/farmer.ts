@@ -7,8 +7,10 @@ export const FarmerSchema = z.object({
   phone: z
     .string()
     .min(1, "Phone number is required")
-    .regex(/^(\+\d{1,3}[- ]?)?\d{10}$/,
-      "Phone must be 10 digits, optionally prefixed by country code"),
+    .regex(
+      /^(\+\d{1,3}[- ]?)?\d{10}$/,
+      "Phone must be 10 digits, optionally prefixed by country code",
+    ),
   village: z.string().min(1, "Village is required"),
   commissioner_id: z.cuid(),
   is_active: z.boolean().default(true),
@@ -22,8 +24,10 @@ export const CreateFarmerSchema = z.object({
   phone: z
     .string()
     .min(1, "Phone number is required")
-    .regex(/^(\+\d{1,3}[- ]?)?\d{10}$/,
-      "Phone must be 10 digits, optionally prefixed by country code"),
+    .regex(
+      /^(\+\d{1,3}[- ]?)?\d{10}$/,
+      "Phone must be 10 digits, optionally prefixed by country code",
+    ),
   village: z.string().min(1, "Village is required"),
   is_active: z.boolean().default(true).optional(),
 });
@@ -34,8 +38,10 @@ export const UpdateFarmerSchema = z.object({
   phone: z
     .string()
     .min(1, "Phone number is required")
-    .regex(/^(\+\d{1,3}[- ]?)?\d{10}$/,
-      "Phone must be 10 digits, optionally prefixed by country code")
+    .regex(
+      /^(\+\d{1,3}[- ]?)?\d{10}$/,
+      "Phone must be 10 digits, optionally prefixed by country code",
+    )
     .optional(),
   village: z.string().min(1, "Village is required").optional(),
   is_active: z.boolean().optional(),

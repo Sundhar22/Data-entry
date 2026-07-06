@@ -19,9 +19,9 @@ const Unit = z.enum([
 
 // Auction Item Creation Schema (buyer_id and rate are optional for partial creation)
 export const CreateAuctionItemSchema = z.object({
-  farmer_id: z.string().cuid("Invalid farmer ID format"),
-  product_id: z.string().cuid("Invalid product ID format"),
-  buyer_id: z.string().cuid("Invalid buyer ID format").optional(),
+  farmer_id: z.cuid("Invalid farmer ID format"),
+  product_id: z.cuid("Invalid product ID format"),
+  buyer_id: z.cuid("Invalid buyer ID format").optional(),
   unit: Unit,
   quantity: z.number().positive("Quantity must be positive"),
   rate: z.number().positive("Rate must be positive").optional(),
@@ -29,9 +29,9 @@ export const CreateAuctionItemSchema = z.object({
 
 // Auction Item Update Schema (all fields optional)
 export const UpdateAuctionItemSchema = z.object({
-  farmer_id: z.string().cuid("Invalid farmer ID format").optional(),
-  product_id: z.string().cuid("Invalid product ID format").optional(),
-  buyer_id: z.string().cuid("Invalid buyer ID format").optional(),
+  farmer_id: z.cuid("Invalid farmer ID format").optional(),
+  product_id: z.cuid("Invalid product ID format").optional(),
+  buyer_id: z.cuid("Invalid buyer ID format").optional(),
   unit: Unit.optional(),
   quantity: z.number().positive("Quantity must be positive").optional(),
   rate: z.number().positive("Rate must be positive").optional(),
@@ -39,15 +39,15 @@ export const UpdateAuctionItemSchema = z.object({
 
 // Complete Auction Item Schema (for completing partial items with buyer and rate)
 export const CompleteAuctionItemSchema = z.object({
-  buyer_id: z.string().cuid("Invalid buyer ID format"),
+  buyer_id: z.cuid("Invalid buyer ID format"),
   rate: z.number().positive("Rate must be positive"),
 });
 
 // Auction Item Filter Schema for listing
 export const AuctionItemFilterSchema = z.object({
-  farmer_id: z.string().cuid().optional(),
-  product_id: z.string().cuid().optional(),
-  buyer_id: z.string().cuid().optional(),
+  farmer_id: z.cuid().optional(),
+  product_id: z.cuid().optional(),
+  buyer_id: z.cuid().optional(),
   paid: z.enum(["true", "false"]).optional(), // Filter by payment status
   completed: z.enum(["true", "false"]).optional(), // Filter by completion status (has buyer and rate)
   page: z.number().int().positive().default(1),

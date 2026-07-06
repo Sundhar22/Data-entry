@@ -4,7 +4,6 @@ import { createSuccessResponse } from "@/lib/api-response";
 import {
   withErrorHandling,
   NotFoundError,
-  ConflictError,
   ValidationError,
 } from "@/lib/error-handler";
 import { AuthenticatedRequest } from "@/types/auth";
@@ -15,7 +14,6 @@ import { calculateBillAmounts, generateBillNumbers } from "@/lib/bill-utils";
 import { isMobileOrTabletRequest } from "@/lib/device-detection";
 
 type GeneratedBill = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   bill: any; // Prisma bill with includes
   auction_items_count: number;
   auction_item_ids: string[]; // IDs of auction items for this bill
@@ -165,19 +163,24 @@ async function generateBillsHandler(
             rate: item.rate!,
           }));
 
-          const { grossAmount: appendGross, commissionAmount: appendCommission } =
-            calculateBillAmounts(
-              itemsForCalculationAppend,
-              commissioner.commission_rate,
-              {},
-            );
+          const {
+            grossAmount: appendGross,
+            commissionAmount: appendCommission,
+          } = calculateBillAmounts(
+            itemsForCalculationAppend,
+            commissioner.commission_rate,
+            {},
+          );
 
           // Merge other_charges (sum same keys)
-          const currentCharges = (existingBill.other_charges as Record<string, number>) || {};
-          const appendCharges = (preview.other_charges as Record<string, number>) || {};
+          const currentCharges =
+            (existingBill.other_charges as Record<string, number>) || {};
+          const appendCharges =
+            (preview.other_charges as Record<string, number>) || {};
           const mergedCharges: Record<string, number> = { ...currentCharges };
           for (const key of Object.keys(appendCharges)) {
-            mergedCharges[key] = (mergedCharges[key] || 0) + (appendCharges[key] || 0);
+            mergedCharges[key] =
+              (mergedCharges[key] || 0) + (appendCharges[key] || 0);
           }
           const mergedChargesTotal = Object.values(mergedCharges).reduce(
             (sum, val) => sum + (typeof val === "number" ? val : 0),
@@ -185,10 +188,14 @@ async function generateBillsHandler(
           );
 
           // Compute new totals
-          const newTotalQuantity = existingBill.total_quantity + newItems.reduce((s, it) => s + it.quantity, 0);
+          const newTotalQuantity =
+            existingBill.total_quantity +
+            newItems.reduce((s, it) => s + it.quantity, 0);
           const newGrossAmount = existingBill.gross_amount + appendGross;
-          const newCommissionAmount = existingBill.commission_amount + appendCommission;
-          const newNetPayable = newGrossAmount - newCommissionAmount + mergedChargesTotal;
+          const newCommissionAmount =
+            existingBill.commission_amount + appendCommission;
+          const newNetPayable =
+            newGrossAmount - newCommissionAmount + mergedChargesTotal;
 
           // Payment status rules:
           // - If existing bill is PAID and caller doesn't mark_as_paid now, do not auto-unpay; return an error instead
@@ -202,9 +209,12 @@ async function generateBillsHandler(
             continue;
           }
 
-          let nextPaymentStatus = existingBill.payment_status as "PAID" | "UNPAID";
+          let nextPaymentStatus = existingBill.payment_status as
+            | "PAID"
+            | "UNPAID";
           let nextPaymentMethod: string | null = existingBill.payment_method;
-          let nextPaymentDate: Date | null = existingBill.payment_date as Date | null;
+          let nextPaymentDate: Date | null =
+            existingBill.payment_date as Date | null;
           let nextNotes = existingBill.notes || null;
 
           if (mark_as_paid) {
@@ -228,7 +238,9 @@ async function generateBillsHandler(
               notes: nextNotes,
             },
             include: {
-              farmer: { select: { id: true, name: true, phone: true, village: true } },
+              farmer: {
+                select: { id: true, name: true, phone: true, village: true },
+              },
               product: { select: { id: true, name: true } },
             },
           });
@@ -421,13 +433,17 @@ async function generateBillsHandler(
 
   if (createdBills.length === 0 && errors.length > 0) {
     console.log("No bills were created, returning success with errors");
-    return createSuccessResponse({
-      generated_bills: [],
-      total_generated: 0,
-      errors,
-      total_errors: errors.length,
-      message: "No new bills were generated. Some selections already have bills or no unbilled items.",
-    }, 200);
+    return createSuccessResponse(
+      {
+        generated_bills: [],
+        total_generated: 0,
+        errors,
+        total_errors: errors.length,
+        message:
+          "No new bills were generated. Some selections already have bills or no unbilled items.",
+      },
+      200,
+    );
   }
 
   console.log("Returning success response");

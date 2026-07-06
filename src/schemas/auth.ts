@@ -24,7 +24,7 @@ export const loginSchema = z.object({
 
 // Forgot password schema
 export const forgotPasswordSchema = z.object({
-  email: z.string().email("Invalid email format"),
+  email: z.email("Invalid email format"),
 });
 
 // Reset password schema

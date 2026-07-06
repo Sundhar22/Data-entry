@@ -5,14 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { showToast } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Label } from "@/components/ui/label";
 import { useIsMobileOrTablet } from "@/hooks/useDeviceType";
 import {
   ArrowLeft,
-  FileText,
   User,
   Package,
   Calendar,
@@ -24,6 +21,7 @@ import {
   Loader2,
   Monitor,
   Receipt,
+  FileText,
 } from "lucide-react";
 
 interface BillDetails {
@@ -83,7 +81,6 @@ export default function BillDetailsPage() {
   const fetchBillDetails = useCallback(async () => {
     setLoading(true);
     try {
-      // Add timestamp to prevent caching
       const response = await fetch(`/api/bills/${billId}?t=${Date.now()}`, {
         cache: "no-store",
         headers: {
@@ -93,7 +90,7 @@ export default function BillDetailsPage() {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
-          setBill(data.data.bill); // The actual bill is nested under data.bill
+          setBill(data.data.bill);
         } else {
           console.error("Invalid response structure:", data);
           router.push("/bills");
@@ -125,8 +122,6 @@ export default function BillDetailsPage() {
 
     setMarkingPaid(true);
     try {
-      // no-console (info): keep only error/warn logs
-
       const response = await fetch("/api/bills/pay-multiple", {
         method: "POST",
         headers: {
@@ -139,26 +134,27 @@ export default function BillDetailsPage() {
         }),
       });
 
-      // no-console
-
       if (response.ok) {
         const data = await response.json();
-        // no-console
-
         if (data.success) {
-          // no-console
-          await fetchBillDetails(); // Refresh the bill data
+          await fetchBillDetails();
           showToast("Bill marked as paid successfully!");
         } else {
           console.error("Payment failed in API:", data);
-          showToast(`Failed to mark bill as paid: ${data.message || "Unknown error"}`);
+          showToast(
+            `Failed to mark bill as paid: ${data.message || "Unknown error"}`,
+          );
         }
       } else {
         const errorData = await response.json().catch(() => null);
         const message =
           (errorData && (errorData.error?.message || errorData.message)) ||
           `HTTP ${response.status}`;
-        console.error("Payment request failed:", response.status, errorData || {});
+        console.error(
+          "Payment request failed:",
+          response.status,
+          errorData || {},
+        );
         showToast(`Failed to mark bill as paid: ${message}`);
       }
     } catch (error) {
@@ -168,6 +164,7 @@ export default function BillDetailsPage() {
       setMarkingPaid(false);
     }
   };
+
   const handlePrint = async (format: "html" | "text" = "html") => {
     if (!bill) return;
 
@@ -180,17 +177,14 @@ export default function BillDetailsPage() {
         const content = await response.text();
 
         if (format === "html") {
-          // Open in new window for printing
           const printWindow = window.open("", "_blank");
           if (printWindow) {
             printWindow.document.write(content);
             printWindow.document.close();
             printWindow.focus();
-            // Auto-print after a short delay
             setTimeout(() => printWindow.print(), 500);
           }
         } else {
-          // For text format, create a download
           const blob = new Blob([content], { type: "text/plain" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
@@ -238,18 +232,6 @@ export default function BillDetailsPage() {
     }).format(amount);
   };
 
-  const getPaymentStatusBadge = (status: string) => {
-    switch (status) {
-      case "PAID":
-        return <Badge className="bg-green-100 text-green-800">Paid</Badge>;
-      case "UNPAID":
-        return <Badge className="bg-red-100 text-red-800">Unpaid</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  // Group items by rate for better display
   const groupItemsByRate = (items: BillDetails["auction_items"]) => {
     const groups = new Map<
       number,
@@ -266,12 +248,12 @@ export default function BillDetailsPage() {
       }
       const group = groups.get(item.rate)!;
       group.quantities.push(item.quantity);
-      group.bags += 1; // Assuming each item is one bag
+      group.bags += 1;
       group.amount += item.quantity * item.rate;
     });
 
     return Array.from(groups.entries()).map(([rate, data]) => ({
-      rate,
+      rate: Number(rate),
       quantities: data.quantities,
       total_quantity: data.quantities.reduce((sum, q) => sum + q, 0),
       bags: data.bags,
@@ -323,8 +305,8 @@ export default function BillDetailsPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
+      <div className="space-y-6 max-w-5xl mx-auto">
+        {/* Top Header Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <Button
@@ -336,56 +318,48 @@ export default function BillDetailsPage() {
               Back
             </Button>
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900">
-                Bill {bill.bill_number}
+              <h1 className="text-2xl font-bold text-slate-900">
+                Invoice{" "}
+                <span className="text-slate-500">#{bill.bill_number}</span>
               </h1>
-              <p className="text-slate-600 mt-1">Detailed view and actions</p>
             </div>
           </div>
 
-          {/* Action buttons */}
           <div className="flex items-center gap-2">
-            {/* Mobile/tablet notice */}
             {isMobileOrTablet && (
               <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded-lg mr-2">
                 <Monitor className="h-4 w-4 text-blue-600" />
                 <span className="text-xs text-blue-600 font-medium">
-                  Some actions require desktop
+                  Use desktop for payments
                 </span>
               </div>
             )}
 
-            {/* Desktop-only actions */}
             {!isMobileOrTablet && (
               <>
                 {bill.payment_status === "UNPAID" && (
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 mr-2">
                     <select
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="border border-gray-300 rounded px-3 py-1"
+                      className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     >
                       <option value="cash">Cash</option>
                       <option value="bank_transfer">Bank Transfer</option>
                       <option value="check">Check</option>
-                      <option value="digital">Digital Payment</option>
+                      <option value="digital">Digital</option>
                     </select>
                     <Button
                       onClick={handleMarkAsPaidClick}
                       disabled={markingPaid}
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-green-600 hover:bg-green-700 text-white"
                     >
                       {markingPaid ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Processing...
-                        </>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
-                        <>
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          Mark as Paid
-                        </>
+                        <CreditCard className="h-4 w-4 mr-2" />
                       )}
+                      Mark as Paid
                     </Button>
                   </div>
                 )}
@@ -409,277 +383,242 @@ export default function BillDetailsPage() {
                   disabled={printing}
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Download
+                  TXT
                 </Button>
               </>
             )}
           </div>
         </div>
 
-        {/* Bill Status */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div
-                  className={`w-12 h-12 rounded-lg flex items-center justify-center ${bill.payment_status === "PAID"
-                    ? "bg-green-100"
-                    : "bg-red-100"
-                    }`}
-                >
-                  {bill.payment_status === "PAID" ? (
-                    <CheckCircle2 className="h-6 w-6 text-green-600" />
-                  ) : (
-                    <XCircle className="h-6 w-6 text-red-600" />
+        {/* Master Spanning Document/Card */}
+        <Card className="shadow-sm border-slate-200 overflow-hidden bg-white">
+          <CardContent className="p-0">
+            {/* INVOICE HEADER */}
+            <div className="p-6 md:p-10 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                  <h2 className="text-3xl font-light text-slate-800 tracking-tight flex items-center gap-3">
+                    <Receipt className="h-8 w-8 text-blue-600" />
+                    Bill Overview
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-2 flex items-center gap-2">
+                    Generated on {formatDate(bill.created_at)}
+                  </p>
+                </div>
+                <div className="text-left md:text-right">
+                  <div className="mb-2">
+                    {bill.payment_status === "PAID" ? (
+                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100 px-3 py-1 text-sm border-0 flex items-center gap-1.5 w-fit md:ml-auto">
+                        <CheckCircle2 className="h-4 w-4" /> Paid
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-red-100 text-red-800 hover:bg-red-100 px-3 py-1 text-sm border-0 flex items-center gap-1.5 w-fit md:ml-auto">
+                        <XCircle className="h-4 w-4" /> Unpaid
+                      </Badge>
+                    )}
+                  </div>
+                  {bill.payment_status === "PAID" && bill.payment_date && (
+                    <p className="text-sm text-slate-500">
+                      Paid on {formatDate(bill.payment_date)} via{" "}
+                      <span className="capitalize">{bill.payment_method}</span>
+                    </p>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* ENTITY INFO DETAILS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 md:p-10 border-b border-slate-100">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-slate-800 font-semibold border-b border-slate-100 pb-2">
+                  <User className="h-4 w-4 text-slate-400" />
+                  Billed To (Farmer)
+                </div>
                 <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <h2 className="text-xl font-semibold">Bill Status</h2>
-                    {getPaymentStatusBadge(bill.payment_status)}
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    {bill.payment_status === "PAID" && bill.payment_date
-                      ? `Paid on ${formatDate(bill.payment_date)} via ${bill.payment_method}`
-                      : "Payment pending"}
+                  <p className="text-lg font-medium text-slate-900">
+                    {bill.farmer?.name || "Unknown Farmer"}
+                  </p>
+                  <p className="text-slate-600 mt-1">
+                    {bill.farmer?.village || "Unknown Village"}
+                  </p>
+                  <p className="text-slate-600">
+                    {bill.farmer?.phone || "No Phone"}
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-green-600">
-                  {formatCurrency(bill.net_payable)}
-                </div>
-                <div className="text-sm text-gray-500">Net Payable</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Farmer & Product Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Farmer & Product Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-500">
-                  Farmer
-                </Label>
-                <p className="font-semibold">
-                  {bill.farmer?.name || "Unknown Farmer"}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {bill.farmer?.village || "Unknown Village"} •{" "}
-                  {bill.farmer?.phone || "No Phone"}
-                </p>
-              </div>
-              <Separator />
-              <div>
-                <Label className="text-sm font-medium text-gray-500">
-                  Product
-                </Label>
-                <p className="font-semibold">{bill.product.name}</p>
-              </div>
-              <Separator />
-              <div>
-                <Label className="text-sm font-medium text-gray-500">
-                  Session Date
-                </Label>
-                <p className="font-semibold flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {formatDate(sessionDate)}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Bill Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Receipt className="h-5 w-5" />
-                Bill Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-500">
-                    Total Quantity
-                  </Label>
-                  <p className="font-semibold">{bill.total_quantity} kg</p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-slate-800 font-semibold border-b border-slate-100 pb-2">
+                  <Package className="h-4 w-4 text-slate-400" />
+                  Produce Details
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-500">
-                    Total Items
-                  </Label>
-                  <p className="font-semibold">
+                  <p className="text-lg font-medium text-slate-900">
+                    {bill.product.name}
+                  </p>
+                  <p className="text-slate-600 mt-1 flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4 text-slate-400" />
+                    Session: {formatDate(sessionDate)}
+                  </p>
+                  <p className="text-slate-600 mt-1">
+                    Total Volume:{" "}
+                    <span className="font-medium text-slate-900">
+                      {bill.total_quantity} kg
+                    </span>{" "}
+                    (
                     {bill._count?.auction_items ||
                       bill.auction_items?.length ||
                       0}{" "}
-                    items
+                    items)
                   </p>
                 </div>
               </div>
-              <Separator />
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Gross Amount:</span>
-                  <span className="font-medium">
-                    {formatCurrency(bill.gross_amount)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    Commission ({bill.commission_rate}%):
-                  </span>
-                  <span className="font-medium text-red-600">
-                    -{formatCurrency(bill.commission_amount)}
-                  </span>
-                </div>
-                {Object.entries(bill.other_charges || {}).map(
-                  ([charge, amount]) => (
-                    <div key={charge} className="flex justify-between">
-                      <span className="text-gray-600">{charge}:</span>
-                      <span
-                        className={`font-medium ${amount >= 0 ? "text-green-600" : "text-red-600"}`}
-                      >
-                        {amount >= 0 ? "+" : ""}
-                        {formatCurrency(amount)}
-                      </span>
-                    </div>
-                  ),
-                )}
-                <Separator />
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Net Payable:</span>
-                  <span className="text-green-600">
-                    {formatCurrency(bill.net_payable)}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
 
-        {/* Item Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Item Details ({bill.auction_items.length} items)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {Array.isArray(rateGroups) &&
-                rateGroups.map(
-                  (
-                    group: {
-                      rate: number;
-                      quantities: number[];
-                      total_quantity: number;
-                      bags: number;
-                      amount: number;
-                    },
-                    index: number,
-                  ) => (
-                    <div
-                      key={index}
-                      className="border border-gray-200 rounded-lg p-4"
-                    >
-                      <div className="flex justify-between items-center mb-3">
-                        <div>
-                          <h4 className="font-medium">
-                            Rate: ₹{group.rate}/kg
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            {group.bags} bags
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold">
+            {/* SPANNING TABLE */}
+            <div className="p-6 md:p-10">
+              <div className="overflow-x-auto rounded-lg border border-slate-200">
+                <table className="w-full text-sm text-left whitespace-nowrap">
+                  <thead className="bg-slate-50 text-slate-600 uppercase text-xs font-semibold border-b border-slate-200">
+                    <tr>
+                      <th className="px-4 py-3">Rate (₹/kg)</th>
+                      <th className="px-4 py-3 text-center">Bags</th>
+                      <th className="px-4 py-3 min-w-[200px]">
+                        Quantities (kg)
+                      </th>
+                      <th className="px-4 py-3 text-right">Total Qty (kg)</th>
+                      <th className="px-4 py-3 text-right">Amount (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {Array.isArray(rateGroups) &&
+                      rateGroups.map((group, index) => (
+                        <tr
+                          key={index}
+                          className="hover:bg-slate-50/50 transition-colors"
+                        >
+                          <td className="px-4 py-4 font-medium text-slate-900">
+                            ₹{group.rate}
+                          </td>
+                          <td className="px-4 py-4 text-center text-slate-600">
+                            {group.bags}
+                          </td>
+                          <td className="px-4 py-4 text-slate-500">
+                            <div
+                              className="max-w-[250px] truncate"
+                              title={group.quantities.join(", ")}
+                            >
+                              {group.quantities.join(", ")}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-right text-slate-700">
+                            {group.total_quantity} kg
+                          </td>
+                          <td className="px-4 py-4 text-right font-medium text-slate-900">
                             {formatCurrency(group.amount)}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {group.total_quantity} kg total
-                          </p>
-                        </div>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded">
-                        <p className="text-sm text-gray-600">
-                          <strong>Quantities:</strong>{" "}
-                          {group.quantities.join(" kg, ")} kg
-                        </p>
-                      </div>
-                    </div>
-                  ),
+                          </td>
+                        </tr>
+                      ))}
+
+                    {/* --- SPANNING SUMMARY ROWS --- */}
+                    <tr className="border-t-2 border-slate-200">
+                      <td
+                        colSpan={3}
+                        className="bg-transparent border-0 px-4 py-3 align-top text-xs text-slate-400"
+                      >
+                        * All monetary values are displayed in Indian Rupees
+                        (INR)
+                      </td>
+                      <td className="px-4 py-3 text-right font-normal text-slate-600">
+                        Gross Amount
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium text-slate-900">
+                        {formatCurrency(bill.gross_amount)}
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td
+                        colSpan={3}
+                        className="bg-transparent border-0 px-0 py-0"
+                      ></td>
+                      <td className="px-4 py-3 text-right font-normal text-slate-600 border-b border-slate-100">
+                        Commission ({bill.commission_rate}%)
+                      </td>
+                      <td className="px-4 py-3 text-right text-red-600 font-medium border-b border-slate-100">
+                        -{formatCurrency(bill.commission_amount)}
+                      </td>
+                    </tr>
+
+                    {Object.entries(bill.other_charges || {}).map(
+                      ([charge, amount]) => (
+                        <tr key={charge}>
+                          <td
+                            colSpan={3}
+                            className="bg-transparent border-0 px-0 py-0"
+                          ></td>
+                          <td className="px-4 py-3 text-right font-normal text-slate-600 border-b border-slate-100 capitalize">
+                            {charge.replace(/_/g, " ")}
+                          </td>
+                          <td
+                            className={`px-4 py-3 text-right font-medium border-b border-slate-100 ${amount > 0 ? "text-red-600" : "text-green-600"}`}
+                          >
+                            {amount > 0 ? "-" : "+"}
+                            {formatCurrency(Math.abs(amount))}
+                          </td>
+                        </tr>
+                      ),
+                    )}
+
+                    <tr className="bg-slate-50/50">
+                      <td
+                        colSpan={3}
+                        className="bg-transparent border-0 px-0 py-0"
+                      ></td>
+                      <td className="px-4 py-4 text-right font-bold text-slate-900 text-base">
+                        Net Payable
+                      </td>
+                      <td className="px-4 py-4 text-right font-bold text-green-600 text-lg">
+                        {formatCurrency(bill.net_payable)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* FOOTER METADATA */}
+            <div className="bg-slate-50 border-t border-slate-100 p-6 md:p-10 text-sm grid grid-cols-1 md:grid-cols-2 gap-8">
+              {bill.notes && (
+                <div>
+                  <h4 className="flex items-center gap-1.5 font-semibold text-slate-700 mb-2">
+                    <FileText className="h-4 w-4" /> Notes & Remarks
+                  </h4>
+                  <p className="text-slate-600 whitespace-pre-wrap leading-relaxed">
+                    {bill.notes}
+                  </p>
+                </div>
+              )}
+              <div
+                className={
+                  bill.notes ? "md:text-right" : "md:col-span-2 md:text-right"
+                }
+              >
+                <p className="text-slate-500 mb-1">
+                  <span className="font-medium text-slate-700">Created:</span>{" "}
+                  {formatDateTime(bill.created_at)}
+                </p>
+                {bill.updated_at !== bill.created_at && (
+                  <p className="text-slate-500">
+                    <span className="font-medium text-slate-700">
+                      Last Modified:
+                    </span>{" "}
+                    {formatDateTime(bill.updated_at)}
+                  </p>
                 )}
+              </div>
             </div>
           </CardContent>
         </Card>
-
-        {/* Notes & Metadata */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Notes */}
-          {bill.notes && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Notes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 whitespace-pre-wrap">
-                  {bill.notes}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Metadata */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Timestamps
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <Label className="text-sm font-medium text-gray-500">
-                  Created
-                </Label>
-                <p className="font-medium">{formatDateTime(bill.created_at)}</p>
-              </div>
-              {bill.updated_at !== bill.created_at && (
-                <div>
-                  <Label className="text-sm font-medium text-gray-500">
-                    Last Updated
-                  </Label>
-                  <p className="font-medium">
-                    {formatDateTime(bill.updated_at)}
-                  </p>
-                </div>
-              )}
-              {bill.payment_date && (
-                <div>
-                  <Label className="text-sm font-medium text-gray-500">
-                    Payment Date
-                  </Label>
-                  <p className="font-medium">
-                    {formatDateTime(bill.payment_date)}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </DashboardLayout>
   );
