@@ -1,0 +1,198 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../generated/prisma"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Commissioner {
+  id               String           @id @default(cuid())
+  name             String
+  location         String
+  phone            String
+  email            String           @unique
+  password         String
+  commission_rate  Float            @default(10.0)
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+  auction_sessions AuctionSession[]
+  bills            Bill[]
+  buyers           Buyer[]
+  farmers          Farmer[]
+  password_resets  PasswordReset[]
+
+  @@map("commissioners")
+}
+
+model PasswordReset {
+  id              String       @id @default(cuid())
+  commissioner_id String
+  token           String       @unique
+  expires_at      DateTime
+  used            Boolean      @default(false)
+  created_at      DateTime     @default(now())
+  used_at         DateTime?
+  commissioner    Commissioner @relation(fields: [commissioner_id], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
+}
+
+model Farmer {
+  id              String        @id @default(cuid())
+  name            String
+  phone           String
+  village         String
+  commissioner_id String
+  is_active       Boolean       @default(true)
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  auction_items   AuctionItem[]
+  bills           Bill[]
+  commissioner    Commissioner  @relation(fields: [commissioner_id], references: [id], onDelete: Cascade)
+
+  @@map("farmers")
+}
+
+model Buyer {
+  id              String        @id @default(cuid())
+  name            String
+  phone           String
+  commissioner_id String
+  is_active       Boolean       @default(true)
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  auction_items   AuctionItem[]
+  commissioner    Commissioner  @relation(fields: [commissioner_id], references: [id], onDelete: Cascade)
+
+  @@map("buyers")
+}
+
+model Category {
+  id         String    @id @default(cuid())
+  name       String    @unique
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  products   Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id            String        @id @default(cuid())
+  name          String        @unique
+  category_id   String
+  is_active     Boolean       @default(true)
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  auction_items AuctionItem[]
+  bills         Bill[]
+  category      Category      @relation(fields: [category_id], references: [id])
+
+  @@map("products")
+}
+
+model AuctionSession {
+  id              String               @id @default(cuid())
+  date            DateTime             @default(now())
+  commissioner_id String
+  status          SessionStatus        @default(ACTIVE)
+  payment_status  SessionPaymentStatus @default(PENDING)
+  created_at      DateTime             @default(now())
+  updated_at      DateTime             @updatedAt
+  auction_items   AuctionItem[]
+  commissioner    Commissioner         @relation(fields: [commissioner_id], references: [id], onDelete: Cascade)
+
+  @@index([payment_status, date])
+  @@map("auction_sessions")
+}
+
+model AuctionItem {
+  id         String         @id @default(cuid())
+  session_id String
+  farmer_id  String
+  product_id String
+  unit       Unit
+  quantity   Float
+  buyer_id   String?
+  bill_id    String?
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+  rate       Float?
+  bill       Bill?          @relation(fields: [bill_id], references: [id])
+  buyer      Buyer?         @relation(fields: [buyer_id], references: [id], onDelete: Restrict)
+  farmer     Farmer         @relation(fields: [farmer_id], references: [id])
+  product    Product        @relation(fields: [product_id], references: [id])
+  session    AuctionSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  @@index([farmer_id, product_id, bill_id])
+  @@index([session_id, farmer_id, product_id])
+  @@map("auction_items")
+}
+
+model Bill {
+  id                String            @id @default(cuid())
+  bill_number       String            @unique
+  farmer_id         String
+  commissioner_id   String
+  product_id        String
+  session_id        String
+  total_quantity    Float
+  gross_amount      Float
+  commission_rate   Float
+  commission_amount Float
+  other_charges     Json              @default("{}")
+  net_payable       Float
+  payment_status    BillPaymentStatus @default(UNPAID)
+  payment_method    String?
+  payment_date      DateTime?
+  notes             String?
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  auction_items     AuctionItem[]
+  commissioner      Commissioner      @relation(fields: [commissioner_id], references: [id])
+  farmer            Farmer            @relation(fields: [farmer_id], references: [id])
+  product           Product           @relation(fields: [product_id], references: [id])
+
+  @@unique([farmer_id, product_id, session_id])
+  @@index([commissioner_id, payment_status])
+  @@index([farmer_id, payment_status])
+  @@index([product_id, payment_status])
+  @@index([session_id, payment_status])
+  @@index([payment_status, created_at])
+  @@map("bills")
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+}
+
+enum SessionPaymentStatus {
+  PENDING
+  COMPLETED
+}
+
+enum BillPaymentStatus {
+  UNPAID
+  PAID
+}
+
+enum Unit {
+  KG
+  GRAM
+  QUINTAL
+  TON
+  BUNDLE
+  PIECE
+  LITRE
+  MILLILITRE
+  GALLON
+  DOZEN
+  BOX
+  BAG
+  OTHER
+}
