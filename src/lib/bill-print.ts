@@ -55,53 +55,69 @@ export function generateBillHTML(data: BillPrintData): string {
           padding: 0;
           box-sizing: border-box;
         }
+
+        /* Set physical paper size to 6x8 inches */
+        @page {
+          size: 6in 8in;
+          margin: 0; /* Reset browser margins to strictly control spacing via CSS */
+        }
         
         body {
-          font-family: 'Courier New', monospace;
+          font-family: 'Courier New', Courier, monospace;
           font-size: 12px;
           line-height: 1.4;
+          /* Screen preview background */
+          background: #e0e0e0; 
+          display: flex;
+          justify-content: center;
           padding: 20px;
-          background: white;
         }
         
         .bill-container {
-          max-width: 400px;
-          margin: 0 auto;
-          border: 1px solid #000;
-          padding: 15px;
+          /* Simulating the physical paper on screen */
+          width: 6in;
+          min-height: 8in;
+          background: white;
+          border: 1px solid #ccc;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+          
+          /* 2 inch blank header space + 0.2in side margins */
+          padding: 2in 0.2in 0.5in 0.2in;
         }
         
         .bill-header {
           text-align: center;
           font-weight: bold;
-          font-size: 14px;
+          font-size: 16px;
           margin-bottom: 15px;
-          border-bottom: 1px solid #000;
+          border-bottom: 1px dashed #000;
           padding-bottom: 10px;
         }
         
         .bill-info {
           margin-bottom: 15px;
-          font-size: 11px;
+          font-size: 12px;
         }
         
         .bill-table {
           width: 100%;
           border-collapse: collapse;
           margin: 15px 0;
-          font-size: 10px;
+          font-size: 11px;
         }
         
         .bill-table th,
         .bill-table td {
           border: 1px solid #000;
-          padding: 5px;
+          padding: 6px 4px;
           text-align: center;
         }
         
         .bill-table th {
           background-color: #f0f0f0;
           font-weight: bold;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
         
         .total-row {
@@ -112,11 +128,11 @@ export function generateBillHTML(data: BillPrintData): string {
         .summary-table {
           width: 100%;
           margin-top: 15px;
-          font-size: 11px;
+          font-size: 12px;
         }
         
         .summary-table td {
-          padding: 3px 10px;
+          padding: 4px 10px;
           border: none;
         }
         
@@ -130,26 +146,30 @@ export function generateBillHTML(data: BillPrintData): string {
           border-bottom: 2px solid #000;
           background-color: #f9f9f9;
           font-weight: bold;
-          font-size: 12px;
+          font-size: 14px;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
         
         @media print {
           body {
+            background: white;
             padding: 0;
+            display: block;
           }
           .bill-container {
-            border: 1px solid #000;
-            max-width: none;
             width: 100%;
+            height: 100%;
+            border: none;
+            box-shadow: none;
+            /* Keep the 2-inch gap for printing */
+            padding: 2in 0.2in 0.5in 0.2in;
           }
         }
       </style>
     </head>
     <body>
       <div class="bill-container">
-        <div class="bill-header">
-          FARMER BILL - ${bill.bill_number}
-        </div>
         
         <div class="bill-info">
           <div><strong>Farmer:</strong> ${bill.farmer.name} | <strong>Product:</strong> ${bill.product.name} | <strong>Date:</strong> ${sessionDate}</div>
@@ -202,7 +222,7 @@ export function generateBillHTML(data: BillPrintData): string {
         
         ${bill.notes
       ? `
-          <div style="margin-top: 10px; font-size: 10px; border-top: 1px dashed #000; padding-top: 5px;">
+          <div style="margin-top: 10px; font-size: 11px; border-top: 1px dashed #000; padding-top: 5px;">
             <strong>Notes:</strong> ${bill.notes}
           </div>
         `
@@ -236,6 +256,9 @@ export function generateBillText(data: BillPrintData): string {
   };
 
   let text = "";
+
+  // 12 empty lines = exactly 2 inches on a standard line printer (6 lines per inch)
+  text += "\n".repeat(12);
 
   // Header
   text += "================================================\n";
