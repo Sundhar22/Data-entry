@@ -374,8 +374,8 @@ export default function AuctionsPage() {
       day: "2-digit",
       month: "short",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+      //hour: "2-digit",
+      //minute: "2-digit",
     });
   };
 
@@ -423,20 +423,20 @@ export default function AuctionsPage() {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            {sessions.filter((s) => s.status === "ACTIVE").length > 0 && (
-              <Link
-                href={`/auctions/live?session=${sessions.filter((s) => s.status === "ACTIVE")[0].id}`}
-                className="w-full sm:w-auto"
-              >
-                <Button
-                  variant="outline"
-                  className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 w-full sm:w-auto text-sm"
-                >
-                  <Activity className="h-4 w-4 mr-2" />
-                  <span className="truncate">Live Auction</span>
-                </Button>
-              </Link>
-            )}
+            {/* {sessions.filter((s) => s.status === "ACTIVE").length > 0 && ( */}
+            {/*   <Link */}
+            {/*     href={`/auctions/live?session=${sessions.filter((s) => s.status === "ACTIVE")[0].id}`} */}
+            {/*     className="w-full sm:w-auto" */}
+            {/*   > */}
+            {/*     <Button */}
+            {/*       variant="outline" */}
+            {/*       className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 w-full sm:w-auto text-sm" */}
+            {/*     > */}
+            {/*       <Activity className="h-4 w-4 mr-2" /> */}
+            {/*       <span className="truncate">Live Auction</span> */}
+            {/*     </Button> */}
+            {/*   </Link> */}
+            {/* )} */}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-slate-50 shadow hover:bg-blue-700 h-9 px-4 py-2 w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
