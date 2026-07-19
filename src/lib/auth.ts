@@ -3,7 +3,6 @@ import { verifyToken, signAccessToken } from "./jwt";
 import { AuthenticatedRequest, JWTPayload } from "@/types/auth";
 import { CommonErrors } from "./api-response";
 import { handleApiError } from "./error-handler";
-import prisma from "./prisma";
 
 export async function verifyAuth(req: NextRequest): Promise<{
   success: boolean;
@@ -24,7 +23,11 @@ export async function verifyAuth(req: NextRequest): Promise<{
     // Try to verify access token first
     if (accessToken) {
       try {
-        const decoded = verifyToken(accessToken, "ACCESS") as JWTPayload;
+        // ADDED AWAIT HERE
+        const decoded = (await verifyToken(
+          accessToken,
+          "ACCESS",
+        )) as JWTPayload;
 
         if (!decoded) {
           return {
@@ -49,7 +52,11 @@ export async function verifyAuth(req: NextRequest): Promise<{
     // Try to use refresh token to get new access token
     if (refreshToken) {
       try {
-        const decoded = verifyToken(refreshToken, "REFRESH") as JWTPayload;
+        // ADDED AWAIT HERE
+        const decoded = (await verifyToken(
+          refreshToken,
+          "REFRESH",
+        )) as JWTPayload;
 
         if (!decoded) {
           return {
@@ -59,7 +66,8 @@ export async function verifyAuth(req: NextRequest): Promise<{
         }
 
         // Generate new access token
-        const newAccessToken = signAccessToken({
+        // ADDED AWAIT HERE
+        const newAccessToken = await signAccessToken({
           id: decoded.id,
           email: decoded.email,
           name: decoded.name,
